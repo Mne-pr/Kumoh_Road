@@ -11,7 +11,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  KakaoSdk.init(nativeAppKey: 'c7b475e5111b80916e28e5e364d626311');
+  KakaoSdk.init(nativeAppKey: 'c7b475e5111b80916e28e5e364d62631');
   runApp(const MyApp());
 }
 
@@ -127,7 +127,12 @@ class GuidePage extends StatelessWidget {
   }
 }
 
-class KakaoLoginPage extends StatelessWidget {
+class KakaoLoginPage extends StatefulWidget {
+  @override
+  _KakaoLoginPageState createState() => _KakaoLoginPageState();
+}
+
+class _KakaoLoginPageState extends State<KakaoLoginPage> {
   final viewModel = MainViewModel(KakaoLogin());
   @override
   Widget build(BuildContext context) {
@@ -149,11 +154,59 @@ class KakaoLoginPage extends StatelessWidget {
         const SizedBox(height: 24),
         InkWell(
           onTap: () async {
-            await viewModel.login();
+            try {
+              await viewModel.login();
+              if (viewModel.isLogined && viewModel.user != null) {
+                print('로그인 성공, 유저 데이터: ${viewModel.user}');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserInfoScreen(user: viewModel.user!),
+                  ),
+                );
+              } else {
+                print('로그인 성공, 유저 정보 없음');
+                // 유저 정보 없음에 대한 처리
+              }
+            } catch (e) {
+              print('로그인 또는 유저 데이터 가져오기 중 오류: $e');
+              // 오류 처리
+            }
           },
           child: Image.asset('assets/images/kakao_login_medium_wide.png'),
         ),
       ],
+    );
+  }
+}
+
+// User Information Screen
+class UserInfoScreen extends StatelessWidget {
+  final User user;
+
+  const UserInfoScreen({Key? key, required this.user}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('User Information'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            user.kakaoAccount?.profile?.profileImageUrl != null
+                ? Image.network(user.kakaoAccount!.profile!.profileImageUrl!)
+                : Icon(Icons.account_circle, size: 100),
+            SizedBox(height: 20),
+            Text(
+                'Nickname: ${user.kakaoAccount?.profile?.nickname ?? "Unavailable"}'),
+            SizedBox(height: 10),
+            Text('Email: ${user.kakaoAccount?.email ?? "Unavailable"}'),
+          ],
+        ),
+      ),
     );
   }
 }
