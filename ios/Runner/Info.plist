@@ -4,6 +4,8 @@
 <dict>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
+	    <string>https</string>
+        <string>http</string>
 		<string></string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
