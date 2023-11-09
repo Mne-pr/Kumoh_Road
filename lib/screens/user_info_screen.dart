@@ -93,97 +93,90 @@ class UserInfoScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-            child: Row(
+            child: Column(
               children: [
-                CircleAvatar(
-                  backgroundImage: userProvider.isLogged && userProvider.user?.kakaoAccount?.profile?.profileImageUrl != null
-                      ? NetworkImage(userProvider.user!.kakaoAccount!.profile!.profileImageUrl!)
-                      : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
-                  radius: 24,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              userProvider.user?.kakaoAccount?.profile?.nickname ?? "Unavailable",
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          Text(
-                            '$mannerTemperature°C $temperatureEmoji',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: temperatureColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: userProvider.isLogged && userProvider.user?.kakaoAccount?.profile?.profileImageUrl != null
+                          ? NetworkImage(userProvider.user!.kakaoAccount!.profile!.profileImageUrl!)
+                          : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
+                      radius: 24,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        userProvider.user?.kakaoAccount?.profile?.nickname ?? "Unavailable",
+                        style: const TextStyle(fontSize: 20),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: LinearProgressIndicator(
-                            value: mannerTemperature / 100,
-                            backgroundColor: Colors.grey[300],
-                            color: temperatureColor,
-                            minHeight: 10,
-                          ),
+                    ),
+                    Text(
+                      '$mannerTemperature°C $temperatureEmoji',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: temperatureColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: mannerTemperature / 100,
+                      backgroundColor: Colors.grey[300],
+                      color: temperatureColor,
+                      minHeight: 10,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          // TODO: Add navigation to the review list screen
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black,
+                        ),
+                        child: Column(
+                          children: const [
+                            Icon(Icons.star_border, color: Colors.black), // Icon color
+                            Text('내 리뷰 목록'),
+                          ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Add navigation to the review list screen
-                              },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black, backgroundColor: Colors.white,
-                              ),
-                              child: Column(
-                                children: const [
-                                  Icon(Icons.star_border, color: Colors.black), // Icon color
-                                  Text('내 리뷰 목록'),
-                                ],
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Add navigation to the QR code registration screen
-                              },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black, backgroundColor: Colors.white, // Button background
-                              ),
-                              child: Column(
-                                children: const [
-                                  Icon(Icons.qr_code_scanner),
-                                  Text('QR 코드 등록'),
-                                ],
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Add navigation to the student verification screen
-                              },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.black, backgroundColor: Colors.white, // Button background
-                              ),
-                              child: Column(
-                                children: const [
-                                  Icon(Icons.school),
-                                  Text('학생 인증'),
-                                ],
-                              ),
-                            ),
+                      TextButton(
+                        onPressed: () {
+                          // TODO: Add navigation to the QR code registration screen
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black,
+                        ),
+                        child: Column(
+                          children: const [
+                            Icon(Icons.qr_code_scanner),
+                            Text('QR 코드 등록'),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // TODO: Add navigation to the student verification screen
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black,
+                        ),
+                        child: Column(
+                          children: const [
+                            Icon(Icons.school),
+                            Text('학생 인증'),
                           ],
                         ),
                       ),
@@ -241,7 +234,7 @@ class UserInfoScreen extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                leading: const Icon(Icons.delete_forever, color: Colors.black),
                 title: const Text('회원탈퇴'),
                 onTap: () {
                   showUnlinkConfirmationDialog();
