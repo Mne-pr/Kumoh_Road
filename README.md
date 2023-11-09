@@ -17,8 +17,6 @@
   = 변수명은 기본적으로 카멜케이스로 작성한다. : camelCase
 - 클래스명 규칙
   - 클래스명은 기본적으로 파스칼케이스로 작성한다. : PascalCase
-   
-    
 # 폴더 구조
 참고 : https://couldi.tistory.com/34
 - assets 폴더 : 이 폴더는 프로젝트 수준에 위치한다. 그 안에 fonts, images, logo 등의 세부 폴더들이 위치할 수 있으며, 앱에서 사용할 asset들을 모아두는 폴더라 생각하면 된다.
@@ -27,5 +25,5 @@
 - utilities 폴더 : 앱에서 사용하는 function이나 logic을 모아두는 폴더이다. 
 - providers 폴더 : 이 폴더에는 앱 외부의 다른 서비스들과 앱을 연결할때 사용하는 내용들을 정리해준다.
 - models 폴더 : 데이터베이스와 데이터를 주고받기 위해 사용하는 파일들을 모아두는 폴더이다.
-
-  
+# 사용자 디자인 규칙
+참고 : https://brunch.co.kr/@chulhochoiucj0/8
