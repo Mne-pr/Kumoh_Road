@@ -12,7 +12,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final int _selectedIndex = 0;
   final List<MainScreenButtonModel> items = [
     MainScreenButtonModel(
       icon: 'assets/images/school_logo(24x24).png',
@@ -78,9 +77,8 @@ class _MainScreenState extends State<MainScreen> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        context: context,
+      bottomNavigationBar: const CustomBottomNavigationBar(
+        selectedIndex: 0,
       ),
     );
   }

@@ -26,7 +26,7 @@ class KumohRoad extends StatelessWidget {
     return MaterialApp(
       title: 'KumohRoad',
       theme: ThemeData(
-        primarySwatch: createMaterialColor(const Color(0xFF7B61FF))
+        primarySwatch: createMaterialColor(const Color(0xFF4AC1DB))
       ),
       home: const IntroScreen(),
     );

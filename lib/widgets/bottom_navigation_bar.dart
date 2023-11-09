@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../screens/main_screen.dart';
 import '../screens/user_info_screen.dart';
 /**
  * 여러 화면에서 편하게 하단 네비게이션바를 구현하도록 한다.
@@ -7,24 +8,34 @@ import '../screens/user_info_screen.dart';
  */
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
-  final BuildContext context;
 
   const CustomBottomNavigationBar({
     Key? key,
     required this.selectedIndex,
-    required this.context,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     void _onItemTapped(int index) {
-      if (index == 4) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => UserInfoScreen()),
-        );
+      if (selectedIndex == index) {
+        // 이미 선택된 탭이면 아무것도 하지 않음
+        return;
       }
-      // 본인 화면 만들때마다 추가할 것
+      switch (index) {
+        case 0:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+          break;
+        case 4:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const UserInfoScreen()),
+          );
+          break;
+      // 다른 인덱스에 대한 네비게이션 로직 추가...
+      }
     }
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,

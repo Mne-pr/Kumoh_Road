@@ -19,7 +19,7 @@ class MainScreenButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.all(8),
+            margin: const EdgeInsets.all(8),
         padding: const EdgeInsets.all(10),
         decoration: ShapeDecoration(
           gradient: LinearGradient(
