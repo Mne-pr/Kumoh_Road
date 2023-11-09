@@ -5,23 +5,64 @@ class KakaoLoginProvider with ChangeNotifier {
   User? _user;
 
   User? get user => _user;
-
   bool get isLogged => _user != null;
 
   Future<void> login() async {
-    try {
-      bool isInstalled = await isKakaoTalkInstalled();
-      if (isInstalled) {
+    // 카카오톡 실행 가능 여부 확인
+    if (await isKakaoTalkInstalled()) {
+      try {
         await UserApi.instance.loginWithKakaoTalk();
-      } else {
-        await UserApi.instance.loginWithKakaoAccount();
+        print('카카오톡으로 로그인 성공');
+        _user = await UserApi.instance.me();
+        notifyListeners();
+      } catch (error) {
+        print('카카오톡으로 로그인 실패 $error');
+        try {
+          await UserApi.instance.loginWithKakaoAccount();
+          print('카카오계정으로 로그인 성공');
+          _user = await UserApi.instance.me();
+          notifyListeners();
+        } catch (error) {
+          print('카카오계정으로 로그인 실패 $error');
+          _user = null;
+          notifyListeners();
+        }
       }
+    } else {
+      try {
+        await UserApi.instance.loginWithKakaoAccount();
+        print('카카오계정으로 로그인 성공');
+        _user = await UserApi.instance.me();
+        notifyListeners();
+      } catch (error) {
+        print('카카오계정으로 로그인 실패 $error');
+        _user = null;
+        notifyListeners();
+      }
+    }
+  }
 
-      _user = await UserApi.instance.me();
-      notifyListeners();
-    } catch (e) {
-      print('로그인 실패 또는 유저 정보 가져오기 실패: $e');
+  Future<void> logout() async {
+    try {
+      await UserApi.instance.logout();
+      print('로그아웃 성공, SDK에서 토큰 삭제');
+    } catch (error) {
+      print('로그아웃 실패, SDK에서 토큰 삭제 $error');
+    } finally {
       _user = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> unlink() async {
+    try {
+      await UserApi.instance.unlink();
+      print('연결 끊기 성공, SDK에서 토큰 삭제');
+    } catch (error) {
+      print('연결 끊기 실패 $error');
+    } finally {
+      _user = null;
+      notifyListeners();
     }
   }
 }
