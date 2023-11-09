@@ -35,18 +35,12 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> {
         const SizedBox(height: 24),
         InkWell(
           onTap: () async {
-            try {
-              await userProvider.login(); // Use the user provider to log in
-              if (userProvider.isLogged) {
-                print('로그인 성공, 유저 데이터: ${userProvider.user}');
-                Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen(),
-                  ),
-                );
-              } else {
-                print('로그인 성공, 유저 정보 없음');
-              }
-            } catch (e) {
-              print('로그인 또는 유저 데이터 가져오기 중 오류: $e');
+            await userProvider.login();
+            if (userProvider.isLogged) {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen()),
+              );
+            } else {
+              print("로그인은 성공했지만, 사용자 정보가 없는 경우");
             }
           },
           child: Image.asset('assets/images/kakao_login_medium_wide.png'),
