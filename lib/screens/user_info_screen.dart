@@ -36,7 +36,7 @@ class UserInfoScreen extends StatelessWidget {
             TextButton(
               child: const Text('취소'),
               onPressed: () {
-                Navigator.of(ctx).pop(); // Dismiss the dialog
+                Navigator.of(ctx).pop();
               },
             ),
           ],
