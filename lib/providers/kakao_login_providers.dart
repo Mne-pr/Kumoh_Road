@@ -8,37 +8,22 @@ class KakaoLoginProvider with ChangeNotifier {
   bool get isLogged => _user != null;
 
   Future<void> login() async {
-    // 카카오톡 실행 가능 여부 확인
-    if (await isKakaoTalkInstalled()) {
-      try {
+    bool isInstalled = await isKakaoTalkInstalled();
+    try {
+      if (isInstalled) {
         await UserApi.instance.loginWithKakaoTalk();
         print('카카오톡으로 로그인 성공');
-        _user = await UserApi.instance.me();
-        notifyListeners();
-      } catch (error) {
-        print('카카오톡으로 로그인 실패 $error');
-        try {
-          await UserApi.instance.loginWithKakaoAccount();
-          print('카카오계정으로 로그인 성공');
-          _user = await UserApi.instance.me();
-          notifyListeners();
-        } catch (error) {
-          print('카카오계정으로 로그인 실패 $error');
-          _user = null;
-          notifyListeners();
-        }
-      }
-    } else {
-      try {
+      } else {
         await UserApi.instance.loginWithKakaoAccount();
         print('카카오계정으로 로그인 성공');
-        _user = await UserApi.instance.me();
-        notifyListeners();
-      } catch (error) {
-        print('카카오계정으로 로그인 실패 $error');
-        _user = null;
-        notifyListeners();
       }
+      _user = await UserApi.instance.me();
+      print('사용자 정보 가져오기 성공: $_user');
+    } catch (error) {
+      print('로그인 실패 또는 사용자 정보 가져오기 실패: $error');
+      _user = null;
+    } finally {
+      notifyListeners();
     }
   }
 
