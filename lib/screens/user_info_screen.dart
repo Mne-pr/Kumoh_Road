@@ -28,15 +28,15 @@ class UserInfoScreen extends StatelessWidget {
           content: const Text('정말 로그아웃 하시겠습니까?'),
           actions: [
             TextButton(
-              child: const Text('로그아웃'),
-              onPressed: () {
-                handleLogout();
-              },
-            ),
-            TextButton(
               child: const Text('취소'),
               onPressed: () {
                 Navigator.of(ctx).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('로그아웃'),
+              onPressed: () {
+                handleLogout();
               },
             ),
           ],
@@ -52,15 +52,15 @@ class UserInfoScreen extends StatelessWidget {
           content: const Text('정말 탈퇴하시겠습니까?\n탈퇴 후에는 복구할 수 없습니다.'),
           actions: [
             TextButton(
-              child: const Text('탈퇴하기'),
-              onPressed: () {
-                handleUnlink();
-              },
-            ),
-            TextButton(
               child: const Text('취소'),
               onPressed: () {
                 Navigator.of(ctx).pop(); // Dismiss the dialog
+              },
+            ),
+            TextButton(
+              child: const Text('탈퇴하기'),
+              onPressed: () {
+                handleUnlink();
               },
             ),
           ],
