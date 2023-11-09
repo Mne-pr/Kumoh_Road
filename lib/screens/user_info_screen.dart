@@ -157,10 +157,10 @@ class UserInfoScreen extends StatelessWidget {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('나의 정보', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('나의 정보', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Colors.black),
             onPressed: () => _showAdditionalInfoDialog(), // 설정 아이콘 클릭 시 대화상자 표시
           ),
         ],
