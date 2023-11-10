@@ -12,18 +12,15 @@ class BusInfoScreen extends StatefulWidget {
 
 class _BusInfoScreenState extends State<BusInfoScreen> {
 
-  //
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
+    return Scaffold(
 
 
 
-          bottomNavigationBar: const CustomBottomNavigationBar(
-            selectedIndex: 2,
-          ),
+      bottomNavigationBar: const CustomBottomNavigationBar(
+        selectedIndex: 2,
       ),
     );
   }

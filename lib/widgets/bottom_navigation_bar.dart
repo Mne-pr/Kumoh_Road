@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:kumoh_road/screens/bus_info_screen.dart';
+import '../screens/bus_info_screen.dart';
 import '../screens/main_screen.dart';
 import '../screens/user_info_screen.dart';
 import '../screens/path_map_screen.dart';
