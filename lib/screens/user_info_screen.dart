@@ -3,6 +3,7 @@ import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import 'faq_screen.dart';
 import 'oss_licenses_screen.dart';
 
 class UserInfoScreen extends StatelessWidget {
@@ -340,7 +341,10 @@ class UserInfoScreen extends StatelessWidget {
                 leading: const Icon(Icons.question_answer, color: Colors.black),
                 title: const Text('자주묻는 질문'),
                 onTap: () {
-                  // TODO: Implement navigation to FAQ screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FAQScreen()),
+                  );
                 },
               ),
               ListTile(
