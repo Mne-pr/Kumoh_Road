@@ -5,6 +5,7 @@ import 'package:kumoh_road/screens/terms_service_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import 'developer_info_screen.dart';
 import 'faq_screen.dart';
 import 'oss_licenses_screen.dart';
 
@@ -383,7 +384,10 @@ class UserInfoScreen extends StatelessWidget {
                 leading: const Icon(Icons.code, color: Colors.black),
                 title: const Text('개발자 정보'),
                 onTap: () {
-                  // TODO: Implement navigation to Developer Information screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const DeveloperInfoScreen()),
+                  );
                 },
               ),
             ],
