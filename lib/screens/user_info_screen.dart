@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
+import 'package:kumoh_road/screens/privacy_policy_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_navigation_bar.dart';
@@ -355,7 +356,12 @@ class UserInfoScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.policy, color: Colors.black),
                 title: const Text('개인정보 처리방침'),
-                onTap: () => Navigator.pushNamed(context, '/privacy'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.help_outline, color: Colors.black),
