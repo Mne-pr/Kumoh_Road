@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
+import 'package:kumoh_road/screens/terms_service_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_navigation_bar.dart';
@@ -351,7 +352,12 @@ class UserInfoScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.payment, color: Colors.black),
                 title: const Text('서비스 이용 약관'),
-                onTap: () => Navigator.pushNamed(context, '/terms'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TermsOfServiceScreen()),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.policy, color: Colors.black),
