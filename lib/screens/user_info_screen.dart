@@ -3,6 +3,7 @@ import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import 'oss_licenses_screen.dart';
 
 class UserInfoScreen extends StatelessWidget {
   const UserInfoScreen({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class UserInfoScreen extends StatelessWidget {
               return AlertDialog(
                 title: const Text('추가 정보 수정'),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                content: Container(
+                content: SizedBox(
                   width: double.maxFinite,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -47,7 +48,7 @@ class UserInfoScreen extends StatelessWidget {
                       const SizedBox(height: 20),
                       const Text('성별'),
                       Center(
-                        child: Container(
+                        child: SizedBox(
                           width: 150,
                           child: DropdownButton<String>(
                             isExpanded: true,
@@ -195,7 +196,7 @@ class UserInfoScreen extends StatelessWidget {
                           // 나이와 성별 정보 표시
                           Text(
                             "${userProvider.age ?? '알 수 없음'}세 (${userProvider.gender ?? '성별 미정'})",
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -225,8 +226,8 @@ class UserInfoScreen extends StatelessWidget {
                           },
                         );
                       },
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children: [
                           Text(
                             '금오온도',
                             style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -285,8 +286,8 @@ class UserInfoScreen extends StatelessWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.black,
                         ),
-                        child: Column(
-                          children: const [
+                        child: const Column(
+                          children: [
                             Icon(Icons.star_border, color: Colors.black),
                             SizedBox(height: 10), // 버튼과 텍스트 사이 간격 추가
                             Text('내 리뷰 목록'),
@@ -301,8 +302,8 @@ class UserInfoScreen extends StatelessWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.black,
                         ),
-                        child: Column(
-                          children: const [
+                        child: const Column(
+                          children: [
                             Icon(Icons.qr_code_scanner),
                             SizedBox(height: 10), // 버튼과 텍스트 사이 간격 추가
                             Text('QR 코드 등록'),
@@ -317,8 +318,8 @@ class UserInfoScreen extends StatelessWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.black,
                         ),
-                        child: Column(
-                          children: const [
+                        child: const Column(
+                          children: [
                             Icon(Icons.school),
                             SizedBox(height: 10), // 버튼과 텍스트 사이 간격 추가
                             Text('학생 인증'),
@@ -355,7 +356,12 @@ class UserInfoScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.help_outline, color: Colors.black),
                 title: const Text('오픈소스 라이센스'),
-                onTap: () => Navigator.pushNamed(context, '/license'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const OssLicensesScreen()),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.code, color: Colors.black),
