@@ -29,6 +29,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
               ],
             ),
             _buildArrivalInfoDropDownButton(context),
+            Divider(),
             _buildPosts(context),
           ],
         ),
@@ -77,102 +78,111 @@ class _TaxiScreenState extends State<TaxiScreen> {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(left: 15),
-        child: DropdownButton<String>(
-          style: const TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-              color: Colors.black),
-          value: '${_dropdownValue} 정보1',
-          onChanged: (String? newValue) {
-            setState(() {
-              _dropdownValue = newValue!;
-            });
-          },
-          // TODO: DB의 버스 또는 기차 게시글 읽어서 넣기
-          items: <String>['${_dropdownValue} 정보1', '${_dropdownValue} 정보2', '${_dropdownValue} 정보3'].map<
-              DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            style: const TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+                color: Colors.black),
+            value: '${_dropdownValue} 정보1',
+            onChanged: (String? newValue) {
+              setState(() {
+                _dropdownValue = newValue!;
+              });
+            },
+            // TODO: DB의 버스 또는 기차 게시글 읽어서 넣기
+            items: <String>['${_dropdownValue} 정보1', '${_dropdownValue} 정보2', '${_dropdownValue} 정보3'].map<
+                DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPosts(BuildContext context) {
+    double imgHeight = MediaQuery.of(context).size.height / 6 - 16;
+
     return Expanded(
-      child: ListView.builder(
+      child: ListView.separated(
         itemCount: 10, // TODO: 실제 DB 데이터 크기로 변경
+        separatorBuilder: (BuildContext context, int index) => const Divider(),
         itemBuilder: (BuildContext context, int index) {
-          return SizedBox(
-            height: MediaQuery.of(context).size.height / 6 - 16, // 게시글 5개 정도만 보이도록
-            child: Card(
-              margin: EdgeInsets.all(8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              elevation: 4,
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 게시글 이미지
-                    AspectRatio(
-                      aspectRatio: 1,
+          return Padding(
+            padding: EdgeInsets.only(left: 15),
+            child: SizedBox(
+              height: imgHeight, // 게시글 5개 정도만 보이도록
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 게시글 이미지
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.horizontal(left: Radius.circular(10)), // 왼쪽 모서리만 둥글게
+                        borderRadius: BorderRadius.all(Radius.circular(3)),
                         child: Image.network(
                           'https://saldfjaskldfjlaks', // TODO: 실제 이미지로 변경하기
-                          width: 100,
+                          width: imgHeight,
                           fit: BoxFit.cover,
                           errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
                             return Image.asset(
                               'assets/images/default_avatar.png',
-                              width: 100,
+                              width: imgHeight,
                               fit: BoxFit.cover,
                             );
                           },
                         ),
                       ),
                     ),
-                    // 게시글 제목 및 글쓴이 정보
-                    const Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '터미널에서 블랙핑크 가실분', // TODO: 실제 제목 데이터로 변경
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '전지민(여) · 20분 전', // TODO: 실제 게시글 생성 시간으로 변경
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // 게시글 댓글 아이콘과 숫자
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  // 게시글 제목, 글쓴이 정보, 참여 인원, 댓글 개수
+                  const Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 10, left: 5),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.comment, color: Colors.grey),
-                          Text('1'), // TODO: 실제 댓글 수 데이터로 변경
+                          Text(
+                            '터미널에서 블랙핑크 가실분', // TODO: 실제 제목 데이터로 변경
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '전지민(여) · 20분 전', // TODO: 실제 게시글 생성 시간으로 변경
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "2/4",
+                            style: TextStyle(
+                                color: Color(0xFF3F51B5),
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 20,),
+                          // 게시글 댓글 아이콘과 숫자
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Icon(Icons.question_answer_outlined, color: Colors.grey),
+                              Text('1'), // TODO: 실제 댓글 수 데이터로 변경
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                ],
               ),
             ),
           );
