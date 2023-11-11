@@ -20,16 +20,24 @@ class _TaxiScreenState extends State<TaxiScreen> {
         child: Column(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildToggleButton(context, '버스'),
-                _buildToggleButton(context, '기차'),
+                _buildArrivalInfoDropDownButton(context),
+                Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: Row(
+                    children: [
+                      _buildToggleButton(context, '버스'),
+                      _buildToggleButton(context, '기차'),
+                    ],
+                  ),
+                ),
                 //TODO: 검색 버튼 만들기
                 //TODO: 메뉴 버튼 만들기
                 //TODO: 알림 모양 버튼 만들기
               ],
             ),
-            _buildArrivalInfoDropDownButton(context),
-            Divider(),
+            const Divider(),
             _buildPosts(context),
           ],
         ),
