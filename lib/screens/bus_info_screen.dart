@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:kumoh_road/widgets/bottom_scrollable_widget.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 
@@ -56,6 +57,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
 
           Align(
             alignment: Alignment.bottomCenter,
+            child: const BottomScrollableWidget(),
           ),
         ],
       ),
