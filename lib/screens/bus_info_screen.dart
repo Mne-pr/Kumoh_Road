@@ -28,9 +28,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
     final busStop1 = NMarker(id: "구미역(버스정류장)", position: NLatLng(36.12963461, 128.3293215),);
     final busStop2 = NMarker(id: "농협(버스정류장)", position: NLatLng(36.12802335, 128.3331997),);
 
-    //final busStop1Info = NInfoWindow.onMarker(id: busStop1.info.id, text: "구미역(버스정류장)");
-    //final busStop2Info = NInfoWindow.onMarker(id: busStop2.info.id, text: "농협(버스정류장)");
-
     return Scaffold(
 
       body: Stack(
@@ -48,10 +45,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
             ),
             onMapReady: (NaverMapController controller){
               con = controller;
-              // 구미역 앞의 버스정류장 두 곳에 마커 달고, 설명 달음
-              con.addOverlay(busStop1);
-              con.addOverlay(busStop2);
-              con.addOverlay(gumiStationMark);
+              // 구미역 앞의 버스정류장 두 곳에 마커
+              con.addOverlayAll({busStop1, busStop2, gumiStationMark});
             },
           ),
 
