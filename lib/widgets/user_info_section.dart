@@ -68,9 +68,9 @@ class UserInfoSection extends StatelessWidget {
                         ),
                         InkWell(
                           onTap: () => _showMannerTemperatureInfo(context),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
+                            children: [
                               Icon(
                                 Icons.info_outline,
                                 color: Colors.grey,
