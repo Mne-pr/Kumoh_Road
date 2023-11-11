@@ -10,8 +10,15 @@ class TaxiScreen extends StatefulWidget {
 }
 
 class _TaxiScreenState extends State<TaxiScreen> {
-  String _dropdownValue = '시외버스'; // 초기 선택값, API로부터 받아올 값
   String _selectedVehicle = '버스'; // 상단의 선택된 버튼 상태
+  final _arrivalsInformations = <String>['정보1', '정보2', '정보3'];
+  String? _selectedArrivalInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedArrivalInfo = _arrivalsInformations[0];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +66,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
         onPressed: () {
           setState(() {
             _selectedVehicle = argTitle;
-            _dropdownValue = argTitle;
           });
         },
         style: OutlinedButton.styleFrom(
@@ -92,14 +98,14 @@ class _TaxiScreenState extends State<TaxiScreen> {
                 fontSize: 23,
                 fontWeight: FontWeight.bold,
                 color: Colors.black),
-            value: '${_dropdownValue} 정보1',
+            value: _selectedArrivalInfo,
             onChanged: (String? newValue) {
               setState(() {
-                _dropdownValue = newValue!;
+                _selectedArrivalInfo = newValue!;
               });
             },
             // TODO: DB의 버스 또는 기차 게시글 읽어서 넣기
-            items: <String>['${_dropdownValue} 정보1', '${_dropdownValue} 정보2', '${_dropdownValue} 정보3'].map<
+            items: _arrivalsInformations.map<
                 DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
