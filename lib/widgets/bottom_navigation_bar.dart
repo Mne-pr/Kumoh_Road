@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/screens/taxi_screen.dart';
 import '../screens/bus_info_screen.dart';
 import '../screens/main_screen.dart';
 import '../screens/user_info_screen.dart';
@@ -28,6 +29,12 @@ class CustomBottomNavigationBar extends StatelessWidget {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+          break;
+        case 1:
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const TaxiScreen()),
           );
           break;
         case 2:
