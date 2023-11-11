@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
+import 'package:kumoh_road/screens/qr_register_screen.dart';
 import 'package:kumoh_road/screens/terms_service_screen.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
+import '../utilities/image_picker_util.dart';
+import '../utilities/url_launcher_util.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/user_info_section.dart';
 import 'developer_info_screen.dart';
@@ -11,9 +17,14 @@ import 'faq_screen.dart';
 import 'manner_temp_screen.dart';
 import 'oss_licenses_screen.dart';
 
-class UserInfoScreen extends StatelessWidget {
+class UserInfoScreen extends StatefulWidget {
   const UserInfoScreen({Key? key}) : super(key: key);
+  @override
+  _UserInfoScreenState createState() => _UserInfoScreenState();
+}
 
+class _UserInfoScreenState extends State<UserInfoScreen> {
+  final MobileScannerController _scannerController = MobileScannerController();
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<KakaoLoginProvider>(context);
@@ -144,7 +155,7 @@ class UserInfoScreen extends StatelessWidget {
               // '받은 매너 평가' 화면으로 이동
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MannerTemperatureScreen()), // 여기서 MannerTemperatureScreen은 해당 화면의 위젯 클래스입니다.
+                MaterialPageRoute(builder: (context) => MannerTemperatureScreen()),
               );
             },
           ),
@@ -152,9 +163,7 @@ class UserInfoScreen extends StatelessWidget {
           _buildButton(
             icon: Icons.qr_code_scanner,
             label: 'QR 코드 등록',
-            onPressed: () {
-              // TODO: QR 코드 등록 화면으로 이동
-            },
+            onPressed: () => _pickAndScanImage(context)
           ),
           // 학생 인증 버튼
           _buildButton(
@@ -168,6 +177,27 @@ class UserInfoScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _pickAndScanImage(BuildContext context) async {
+    final File? image = await ImagePickerUtils.pickImageFromGallery();
+    if (image != null) {
+      final bool hasBarcode = await _scannerController.analyzeImage(image.path);
+      if (hasBarcode) {
+        _scannerController.barcodes.listen((barcodeCapture) {
+          for (var barcode in barcodeCapture.barcodes) {
+            if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
+              debugPrint('QR 코드 데이터: ${barcode.rawValue}');
+              launchURL(barcode.rawValue!);
+              Provider.of<KakaoLoginProvider>(context, listen: false).saveQRCodeUrl(barcode.rawValue!);
+            }
+          }
+        });
+      } else {
+        debugPrint('QR 코드 없음');
+      }
+    }
+  }
+
   Widget _buildButton({required IconData icon, required String label, required VoidCallback onPressed}) {
     return TextButton(
       onPressed: onPressed,
