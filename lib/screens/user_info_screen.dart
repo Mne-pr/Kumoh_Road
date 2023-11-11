@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
+import 'package:kumoh_road/screens/qr_register_screen.dart';
 import 'package:kumoh_road/screens/terms_service_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
@@ -153,7 +154,11 @@ class UserInfoScreen extends StatelessWidget {
             icon: Icons.qr_code_scanner,
             label: 'QR 코드 등록',
             onPressed: () {
-              // TODO: QR 코드 등록 화면으로 이동
+              // '받은 매너 평가' 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => QRCodeRegistrationScreen()), // 여기서 MannerTemperatureScreen은 해당 화면의 위젯 클래스입니다.
+              );
             },
           ),
           // 학생 인증 버튼
