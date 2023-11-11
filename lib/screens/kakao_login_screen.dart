@@ -1,9 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/kakao_login_providers.dart';
+import '../widgets/loding_indicator_widget.dart';
 import 'main_screen.dart';
 
 class KakaoLoginPage extends StatefulWidget {
@@ -13,7 +14,39 @@ class KakaoLoginPage extends StatefulWidget {
   _KakaoLoginPageState createState() => _KakaoLoginPageState();
 }
 
-class _KakaoLoginPageState extends State<KakaoLoginPage> {
+class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(vsync: this, duration: Duration(seconds: 2))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _login() async {
+    setState(() => _isLoading = true);
+    final userProvider = Provider.of<KakaoLoginProvider>(context, listen: false);
+    await userProvider.login();
+
+    if (userProvider.isLogged) {
+      if (userProvider.age == null || userProvider.gender == null) {
+        _showAdditionalInfoDialog();
+      } else {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } else {
+      print("로그인은 성공했지만, 사용자 정보가 없는 경우");
+    }
+    setState(() => _isLoading = false);
+  }
 
   void _showAdditionalInfoDialog() {
     int age = 25; // 초기 나이 설정
@@ -93,42 +126,35 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> {
       },
     );
   }
-
-
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<KakaoLoginProvider>(context);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset('assets/images/app_logo.png', width: 130, height: 130),
-        const SizedBox(height: 24),
-        const Text(
-          '금오로드 시작하기',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return Scaffold(
+      body: Center(
+        child: _isLoading
+            ? LoadingIndicatorWidget()
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 130, height: 130),
+            const SizedBox(height: 24),
+            const Text(
+              '금오로드 시작하기',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '간편하게 로그인하고 서비스를 이용하세요!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            InkWell(
+              onTap: _login,
+              child: Image.asset('assets/images/kakao_login_medium_wide.png'),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        const Text(
-          '간편하게 로그인하고 서비스를 이용하세요!',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
-        ),
-        const SizedBox(height: 24),
-        InkWell(
-          onTap: () async {
-            await userProvider.login();
-            if (userProvider.isLogged && (userProvider.age == null || userProvider.gender == null)) {
-              _showAdditionalInfoDialog(); // 나이와 성별 정보가 없는 경우에만 대화상자 표시
-            } else if (userProvider.isLogged) {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()),
-              );
-            } else {
-              print("로그인은 성공했지만, 사용자 정보가 없는 경우");
-            }
-          },
-          child: Image.asset('assets/images/kakao_login_medium_wide.png'),
-        ),
-      ],
+      ),
     );
   }
 }
