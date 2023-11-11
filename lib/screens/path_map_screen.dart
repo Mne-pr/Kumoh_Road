@@ -1,9 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:kumoh_road/models/main_screen_button_model.dart';
 import '../widgets/bottom_navigation_bar.dart';
-import '../widgets/main_screen_button.dart';
+import "package:http/http.dart" as http;
 
 class PathMapScreen extends StatefulWidget {
   const PathMapScreen({Key? key}) : super(key: key);
@@ -13,6 +13,22 @@ class PathMapScreen extends StatefulWidget {
 }
 
 class _PathMapScreenState extends State<PathMapScreen> {
+  //장소 이름을 좌표로 변경하기 위한 api id
+  Map<String, String> headerss = {
+    "X-NCP-APIGW-API-KEY-ID": "t2v0aiyv0u",
+    "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"
+  };
+  //장소를 좌표로 변경하는 api
+  Future<dynamic> get(String url) async {
+    //String base = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=";
+    //http.Response response = await http.get(Uri.parse(base + url), headers: headerss);
+    http.Response response2 = await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=경상북도 구미시 대학로 61"), headers: headerss);
+    String jsonData = response2.body;
+    var lon = jsonDecode(jsonData)["addresses"][0]['x'];
+    var lat = jsonDecode(jsonData)["addresses"][0]['y'];
+    List<String> geo = [lon, lat];
+    return geo;
+  }
   var _putStart = TextEditingController();
   var _putEnd = TextEditingController();
 
@@ -22,9 +38,8 @@ class _PathMapScreenState extends State<PathMapScreen> {
     _putEnd.dispose();
     super.dispose();
   }
-  void Find_path(){
-    print(_putStart.text);
-    print(_putEnd.text);
+  void Get_Location(){
+    var tmp = get(_putStart.text);
   }
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,8 +51,16 @@ class _PathMapScreenState extends State<PathMapScreen> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                const Text(
-                    "출발지 : "
+                const Positioned(
+                  left: 0,
+                  top: 0,
+                  child: SizedBox(
+                    width: 50,
+                    height: 30,
+                    child: Text(
+                      '출발지 : ',
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: TextField(
@@ -59,7 +82,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ],
             ),
             ElevatedButton(
-                  onPressed: () => Find_path(),
+                  onPressed: () => Get_Location(),
                   child: const Text('경로 탐색'),
             ),
             Expanded(
@@ -74,10 +97,9 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   activeLayerGroups: [
                     NLayerGroup.building,
                     NLayerGroup.mountain,
-                    NLayerGroup.transit
+                    NLayerGroup.bicycle,
                   ],
-                  // 줌 제스쳐만 허용
-                  rotationGesturesEnable: true,
+                  rotationGesturesEnable: false,
                   scrollGesturesEnable: true,
                   tiltGesturesEnable: false,
                   stopGesturesEnable: false,
@@ -85,7 +107,6 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   logoClickEnable: false,
                 ),
                 onMapReady: (NaverMapController controller) {
-                  // 구미역 앞의 버스정류장 두 곳에 마커 달고, 설명 달음
                 },
               ),
             ),
