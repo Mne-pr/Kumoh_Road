@@ -38,14 +38,14 @@ class MannerDetailsWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Text(
         title,
-        style: TextStyle(fontSize: 20),
+        style: const TextStyle(fontSize: 20),
       ),
     );
   }
 
   Widget _buildMannerList(List<Map<String, dynamic>> manners) {
     return ListView.separated(
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       // Prevents nested scrolling
       shrinkWrap: true,
       // Adjusts ListView size based on content
@@ -56,14 +56,14 @@ class MannerDetailsWidget extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.people_outline, size: 20),
-              SizedBox(width: 5),
+              const Icon(Icons.people_outline, size: 20),
+              const SizedBox(width: 5),
               Text('${manners[index]['votes']}'),
             ],
           ),
         );
       },
-      separatorBuilder: (BuildContext context, int index) => Divider(),
+      separatorBuilder: (BuildContext context, int index) => const Divider(),
     );
   }
 }
