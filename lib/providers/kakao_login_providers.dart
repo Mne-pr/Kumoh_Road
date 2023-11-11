@@ -6,13 +6,17 @@ class KakaoLoginProvider with ChangeNotifier {
   User? _user;
   int? _age;
   String? _gender;
-  double _mannerTemperature = -1;
+  double? _mannerTemperature;
+  List<Map<String, dynamic>>? _mannerList;
+  List<Map<String, dynamic>>? _unmannerList;
 
   User? get user => _user;
   bool get isLogged => _user != null;
   int? get age => _age;
   String? get gender => _gender;
-  double get mannerTemperature => _mannerTemperature;
+  double? get mannerTemperature => _mannerTemperature;
+  List<Map<String, dynamic>>? get mannerList => _mannerList;
+  List<Map<String, dynamic>>? get unmannerList => _unmannerList;
 
   Future<void> login() async {
     bool isInstalled = await isKakaoTalkInstalled();
@@ -51,7 +55,8 @@ class KakaoLoginProvider with ChangeNotifier {
       _age = data?['age'];
       _gender = data?['gender'];
       _mannerTemperature = data?['mannerTemperature'];
-
+      _mannerList = List<Map<String, dynamic>>.from(data?['mannerList'] ?? []);
+      _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
       // Firestore 문서 업데이트 (변경된 정보만 업데이트)
       Map<String, dynamic> updates = {};
       if (data?['email'] != email) updates['email'] = email;
@@ -62,7 +67,19 @@ class KakaoLoginProvider with ChangeNotifier {
         await userDocument.update(updates);
       }
     } else {
-      // 문서가 존재하지 않는 경우, 새로운 문서 생성
+      _mannerTemperature = 36.5;
+      _mannerList = [
+        {'content': '목적지 변경에 유연하게 대응해줬어요.', 'votes': 0},
+        {'content': '합승 비용을 정확히 계산하고 공정하게 나눠냈어요.', 'votes': 0},
+        {'content': '다른 인원의 합승 요청에 신속하게 응답했어요.', 'votes': 0},
+        {'content': '개인 사진으로 위치 인증을 해서 신뢰가 갔어요.', 'votes': 0},
+      ];
+      _unmannerList = [
+        {'content': '게시된 합승 시간보다 많이 늦게 도착했어요.', 'votes': 0},
+        {'content': '비용을 더 많이 내게 하려는 태도를 보였어요.', 'votes': 0},
+        {'content': '위치 인증 없이 불분명한 장소를 제시했어요.', 'votes': 0},
+        {'content': '합승 중 타인에 대한 불편한 발언을 했어요.', 'votes': 0},
+      ];
       await userDocument.set({
         'email': email,
         'profileImageUrl': profileImageUrl,
@@ -70,6 +87,8 @@ class KakaoLoginProvider with ChangeNotifier {
         'age': _age,
         'gender': _gender,
         'mannerTemperature': 36.5,
+        'mannerList': _mannerList,
+        'unmannerList': _unmannerList,
       });
     }
     notifyListeners();
@@ -96,7 +115,7 @@ class KakaoLoginProvider with ChangeNotifier {
 
   Future<void> updateMannerTemperature(double temperature) async {
     if (_user != null) {
-      _mannerTemperature = temperature; // Update the local manner temperature
+      _mannerTemperature = temperature;
       var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
       await userDocument.update({'mannerTemperature': temperature});
       notifyListeners();

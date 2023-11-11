@@ -8,6 +8,7 @@ import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/user_info_section.dart';
 import 'developer_info_screen.dart';
 import 'faq_screen.dart';
+import 'manner_temp_screen.dart';
 import 'oss_licenses_screen.dart';
 
 class UserInfoScreen extends StatelessWidget {
@@ -26,9 +27,9 @@ class UserInfoScreen extends StatelessWidget {
             imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? "assets/images/default_avatar.png",
             age: userProvider.age ?? 0, 
             gender: userProvider.gender ?? "기타",
-            mannerTemperature: userProvider.mannerTemperature,
+            mannerTemperature: userProvider.mannerTemperature ?? 0,
           ),
-          _buildUserInteractionButtons(),
+          _buildUserInteractionButtons(context),
           _buildInformationTile(context),
           _buildOtherOptionsTile(context, userProvider),
         ],
@@ -129,7 +130,7 @@ class UserInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInteractionButtons() {
+  Widget _buildUserInteractionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(),
       child: Row(
@@ -138,9 +139,13 @@ class UserInfoScreen extends StatelessWidget {
           // 리뷰 목록 버튼
           _buildButton(
             icon: Icons.star_border,
-            label: '내 리뷰 목록',
+            label: '매너 평가',
             onPressed: () {
-              // TODO: 리뷰 목록 화면으로 이동
+              // '받은 매너 평가' 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MannerTemperatureScreen()), // 여기서 MannerTemperatureScreen은 해당 화면의 위젯 클래스입니다.
+              );
             },
           ),
           // QR 코드 등록 버튼
