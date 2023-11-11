@@ -11,6 +11,7 @@ class TaxiScreen extends StatefulWidget {
 
 class _TaxiScreenState extends State<TaxiScreen> {
   String dropdownValue = '6:45 도착 시외버스'; // 초기 선택값, API로부터 받아올 값
+  String selectedCategory = '버스'; // 상단의 선택된 버튼 상태
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +19,62 @@ class _TaxiScreenState extends State<TaxiScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 15, top: 5),
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedCategory = '버스'; // 버튼 상태 업데이트
+                      });
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: selectedCategory == '버스' ? const Color(0xFF3F51B5) : Colors.transparent, // 조건부 배경색
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      side: BorderSide(color: selectedCategory == '버스' ? const Color(0xFF3F51B5) : Colors.black12), // 조건부 테두리 색상
+                    ),
+                    child: Text(
+                      "버스",
+                      style: TextStyle(
+                        color: selectedCategory == '버스' ? Colors.white : Colors.black26,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 5, top: 5),
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedCategory = '기차'; // 버튼 상태 업데이트
+                      });
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: selectedCategory == '기차' ? const Color(0xFF3F51B5) : Colors.transparent, // 조건부 배경색
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      side: BorderSide(color: selectedCategory == '기차' ?const Color(0xFF3F51B5) : Colors.black12), // 조건부 테두리 색상
+                    ),
+                    child: Text(
+                      "기차",
+                      style: TextStyle(
+                        color: selectedCategory == '기차' ? Colors.white : Colors.black26,
+                      ),
+                    ),
+                  ),
+                //TODO: 검색 버튼 만들기
+                //TODO: 메뉴 버튼 만들기
+                //TODO: 알림 모양 버튼 만들기
+                ),
+            ],),
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
-                padding: EdgeInsets.only(left: 15, top: 5),
+                padding: const EdgeInsets.only(left: 15),
                 child: Row(
                   children: [
                     DropdownButton<String>(
@@ -47,19 +100,17 @@ class _TaxiScreenState extends State<TaxiScreen> {
                         );
                       }).toList(),
                     ),
-                    //TODO: 검색 버튼 만들기
-                    //TODO: 메뉴 버튼 만들기
-                    //TODO: 알림 모양 버튼 만들기
                   ],
                 ),
               ),
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: 10, // 실제 DB 데이터 크기로 변경
+                itemCount: 10, // TODO: 실제 DB 데이터 크기로 변경
                 itemBuilder: (BuildContext context, int index) {
                   return SizedBox(
-                    height: MediaQuery.of(context).size.height / 6 - 16, // 화면 높이의 1/4에서 카드의 마진만큼 뺀 높이
+                    height: MediaQuery.of(context).size.height / 6 -
+                        16, // 화면 높이의 1/4에서 카드의 마진만큼 뺀 높이
                     child: Card(
                       margin: EdgeInsets.all(8), // 카드 외부 여백
                       shape: RoundedRectangleBorder(
@@ -82,10 +133,12 @@ class _TaxiScreenState extends State<TaxiScreen> {
                                   // 실제 이미지 URL로 변경
                                   width: 100,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                                  errorBuilder: (BuildContext context,
+                                      Object error, StackTrace? stackTrace) {
                                     // 이미지 로드에 실패했을 때 회색 배경을 보여주는 컨테이너
                                     return Image.asset(
-                                      'assets/images/default_avatar.png', // 에셋 이미지 경로
+                                      'assets/images/default_avatar.png',
+                                      // 에셋 이미지 경로
                                       width: 100,
                                       fit: BoxFit.cover,
                                     );
@@ -111,7 +164,8 @@ class _TaxiScreenState extends State<TaxiScreen> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      '전지민(여) · 20분 전', // // TODO: 실제 부가 정보 데이터로 변경
+                                      '전지민(여) · 20분 전',
+                                      // // TODO: 실제 부가 정보 데이터로 변경
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontSize: 12,
@@ -150,7 +204,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
           // 게시물 추가 또는 다른 액션을 위한 핸들러
         },
         child: Icon(Icons.add),
-        backgroundColor: Colors.blue,
       ),
     );
   }
