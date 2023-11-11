@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../utilities/image_picker_util.dart';
+import '../utilities/url_launcher_util.dart';
 
 class QRCodeRegistrationScreen extends StatefulWidget {
   @override
@@ -8,17 +11,31 @@ class QRCodeRegistrationScreen extends StatefulWidget {
 }
 
 class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
+  final MobileScannerController _scannerController = MobileScannerController();
   File? _image;
-  final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImageFromGallery() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
+    _image = await ImagePickerUtils.pickImageFromGallery();
+    if (_image != null) {
+      setState(() {});
+      _scanImage(_image!);
     }
+  }
+
+  void _scanImage(File image) async {
+    await _scannerController.analyzeImage(image.path);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scannerController.barcodes.listen((barcodeCapture) {
+      for (var barcode in barcodeCapture.barcodes) {
+        if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
+          launchURL(barcode.rawValue!);
+        }
+      }
+    });
   }
 
   @override
@@ -51,5 +68,11 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scannerController.dispose();
+    super.dispose();
   }
 }

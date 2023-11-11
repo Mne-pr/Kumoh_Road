@@ -9,6 +9,7 @@ class KakaoLoginProvider with ChangeNotifier {
   double? _mannerTemperature;
   List<Map<String, dynamic>>? _mannerList;
   List<Map<String, dynamic>>? _unmannerList;
+  String? _qrCodeUrl;
 
   User? get user => _user;
   bool get isLogged => _user != null;
@@ -17,6 +18,7 @@ class KakaoLoginProvider with ChangeNotifier {
   double? get mannerTemperature => _mannerTemperature;
   List<Map<String, dynamic>>? get mannerList => _mannerList;
   List<Map<String, dynamic>>? get unmannerList => _unmannerList;
+  String? get qrCodeUrl => _qrCodeUrl;
 
   Future<void> login() async {
     bool isInstalled = await isKakaoTalkInstalled();
@@ -57,6 +59,7 @@ class KakaoLoginProvider with ChangeNotifier {
       _mannerTemperature = data?['mannerTemperature'];
       _mannerList = List<Map<String, dynamic>>.from(data?['mannerList'] ?? []);
       _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
+      _qrCodeUrl = data?['qrCodeUrl'];
       // Firestore 문서 업데이트 (변경된 정보만 업데이트)
       Map<String, dynamic> updates = {};
       if (data?['email'] != email) updates['email'] = email;
@@ -80,6 +83,7 @@ class KakaoLoginProvider with ChangeNotifier {
         {'content': '위치 인증 없이 불분명한 장소를 제시했어요.', 'votes': 0},
         {'content': '합승 중 타인에 대한 불편한 발언을 했어요.', 'votes': 0},
       ];
+      _qrCodeUrl = null;
       await userDocument.set({
         'email': email,
         'profileImageUrl': profileImageUrl,
@@ -89,6 +93,7 @@ class KakaoLoginProvider with ChangeNotifier {
         'mannerTemperature': 36.5,
         'mannerList': _mannerList,
         'unmannerList': _unmannerList,
+        'qrCodeUrl': _qrCodeUrl,
       });
     }
     notifyListeners();
@@ -118,6 +123,15 @@ class KakaoLoginProvider with ChangeNotifier {
       _mannerTemperature = temperature;
       var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
       await userDocument.update({'mannerTemperature': temperature});
+      notifyListeners();
+    }
+  }
+
+  Future<void> saveQRCodeUrl(String url) async {
+    if (_user != null) {
+      var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
+      _qrCodeUrl = url;
+      await userDocument.update({'qrCodeUrl': url});
       notifyListeners();
     }
   }
