@@ -152,7 +152,6 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             icon: Icons.star_border,
             label: '매너 평가',
             onPressed: () {
-              // '받은 매너 평가' 화면으로 이동
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => MannerTemperatureScreen()),
@@ -163,7 +162,12 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           _buildButton(
             icon: Icons.qr_code_scanner,
             label: 'QR 코드 등록',
-            onPressed: () => _pickAndScanImage(context)
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => QRCodeRegistrationScreen()),
+              );
+            },
           ),
           // 학생 인증 버튼
           _buildButton(
@@ -176,26 +180,6 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         ],
       ),
     );
-  }
-
-  void _pickAndScanImage(BuildContext context) async {
-    final File? image = await ImagePickerUtils.pickImageFromGallery();
-    if (image != null) {
-      final bool hasBarcode = await _scannerController.analyzeImage(image.path);
-      if (hasBarcode) {
-        _scannerController.barcodes.listen((barcodeCapture) {
-          for (var barcode in barcodeCapture.barcodes) {
-            if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
-              debugPrint('QR 코드 데이터: ${barcode.rawValue}');
-              launchURL(barcode.rawValue!);
-              Provider.of<KakaoLoginProvider>(context, listen: false).saveQRCodeUrl(barcode.rawValue!);
-            }
-          }
-        });
-      } else {
-        debugPrint('QR 코드 없음');
-      }
-    }
   }
 
   Widget _buildButton({required IconData icon, required String label, required VoidCallback onPressed}) {
