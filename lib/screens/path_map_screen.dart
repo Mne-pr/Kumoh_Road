@@ -19,29 +19,39 @@ class _PathMapScreenState extends State<PathMapScreen> {
     "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"
   };
   //장소를 좌표로 변경하는 api
-  Future<dynamic> get(String url) async {
-    //String base = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=";
-    //http.Response response = await http.get(Uri.parse(base + url), headers: headerss);
-    http.Response response2 = await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=경상북도 구미시 대학로 61"), headers: headerss);
-    String jsonData = response2.body;
-    var lon = jsonDecode(jsonData)["addresses"][0]['x'];
-    var lat = jsonDecode(jsonData)["addresses"][0]['y'];
-    List<String> geo = [lon, lat];
-    return geo;
-  }
+
   var _putStart = TextEditingController();
   var _putEnd = TextEditingController();
 
   @override
+  //좌표 변환 코드
+  Future<List> get(String url) async {
+    http.Response response2 = await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$url"), headers: headerss);
+    String jsonData = utf8.decode(response2.bodyBytes);
+    var a = jsonDecode(jsonData)["addresses"][0]['x'];
+    var b = jsonDecode(jsonData)["addresses"][0]['y'];
+    List<dynamic> dot = [double.parse(a), double.parse(b)];
+    return dot;
+  }
+
+  void Get_Location() async{
+    List<dynamic> tmp = List.generate(3, (index) => 2, growable:false);
+    tmp[0] = await get(_putStart.text);
+    tmp[1] = await get(_putEnd.text);
+    print(tmp[0]);
+    print(tmp[1]);
+    final controller = NCameraUpdate.scrollAndZoomTo(target: NLatLng(tmp[0][1], tmp[0][0]));
+  }
+
   void dispose() {
     _putStart.dispose();
     _putEnd.dispose();
     super.dispose();
   }
-  void Get_Location(){
-    var tmp = get(_putStart.text);
-  }
+
+  @override
   Widget build(BuildContext context) {
+    const Baseposition = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -49,41 +59,53 @@ class _PathMapScreenState extends State<PathMapScreen> {
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                const Positioned(
-                  left: 0,
-                  top: 0,
-                  child: SizedBox(
-                    width: 50,
-                    height: 30,
-                    child: Text(
-                      '출발지 : ',
+            Container(
+              margin: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+              height: 35,
+              child: TextField(
+                controller: _putStart,
+                textAlignVertical: TextAlignVertical.bottom,
+                textAlign: TextAlign.left,
+                decoration: const InputDecoration(
+                  hintText: "출발지를 입력하세요",
+                  filled: true,
+                  fillColor: Colors.black12,
+                  enabledBorder:
+                  OutlineInputBorder(borderSide: BorderSide.none),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black54,
+                      width: 1.5,
                     ),
                   ),
                 ),
-                Expanded(
-                  child: TextField(
-                    controller: _putStart,
-                  ),
-                ),
-              ],
+              ),
             ),
-            Row(
-              children: <Widget>[
-                const Text(
-                  "도착지 : "
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _putEnd,
+            Container(
+              margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+              height: 35,
+              child: TextField(
+                controller: _putEnd,
+                textAlignVertical: TextAlignVertical.bottom,
+                textAlign: TextAlign.left,
+                decoration: const InputDecoration(
+                  hintText: "도착지를 입력하세요",
+                  filled: true,
+                  fillColor: Colors.black12,
+                  enabledBorder:
+                      OutlineInputBorder(borderSide: BorderSide.none),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black54,
+                      width: 1.5,
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
             ElevatedButton(
-                  onPressed: () => Get_Location(),
-                  child: const Text('경로 탐색'),
+              onPressed: () => Get_Location(),
+              child: const Text('경로 탐색'),
             ),
             Expanded(
               child: NaverMap(
@@ -94,6 +116,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   locale: Locale('kr'),
                   mapType: NMapType.basic,
                   liteModeEnable: true,
+                  initialCameraPosition: Baseposition,
                   activeLayerGroups: [
                     NLayerGroup.building,
                     NLayerGroup.mountain,
@@ -106,7 +129,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   scaleBarEnable: false,
                   logoClickEnable: false,
                 ),
-                onMapReady: (NaverMapController controller) {
+                onMapReady: (final NaverMapController controller) {
                 },
               ),
             ),
