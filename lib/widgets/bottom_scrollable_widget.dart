@@ -91,15 +91,17 @@ class BusScheduleBox extends StatelessWidget {
 }
 
 
-
+// 아직 확장성 고려하지 않음!!!
 class BottomScrollableWidget extends StatefulWidget {
-  const BottomScrollableWidget({super.key});
+  final BusStopBox busStop;
+  const BottomScrollableWidget({required this.busStop, super.key});
 
   @override
   State<BottomScrollableWidget> createState() => _BottomScrollableWidgetState();
 }
 
 class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
+
   final DraggableScrollableController con = DraggableScrollableController();
 
   void expandSheet([int speed = 100]) { con.animateTo(0.9, duration: Duration(milliseconds: speed), curve: Curves.easeOut); }
@@ -108,10 +110,12 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final busStop = widget.busStop;
+
     return DraggableScrollableSheet(
       controller: con,
-      initialChildSize: 0.035,
-      minChildSize: 0.035,
+      initialChildSize: 0.20,
+      minChildSize: 0.20,
       maxChildSize: 0.9,
       builder: (BuildContext context, ScrollController scrollController) {
         return Container(
@@ -157,7 +161,7 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                   child: Column(
                     children: <Widget>[
                       // 버스정류장
-                      BusStopBox('구미역(선산노선정류장)', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 3),
+                      busStop,
 
                       // 버스 시간표
                       BusScheduleBox('구미역 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정'),

@@ -18,21 +18,24 @@ class BusInfoScreen extends StatefulWidget {
 
 class _BusInfoScreenState extends State<BusInfoScreen> {
   late NaverMapController con;
+  late BusStopBox currentBusStop = busStop1Info;
+
+  final gumiStationMark = NInfoWindow.onMap(id: "구미역", position: NLatLng(36.12827222, 128.3310162), text: "구미역");
+  final busStop1 = NMarker(id: "구미역(버스정류장)", position: NLatLng(36.12963461, 128.3293215),);
+  final busStop1Info = BusStopBox('구미역', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 3);
+  final busStop2 = NMarker(id: "농협(버스정류장)", position: NLatLng(36.12802335, 128.3331997),);
+  final busStop2Info = BusStopBox('농협', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 4);
 
   @override
   Widget build(BuildContext context) {
-    // 시작위치 - 구미역
     const gumiStationPos = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
+    final bottomScrollWidget = BottomScrollableWidget(busStop: currentBusStop,key: UniqueKey(),);
 
-    final gumiStationMark = NInfoWindow.onMap(id: "구미역", position: NLatLng(36.12827222, 128.3310162), text: "구미역");
-    final busStop1 = NMarker(id: "구미역(버스정류장)", position: NLatLng(36.12963461, 128.3293215),);
-    final busStop2 = NMarker(id: "농협(버스정류장)", position: NLatLng(36.12802335, 128.3331997),);
+    void updateBusStop(final inpBusStop){ setState(() { currentBusStop = inpBusStop; }); }
 
     return Scaffold(
-
       body: Stack(
         children: [
-
           NaverMap(
             options: const NaverMapViewOptions(
               minZoom: 12, maxZoom: 18, pickTolerance: 8, locale: Locale('kr'),
@@ -47,16 +50,21 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
               con = controller;
               // 구미역 앞의 버스정류장 두 곳에 마커
               con.addOverlayAll({busStop1, busStop2, gumiStationMark});
+              busStop1.setOnTapListener((overlay) {
+                if (overlay.info.id == '구미역(버스정류장)'){
+                  // 두 번 클릭하면.. 하지말까??
+                } else { updateBusStop(busStop1Info); }
+              });
+              busStop2.setOnTapListener((overlay) { updateBusStop(busStop2Info); });
             },
           ),
 
           Align(
             alignment: Alignment.bottomCenter,
-            child: const BottomScrollableWidget(),
+            child: bottomScrollWidget,
           ),
         ],
       ),
-
       bottomNavigationBar: const CustomBottomNavigationBar(
         selectedIndex: 2,
       ),
