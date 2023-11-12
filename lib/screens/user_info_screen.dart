@@ -149,7 +149,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         children: [
           // 리뷰 목록 버튼
           _buildButton(
-            icon: Icons.star_border,
+            icon: Icons.thumb_up_outlined,
             label: '매너 평가',
             onPressed: () {
               Navigator.push(
@@ -160,7 +160,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
           // QR 코드 등록 버튼
           _buildButton(
-            icon: Icons.qr_code_scanner,
+            icon: Icons.qr_code,
             label: 'QR 코드 등록',
             onPressed: () {
               Navigator.push(
@@ -171,7 +171,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
           // 학생 인증 버튼
           _buildButton(
-            icon: Icons.school,
+            icon: Icons.school_outlined,
             label: '학생 인증',
             onPressed: () {
               // TODO: 학생 인증 화면으로 이동
