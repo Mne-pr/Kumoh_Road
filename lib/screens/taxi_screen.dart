@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/kakao_login_providers.dart';
 import '../widgets/bottom_navigation_bar.dart';
 
 class TaxiScreen extends StatefulWidget {
@@ -45,7 +48,15 @@ class _TaxiScreenState extends State<TaxiScreen> {
               ],
             ),
             const Divider(),
-            _buildPosts(context),
+            FutureBuilder(
+                future: _buildPosts(context),
+                builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+                  if(snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  return snapshot.data!;
+                }
+            )
           ],
         ),
       ),
@@ -118,18 +129,33 @@ class _TaxiScreenState extends State<TaxiScreen> {
     );
   }
 
-  Widget _buildPosts(BuildContext context) {
-    double imgHeight = MediaQuery.of(context).size.height / 6 - 16;
+  Future<Widget> _buildPosts(BuildContext context) async {
+    double imgHeight = MediaQuery.of(context).size.height / 6 - 16; // 게시글 5개 정도만 보이도록
+
+    String collectionName = "";
+    if(_selectedVehicle == "버스") {
+      collectionName = "express_bus_posts";
+    } else if(_selectedVehicle == "기차") {
+      collectionName = "train_posts";
+    }
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionName).get();
+    List<Map<String, dynamic>> documents = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    print(documents[0]);
 
     return Expanded(
       child: ListView.separated(
-        itemCount: 10, // TODO: 실제 DB 데이터 크기로 변경
+        itemCount: documents.length, // TODO: 실제 DB 데이터 크기로 변경
         separatorBuilder: (BuildContext context, int index) => const Divider(),
         itemBuilder: (BuildContext context, int index) {
+          String title = documents[index]["title"];
+          DateTime createdTime = documents[index]["createdTime"].toDate();
+          List members = documents[index]["members"];
+          String writerId = documents[index]["writer"];
+
           return Padding(
-            padding: EdgeInsets.only(left: 15),
+            padding: const EdgeInsets.only(left: 15),
             child: SizedBox(
-              height: imgHeight, // 게시글 5개 정도만 보이도록
+              height: imgHeight,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -137,11 +163,11 @@ class _TaxiScreenState extends State<TaxiScreen> {
                   AspectRatio(
                     aspectRatio: 1,
                     child: Padding(
-                      padding: EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(10),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(3)),
+                        borderRadius: const BorderRadius.all(Radius.circular(3)),
                         child: Image.network(
-                          'https://saldfjaskldfjlaks', // TODO: 실제 이미지로 변경하기
+                          documents[index]["image"], 
                           width: imgHeight,
                           fit: BoxFit.cover,
                           errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
@@ -155,36 +181,38 @@ class _TaxiScreenState extends State<TaxiScreen> {
                       ),
                     ),
                   ),
-                  // 게시글 제목, 글쓴이 정보, 참여 인원, 댓글 개수
-                  const Expanded(
+                  Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(top: 10, left: 5),
+                      padding: const EdgeInsets.only(top: 10, left: 5),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          //게시글 제목
                           Text(
-                            '터미널에서 블랙핑크 가실분', // TODO: 실제 제목 데이터로 변경
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
+                            title, 
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
+                          // 글쓴이 및 생성 시간
                           Text(
-                            '전지민(여) · 20분 전', // TODO: 실제 게시글 생성 시간으로 변경
-                            style: TextStyle(
+                            '${createdTime.hour}시 ${createdTime.minute}분',
+                            style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
+                          // 참여 인원 수
                           Text(
-                            "2/4",
-                            style: TextStyle(
+                            "${members.length + 1}/4",
+                            style: const TextStyle(
                                 color: Color(0xFF3F51B5),
                                 fontWeight: FontWeight.bold),
                           ),
-                          SizedBox(height: 20,),
-                          // 게시글 댓글 아이콘과 숫자
-                          Row(
+                          const SizedBox(height: 20,),
+                          // 댓글 수
+                          const Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Icon(Icons.question_answer_outlined, color: Colors.grey),
