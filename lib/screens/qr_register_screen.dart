@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart';
+import '../providers/kakao_login_providers.dart';
 import '../utilities/image_picker_util.dart';
 import '../utilities/url_launcher_util.dart';
 
@@ -31,7 +33,9 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
     _scannerController.barcodes.listen((barcodeCapture) {
       for (var barcode in barcodeCapture.barcodes) {
         if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
-          launchURL(barcode.rawValue!);
+          String qrCodeUrl = barcode.rawValue!;
+          Provider.of<KakaoLoginProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
+          launchURL(qrCodeUrl);
         }
       }
     });
@@ -52,7 +56,7 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
           Padding(
             padding: const EdgeInsets.all(13.0),
             child: ElevatedButton.icon(
-              icon: const Icon(Icons.photo_library), // 갤러리 아이콘 추가
+              icon: const Icon(Icons.photo_library),
               label: const Text('QR 코드 등록'),
               onPressed: _pickImageFromGallery,
               style: ElevatedButton.styleFrom(
@@ -68,15 +72,21 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
                 children: [
                   GuideStep(
                     imagePath: 'assets/images/QR_guide0.jpg',
-                    instruction: '1. 카카오톡 실행 후 "더보기" 탭을 선택합니다.',
+                    instruction: '1. 카카오톡 실행 후 하단에',
+                    icon: Icons.more_horiz,
+                    trailingText: ' 탭을 선택합니다.',
                   ),
                   GuideStep(
                     imagePath: 'assets/images/QR_guide1.jpg',
-                    instruction: '2. 오른쪽 상단의 QR 코드 버튼을 누릅니다.',
+                    instruction: '2. 오른쪽 상단의 ',
+                    icon: Icons.qr_code,
+                    trailingText: ' 을 누릅니다.',
                   ),
                   GuideStep(
                     imagePath: 'assets/images/QR_guide2.jpg',
-                    instruction: '3. QR 코드가 나오면 저장 버튼을 선택하여 저장합니다.',
+                    instruction: '3. QR 코드가 나오면 ',
+                    icon: Icons.save_alt ,
+                    trailingText: ' 선택하여 저장합니다.',
                   ),
                 ],
               ),
@@ -97,11 +107,15 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
 class GuideStep extends StatelessWidget {
   final String imagePath;
   final String instruction;
+  final IconData icon;
+  final String trailingText;
 
   const GuideStep({
     Key? key,
     required this.imagePath,
     required this.instruction,
+    required this.icon,
+    required this.trailingText,
   }) : super(key: key);
 
   @override
@@ -111,9 +125,20 @@ class GuideStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            instruction,
-            style: const TextStyle(fontSize: 16),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(fontSize: 16, color: Colors.black),
+              children: [
+                TextSpan(text: instruction),
+                WidgetSpan(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: Icon(icon, size: 16), // 아이콘
+                  ),
+                ),
+                TextSpan(text: trailingText),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           Image.asset(imagePath),

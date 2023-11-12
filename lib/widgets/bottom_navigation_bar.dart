@@ -21,42 +21,36 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     void _onItemTapped(int index) {
       if (selectedIndex == index) {
-        // 이미 선택된 탭이면 아무것도 하지 않음
         return;
       }
+      Widget nextPage;
       switch (index) {
         case 0:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-          );
+          nextPage = const MainScreen();
           break;
         case 1:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const TaxiScreen()),
-          );
+          nextPage = const TaxiScreen();
           break;
         case 2:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const BusInfoScreen()),
-          );
+          nextPage = const BusInfoScreen();
           break;
         case 3:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const PathMapScreen())
-          );
+          nextPage = const PathMapScreen();
           break;
         case 4:
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const UserInfoScreen()),
-          );
+          nextPage = const UserInfoScreen();
           break;
-      // 다른 인덱스에 대한 네비게이션 로직 추가...
+        default:
+          return;
       }
+      Navigator.pushReplacement(
+        context,
+        CustomPageRouteBuilder(
+          child: nextPage,
+          currentIndex: selectedIndex,
+          newIndex: index,
+        ),
+      );
     }
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
@@ -87,3 +81,36 @@ class CustomBottomNavigationBar extends StatelessWidget {
     );
   }
 }
+
+class CustomPageRouteBuilder<T> extends PageRouteBuilder<T> {
+  final Widget child;
+  final int currentIndex;
+  final int newIndex;
+
+  CustomPageRouteBuilder({
+    required this.child,
+    required this.currentIndex,
+    required this.newIndex,
+  }) : super(
+    pageBuilder: (context, animation, secondaryAnimation) => child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      Offset begin;
+      if (currentIndex < newIndex) {
+        begin = const Offset(1.0, 0.0);
+      } else {
+        begin = const Offset(-1.0, 0.0);
+      }
+      var end = Offset.zero;
+      var curve = Curves.ease;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
+
