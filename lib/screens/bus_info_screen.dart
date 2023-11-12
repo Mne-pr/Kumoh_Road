@@ -51,9 +51,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
               // 구미역 앞의 버스정류장 두 곳에 마커
               con.addOverlayAll({busStop1, busStop2, gumiStationMark});
               busStop1.setOnTapListener((overlay) {
-                if (overlay.info.id == '구미역(버스정류장)'){
-                  // 두 번 클릭하면.. 하지말까??
-                } else { updateBusStop(busStop1Info); }
+                updateBusStop(busStop1Info);
               });
               busStop2.setOnTapListener((overlay) { updateBusStop(busStop2Info); });
             },
