@@ -1,18 +1,30 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
+import 'package:kumoh_road/screens/qr_register_screen.dart';
 import 'package:kumoh_road/screens/terms_service_screen.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
+import '../utilities/image_picker_util.dart';
+import '../utilities/url_launcher_util.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/user_info_section.dart';
 import 'developer_info_screen.dart';
 import 'faq_screen.dart';
+import 'manner_temp_screen.dart';
 import 'oss_licenses_screen.dart';
 
-class UserInfoScreen extends StatelessWidget {
+class UserInfoScreen extends StatefulWidget {
   const UserInfoScreen({Key? key}) : super(key: key);
+  @override
+  _UserInfoScreenState createState() => _UserInfoScreenState();
+}
 
+class _UserInfoScreenState extends State<UserInfoScreen> {
+  final MobileScannerController _scannerController = MobileScannerController();
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<KakaoLoginProvider>(context);
@@ -26,9 +38,9 @@ class UserInfoScreen extends StatelessWidget {
             imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? "assets/images/default_avatar.png",
             age: userProvider.age ?? 0, 
             gender: userProvider.gender ?? "기타",
-            mannerTemperature: userProvider.mannerTemperature,
+            mannerTemperature: userProvider.mannerTemperature ?? 0,
           ),
-          _buildUserInteractionButtons(),
+          _buildUserInteractionButtons(context),
           _buildInformationTile(context),
           _buildOtherOptionsTile(context, userProvider),
         ],
@@ -129,7 +141,7 @@ class UserInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInteractionButtons() {
+  Widget _buildUserInteractionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(),
       child: Row(
@@ -138,18 +150,20 @@ class UserInfoScreen extends StatelessWidget {
           // 리뷰 목록 버튼
           _buildButton(
             icon: Icons.star_border,
-            label: '내 리뷰 목록',
+            label: '매너 평가',
             onPressed: () {
-              // TODO: 리뷰 목록 화면으로 이동
+              // '받은 매너 평가' 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MannerTemperatureScreen()),
+              );
             },
           ),
           // QR 코드 등록 버튼
           _buildButton(
             icon: Icons.qr_code_scanner,
             label: 'QR 코드 등록',
-            onPressed: () {
-              // TODO: QR 코드 등록 화면으로 이동
-            },
+            onPressed: () => _pickAndScanImage(context)
           ),
           // 학생 인증 버튼
           _buildButton(
@@ -163,6 +177,27 @@ class UserInfoScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _pickAndScanImage(BuildContext context) async {
+    final File? image = await ImagePickerUtils.pickImageFromGallery();
+    if (image != null) {
+      final bool hasBarcode = await _scannerController.analyzeImage(image.path);
+      if (hasBarcode) {
+        _scannerController.barcodes.listen((barcodeCapture) {
+          for (var barcode in barcodeCapture.barcodes) {
+            if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
+              debugPrint('QR 코드 데이터: ${barcode.rawValue}');
+              launchURL(barcode.rawValue!);
+              Provider.of<KakaoLoginProvider>(context, listen: false).saveQRCodeUrl(barcode.rawValue!);
+            }
+          }
+        });
+      } else {
+        debugPrint('QR 코드 없음');
+      }
+    }
+  }
+
   Widget _buildButton({required IconData icon, required String label, required VoidCallback onPressed}) {
     return TextButton(
       onPressed: onPressed,
