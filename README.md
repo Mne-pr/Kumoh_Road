@@ -12,11 +12,11 @@
 - [STYLE] : 디자인 관련 변경사항
 # Naming Convention
 - 파일명 규칙
-  - 파일명은 기본적으로 스네이크케이스로 작성한다. : snake_case
+  - 파일명은 기본적으로 스네이크케이스로 작성한다 : snake_case
 - 변수명 규칙
-  = 변수명은 기본적으로 카멜케이스로 작성한다. : camelCase
+  - 변수명은 기본적으로 카멜케이스로 작성한다 : camelCase
 - 클래스명 규칙
-  - 클래스명은 기본적으로 파스칼케이스로 작성한다. : PascalCase
+  - 클래스명은 기본적으로 파스칼케이스로 작성한다 : PascalCase
 # 폴더 구조
 참고 : https://couldi.tistory.com/34
 - assets 폴더 : 이 폴더는 프로젝트 수준에 위치한다. 그 안에 fonts, images, logo 등의 세부 폴더들이 위치할 수 있으며, 앱에서 사용할 asset들을 모아두는 폴더라 생각하면 된다.
