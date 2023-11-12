@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
@@ -10,6 +12,7 @@ class KakaoLoginProvider with ChangeNotifier {
   List<Map<String, dynamic>>? _mannerList;
   List<Map<String, dynamic>>? _unmannerList;
   String? _qrCodeUrl;
+  StreamSubscription<DocumentSnapshot>? _userChangesSubscription;
 
   User? get user => _user;
   bool get isLogged => _user != null;
@@ -21,29 +24,29 @@ class KakaoLoginProvider with ChangeNotifier {
   String? get qrCodeUrl => _qrCodeUrl;
 
   Future<void> login() async {
-    bool isInstalled = await isKakaoTalkInstalled();
     try {
+      bool isInstalled = await isKakaoTalkInstalled();
       if (isInstalled) {
         await UserApi.instance.loginWithKakaoTalk();
-        print('카카오톡으로 로그인 성공');
       } else {
         await UserApi.instance.loginWithKakaoAccount();
-        print('카카오계정으로 로그인 성공');
       }
       _user = await UserApi.instance.me();
       if (_user != null) {
         await _saveOrUpdateUserInfo(_user!);
       }
-      print('사용자 정보 가져오기 성공: $_user');
-    } catch (error) {
-      print('로그인 실패 또는 사용자 정보 가져오기 실패: $error');
-      _user = null;
+    } on KakaoAuthException catch (e) {
+      // 카카오 인증 관련 에러 처리
+    } on Exception catch (e) {
+      // 다른 유형의 에러 처리
     } finally {
       notifyListeners();
     }
   }
 
+  // 사용자 정보 저장 또는 업데이트
   Future<void> _saveOrUpdateUserInfo(User user) async {
+    // Firestore 문서 참조 생성
     var userDocument = FirebaseFirestore.instance.collection('users').doc(user.id.toString());
     var snapshot = await userDocument.get();
 
@@ -54,12 +57,7 @@ class KakaoLoginProvider with ChangeNotifier {
 
     if (snapshot.exists) {
       var data = snapshot.data();
-      _age = data?['age'];
-      _gender = data?['gender'];
-      _mannerTemperature = data?['mannerTemperature'];
-      _mannerList = List<Map<String, dynamic>>.from(data?['mannerList'] ?? []);
-      _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
-      _qrCodeUrl = data?['qrCodeUrl'];
+      _updateLocalUserData(data);
       // Firestore 문서 업데이트 (변경된 정보만 업데이트)
       Map<String, dynamic> updates = {};
       if (data?['email'] != email) updates['email'] = email;
@@ -70,20 +68,7 @@ class KakaoLoginProvider with ChangeNotifier {
         await userDocument.update(updates);
       }
     } else {
-      _mannerTemperature = 36.5;
-      _mannerList = [
-        {'content': '목적지 변경에 유연하게 대응해줬어요.', 'votes': 0},
-        {'content': '합승 비용을 정확히 계산하고 공정하게 나눠냈어요.', 'votes': 0},
-        {'content': '다른 인원의 합승 요청에 신속하게 응답했어요.', 'votes': 0},
-        {'content': '개인 사진으로 위치 인증을 해서 신뢰가 갔어요.', 'votes': 0},
-      ];
-      _unmannerList = [
-        {'content': '게시된 합승 시간보다 많이 늦게 도착했어요.', 'votes': 0},
-        {'content': '비용을 더 많이 내게 하려는 태도를 보였어요.', 'votes': 0},
-        {'content': '위치 인증 없이 불분명한 장소를 제시했어요.', 'votes': 0},
-        {'content': '합승 중 타인에 대한 불편한 발언을 했어요.', 'votes': 0},
-      ];
-      _qrCodeUrl = null;
+      // 새 사용자 정보 Firestore에 저장
       await userDocument.set({
         'email': email,
         'profileImageUrl': profileImageUrl,
@@ -91,87 +76,132 @@ class KakaoLoginProvider with ChangeNotifier {
         'age': _age,
         'gender': _gender,
         'mannerTemperature': 36.5,
-        'mannerList': _mannerList,
-        'unmannerList': _unmannerList,
+        'mannerList':  [
+          {'content': '목적지 변경에 유연하게 대응해줬어요.', 'votes': 0},
+          {'content': '합승 비용을 정확히 계산하고 공정하게 나눠냈어요.', 'votes': 0},
+          {'content': '다른 인원의 합승 요청에 신속하게 응답했어요.', 'votes': 0},
+          {'content': '개인 사진으로 위치 인증을 해서 신뢰가 갔어요.', 'votes': 0},
+        ],
+        'unmannerList': [
+          {'content': '게시된 합승 시간보다 많이 늦게 도착했어요.', 'votes': 0},
+          {'content': '비용을 더 많이 내게 하려는 태도를 보였어요.', 'votes': 0},
+          {'content': '위치 인증 없이 불분명한 장소를 제시했어요.', 'votes': 0},
+          {'content': '합승 중 타인에 대한 불편한 발언을 했어요.', 'votes': 0},
+        ],
         'qrCodeUrl': _qrCodeUrl,
       });
     }
     notifyListeners();
   }
 
+  // Firestore 데이터 변경 감지 메서드
+  void startListeningToUserChanges() {
+    if (_user != null && _userChangesSubscription == null) {
+      _userChangesSubscription = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_user!.id.toString())
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.exists) {
+          var data = snapshot.data();
+          _updateLocalUserData(data);
+          notifyListeners();
+        }
+      }, onError: (error) {
+        // Firestore 리스너 오류 처리
+      });
+    }
+  }
 
-  Future<void> updateUserInfo({int? age, String? gender}) async {
+  // 사용자 데이터 업데이트 메서드
+  void _updateLocalUserData(Map<String, dynamic>? data) {
+    _age = data?['age'];
+    _gender = data?['gender'];
+    _mannerTemperature = data?['mannerTemperature'];
+    _mannerList = List<Map<String, dynamic>>.from(data?['mannerList'] ?? []);
+    _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
+    _qrCodeUrl = data?['qrCodeUrl'];
+  }
+
+  // 리소스 정리 메서드
+  @override
+  void dispose() {
+    _userChangesSubscription?.cancel();
+    super.dispose();
+  }
+
+  // 사용자 정보 업데이트 메서드
+  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url}) async {
     if (_user != null) {
       var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
       var updateData = <String, dynamic>{};
       if (age != null) {
-        _age = age;
         updateData['age'] = age;
       }
       if (gender != null) {
-        _gender = gender;
         updateData['gender'] = gender;
+      }
+      if (email != null) {
+        updateData['email'] = email;
+      }
+      if (profileImageUrl != null) {
+        updateData['profileImageUrl'] = profileImageUrl;
+      }
+      if (nickname != null) {
+        updateData['nickname'] = nickname;
+      }
+      if (url != null) {
+        updateData['qrCodeUrl'] = url;
       }
       if (updateData.isNotEmpty) {
         await userDocument.update(updateData);
+        notifyListeners();
       }
     }
   }
 
-  Future<void> updateMannerTemperature(double temperature) async {
-    if (_user != null) {
-      _mannerTemperature = temperature;
-      var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
-      await userDocument.update({'mannerTemperature': temperature});
-      notifyListeners();
-    }
-  }
 
-  Future<void> saveQRCodeUrl(String url) async {
-    if (_user != null) {
-      var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
-      _qrCodeUrl = url;
-      await userDocument.update({'qrCodeUrl': url});
-      notifyListeners();
-    }
-  }
-
+  // 로그아웃 메서드
   Future<void> logout() async {
     try {
       await UserApi.instance.logout();
-      print('로그아웃 성공, SDK에서 토큰 삭제');
+      // 로그아웃 성공, SDK에서 토큰 삭제
     } catch (error) {
-      print('로그아웃 실패, SDK에서 토큰 삭제 $error');
+      // 로그아웃 실패, SDK에서 토큰 삭제 실패 처리
     } finally {
-      _user = null;
-      _gender = null;
-      _age = null;
-      _mannerTemperature = -1;
+      _resetLocalUserData();
       notifyListeners();
     }
   }
 
+  // 연결 끊기 메서드
   Future<void> unlink() async {
     try {
       await UserApi.instance.unlink();
-      print('연결 끊기 성공, SDK에서 토큰 삭제');
+      // 연결 끊기 성공, SDK에서 토큰 삭제
       if (_user != null) {
         // Firestore에서 사용자 정보 삭제
         await FirebaseFirestore.instance
             .collection('users')
             .doc(_user!.id.toString())
             .delete();
-        print('Firestore에서 사용자 정보 삭제 성공');
       }
     } catch (error) {
-      print('연결 끊기 실패: $error');
+      // 연결 끊기 실패 처리
     } finally {
-      _user = null;
-      _gender = null;
-      _age = null;
-      _mannerTemperature = -1;
+      _resetLocalUserData();
       notifyListeners();
     }
   }
 
+  // 로컬 사용자 데이터 초기화
+  void _resetLocalUserData() {
+    _user = null;
+    _age = null;
+    _gender = null;
+    _mannerTemperature = null;
+    _mannerList = null;
+    _unmannerList = null;
+    _qrCodeUrl = null;
+  }
 }

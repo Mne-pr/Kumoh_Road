@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart';
+import '../providers/kakao_login_providers.dart';
 import '../utilities/image_picker_util.dart';
 import '../utilities/url_launcher_util.dart';
 
@@ -31,7 +33,9 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
     _scannerController.barcodes.listen((barcodeCapture) {
       for (var barcode in barcodeCapture.barcodes) {
         if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
-          launchURL(barcode.rawValue!);
+          String qrCodeUrl = barcode.rawValue!;
+          Provider.of<KakaoLoginProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
+          launchURL(qrCodeUrl);
         }
       }
     });
@@ -68,21 +72,21 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
                 children: [
                   GuideStep(
                     imagePath: 'assets/images/QR_guide0.jpg',
-                    instruction: '1. 카카오톡 실행 후 ',
+                    instruction: '1. 카카오톡 실행 후 하단에',
                     icon: Icons.more_horiz,
-                    trailingText: ' 탭을 선택합니다.', // "더보기" 후속 텍스트
+                    trailingText: ' 탭을 선택합니다.',
                   ),
                   GuideStep(
                     imagePath: 'assets/images/QR_guide1.jpg',
                     instruction: '2. 오른쪽 상단의 ',
                     icon: Icons.qr_code,
-                    trailingText: ' 을 누릅니다.', // "QR 코드" 후속 텍스트
+                    trailingText: ' 을 누릅니다.',
                   ),
                   GuideStep(
                     imagePath: 'assets/images/QR_guide2.jpg',
                     instruction: '3. QR 코드가 나오면 ',
                     icon: Icons.save_alt ,
-                    trailingText: ' 선택하여 저장합니다.', // "저장" 후속 텍스트
+                    trailingText: ' 선택하여 저장합니다.',
                   ),
                 ],
               ),
