@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../utilities/image_picker_util.dart';
 import '../utilities/url_launcher_util.dart';
 
@@ -48,24 +47,42 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
         elevation: 0,
         titleSpacing: -5.0,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: _pickImageFromGallery,
-                child: const Text('갤러리에서 QR 코드 선택'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: Colors.blue,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(13.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.photo_library), // 갤러리 아이콘 추가
+              label: const Text('QR 코드 등록'),
+              onPressed: _pickImageFromGallery,
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // 버튼 모서리 둥글게
                 ),
               ),
-              const SizedBox(height: 20),
-              _image != null ? Image.file(_image!) : const Text('이미지가 선택되지 않았습니다.'),
-            ],
+            ),
           ),
-        ),
+          const Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  GuideStep(
+                    imagePath: 'assets/images/QR_guide0.jpg',
+                    instruction: '1. 카카오톡 실행 후 "더보기" 탭을 선택합니다.',
+                  ),
+                  GuideStep(
+                    imagePath: 'assets/images/QR_guide1.jpg',
+                    instruction: '2. 오른쪽 상단의 QR 코드 버튼을 누릅니다.',
+                  ),
+                  GuideStep(
+                    imagePath: 'assets/images/QR_guide2.jpg',
+                    instruction: '3. QR 코드가 나오면 저장 버튼을 선택하여 저장합니다.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -74,5 +91,34 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
   void dispose() {
     _scannerController.dispose();
     super.dispose();
+  }
+}
+
+class GuideStep extends StatelessWidget {
+  final String imagePath;
+  final String instruction;
+
+  const GuideStep({
+    Key? key,
+    required this.imagePath,
+    required this.instruction,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            instruction,
+            style: const TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Image.asset(imagePath),
+        ],
+      ),
+    );
   }
 }
