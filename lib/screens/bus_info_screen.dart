@@ -30,6 +30,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   Widget build(BuildContext context) {
     const gumiStationPos = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
     final bottomScrollWidget = BottomScrollableWidget(busStop: currentBusStop,key: UniqueKey(),);
+    final busStop1Window = NInfoWindow.onMarker(id: busStop1.info.id, text: busStop1Info.mainText);
+    final busStop2Window = NInfoWindow.onMarker(id: busStop2.info.id, text: busStop2Info.mainText);
+
 
     void updateBusStop(final inpBusStop){ setState(() { currentBusStop = inpBusStop; }); }
 
@@ -50,10 +53,16 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
               con = controller;
               // 구미역 앞의 버스정류장 두 곳에 마커
               con.addOverlayAll({busStop1, busStop2, gumiStationMark});
-              busStop1.setOnTapListener((overlay) {
+              busStop1.setOnTapListener((overlay) async {
                 updateBusStop(busStop1Info);
+                busStop1.openInfoWindow(busStop1Window);
+                busStop2Window.close();
               });
-              busStop2.setOnTapListener((overlay) { updateBusStop(busStop2Info); });
+              busStop2.setOnTapListener((overlay) {
+                updateBusStop(busStop2Info);
+                busStop2.openInfoWindow(busStop2Window);
+                busStop1Window.close();
+              });
             },
           ),
 
