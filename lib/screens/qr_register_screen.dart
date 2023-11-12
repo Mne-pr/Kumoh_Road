@@ -45,17 +45,21 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
+        titleSpacing: -5.0,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
+            padding: const EdgeInsets.all(13.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.photo_library), // 갤러리 아이콘 추가
+              label: const Text('QR 코드 등록'),
               onPressed: _pickImageFromGallery,
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
+                foregroundColor: Colors.white, shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // 버튼 모서리 둥글게
+                ),
               ),
-              child: const Text('QR 코드 등록'),
             ),
           ),
           const Expanded(

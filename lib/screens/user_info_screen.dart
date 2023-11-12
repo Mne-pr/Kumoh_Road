@@ -36,7 +36,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           UserInfoSection(
             nickname: userProvider.user?.kakaoAccount?.profile?.nickname ?? "사용자 정보 오류",
             imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? "assets/images/default_avatar.png",
-            age: userProvider.age ?? 0, 
+            age: userProvider.age ?? 0,
             gender: userProvider.gender ?? "기타",
             mannerTemperature: userProvider.mannerTemperature ?? 0,
           ),
