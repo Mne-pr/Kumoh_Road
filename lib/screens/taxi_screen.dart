@@ -51,10 +51,19 @@ class _TaxiScreenState extends State<TaxiScreen> {
             FutureBuilder(
                 future: _buildPosts(context),
                 builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-                  if(snapshot.hasError) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    // 데이터가 로딩중일 때 표시할 위젯
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    // 에러가 발생했을 때 표시할 위젯
                     return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (snapshot.hasData) {
+                    // 데이터를 성공적으로 가져왔을 때 표시할 위젯
+                    return snapshot.data!;
+                  } else {
+                    // 데이터가 null일 때 표시할 위젯
+                    return Center(child: Text('No data available'));
                   }
-                  return snapshot.data!;
                 }
             )
           ],
@@ -106,7 +115,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             style: const TextStyle(
-                fontSize: 23,
+                fontSize: 20, // 폰트 크기 수정
                 fontWeight: FontWeight.bold,
                 color: Colors.black),
             value: _selectedArrivalInfo,
@@ -167,7 +176,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                       child: ClipRRect(
                         borderRadius: const BorderRadius.all(Radius.circular(3)),
                         child: Image.network(
-                          documents[index]["image"], 
+                          documents[index]["image"],
                           width: imgHeight,
                           fit: BoxFit.cover,
                           errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
@@ -189,7 +198,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                         children: [
                           //게시글 제목
                           Text(
-                            title, 
+                            title,
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
                             overflow: TextOverflow.ellipsis,
                           ),
