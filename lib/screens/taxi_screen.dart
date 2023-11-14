@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../providers/kakao_login_providers.dart';
+import 'package:http/http.dart' as http;
 import '../widgets/bottom_navigation_bar.dart';
 
 class TaxiScreen extends StatefulWidget {
@@ -13,7 +11,7 @@ class TaxiScreen extends StatefulWidget {
 }
 
 class _TaxiScreenState extends State<TaxiScreen> {
-  final _startList = <String>['금오공과대학교', '구미종합터미널', '구미역'];
+  final List<String> _startList = <String>['금오공과대학교', '구미종합터미널', '구미역'];
   String _selectedStartInfo = "금오공과대학교";
   bool _isSelectedKumohUniversity = true;
 
@@ -89,12 +87,66 @@ class _TaxiScreenState extends State<TaxiScreen> {
     );
   }
 
-  Widget _buildArrivalInfo(BuildContext context){
+  Future getBusAPI(Uri url) async {
+    final http.Response res = await http.get(url);
+    if (res.statusCode == 200) {
+      return res.body;
+    } else {
+      return print(res.statusCode);
+    }
+  }
+  Future getTrainAPI(Uri url) async {
+    final http.Response res = await http.get(url);
+    if (res.statusCode == 200) {
+      return res.body;
+    } else {
+      return print(res.statusCode);
+    }
+  }
+
+  Widget _buildArrivalInfo(BuildContext context){ // TODO: API에서 정보 얻어오기
     /*
     * 1. _selectedStartInfo에 따라서 API에서 데이터를 읽기
-    * 2. 현재 시간 이후의 데이터만 드롭다운 버튼으로 출력하기
+    * 2. 현재 시간 이후의 데이터만 드롭다운 버튼을 리턴하기
     * */
-    return Center(child: Text("도착 정보"));
+    // Placeholder list of times - replace with actual data fetching logic
+    List<String> arrivalTimes = ["08:00", "09:00", "10:00", "11:00", "12:00"];
+    String? _selectedArrivalTime = arrivalTimes[0];
+
+    // Filter the times to only include those after the current time
+    DateTime now = DateTime.now();
+    /*arrivalTimes.removeWhere((time) {
+      List<String> parts = time.split(':');
+      int hour = int.parse(parts[0]);
+      int minute = int.parse(parts[1]);
+      return DateTime(now.year, now.month, now.day, hour, minute).isBefore(now);
+    });*/
+
+    if (arrivalTimes.isEmpty) {
+      // No times available, handle accordingly
+      return Text("No arrival times available");
+    }
+      return DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black
+          ),
+          value: _selectedArrivalTime,
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedArrivalTime = newValue;
+            });
+          },
+          items: arrivalTimes.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text('$value 도착'),
+            );
+          }).toList(),
+        ),
+      );
   }
 
   Future<Widget> _fetchAndBuildPosts(BuildContext context) async {
@@ -135,6 +187,8 @@ class _TaxiScreenState extends State<TaxiScreen> {
           Map<String, dynamic>? writerDetails = writersDetails[writerId];
           String writerName = writerDetails?['nickname'] ?? 'no name';
           String writerGender = writerDetails?['gender'] ?? 'no gender';
+
+          List comments = document["comments"];
 
           return Padding(
             padding: const EdgeInsets.only(left: 15),
@@ -196,11 +250,11 @@ class _TaxiScreenState extends State<TaxiScreen> {
                           ),
                           const SizedBox(height: 20,),
                           // 댓글 수
-                          const Row(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Icon(Icons.question_answer_outlined, color: Colors.grey),
-                              Text('1'), // TODO: 실제 댓글 수 데이터로 변경
+                              Text('${comments.length}'), // TODO: 실제 댓글 수 데이터로 변경
                             ],
                           ),
                         ],
