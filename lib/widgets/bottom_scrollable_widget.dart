@@ -120,7 +120,7 @@ class BusScheduleBox extends StatelessWidget {
   }
 }
 
-// 아직 확장성 고려하지 않음!!!
+
 class BottomScrollableWidget extends StatefulWidget {
   final BusStopBox busStop;
 
@@ -139,7 +139,7 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
   }
 
   void collapseSheet([int speed = 100]) {
-    con.animateTo(0.035,
+    con.animateTo(0.20,
         duration: Duration(milliseconds: speed), curve: Curves.easeIn);
   }
 
@@ -174,63 +174,77 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
             ],
           ),
 
-          child: Stack(
-            children: <Widget>[
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50.0),
-                    topRight: Radius.circular(50.0),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10.0, // 그림자 흐림 정도
-                      spreadRadius: 5.0, // 그림자 범위
-                      offset: Offset(0.0, -5.0), // 그림자 위치
+          child: ScrollConfiguration(
+            behavior: NoGlowScrollBehavior(),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(50.0),
+                      topRight: Radius.circular(50.0),
                     ),
-                  ],
-                ),
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                  controller: scrollController,
-                  children: [
-                    Column(
-                      children: [
-                        Center(
-                          child: GestureDetector(
-                            onTap: () { autoExCo();},
-                            child: Container(
-                              width: 150, height: 10,
-                              margin: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                              decoration: BoxDecoration(
-                                  color: Colors.grey,
-                                  borderRadius: BorderRadius.circular(10)
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10.0, // 그림자 흐림 정도
+                        spreadRadius: 5.0, // 그림자 범위
+                        offset: Offset(0.0, -5.0), // 그림자 위치
+                      ),
+                    ],
+                  ),
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                    controller: scrollController,
+                    children: [
+                      Column(
+                        children: [
+                          Center(
+                            child: GestureDetector(
+                              onTap: () { autoExCo();},
+                              child: Container(
+                                width: 150, height: 10,
+                                margin: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                                decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.circular(10)
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        busStop,
-                      ],
-                    ),
-                  ],
+                          busStop,
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              Positioned.fill(
-                top: MediaQuery.of(context).size.height*0.15,
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                  itemCount: 50,
-                  itemBuilder: (context, index) {
-                    return BusScheduleBox('구미역 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정');
+                Positioned.fill(
+                  top: MediaQuery.of(context).size.height*0.15,
+                  child: ListView.builder(
+                    controller: scrollController,
+                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                    itemCount: busStop.numOfBus,
+                    itemBuilder: (context, index) {
+                      switch(busStop.mainText){
+                        case "구미역":
+                          return BusScheduleBox('구미역 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 190, '5분 후 도착예정');
+                        case "농협":
+                          return BusScheduleBox('농협 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 195, '5분 후 도착예정');
+                        case "금오공대종점":
+                          return BusScheduleBox('금오공대종점 -> 구미역', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 57, '5분 후 도착예정');
+                        case "금오공대입구(옥계중학교방면)":
+                          return BusScheduleBox('금오공대입구(옥계중학교방면) -> 구미역', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정');
+                        default:
+                          return Text("?");
+                      }
 
-                  },
-                ),
-              )
-            ],
+                    },
+                  ),
+                )
+              ],
+            ),
           ),
 
         );

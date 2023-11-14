@@ -125,7 +125,7 @@ class UserInfoSection extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('금오온도란?'),
-          content: const Text('금오온도는 사용자의 활동에 기반한 평판 점수입니다.\n 긍정적인 활동으로 온도가 상승하며, 부정적인 행동으로 하락합니다.'),
+          content: const Text('금오온도는 사용자의 활동에 기반한 평판 점수입니다.\n긍정적인 활동으로 온도가 상승하며, 부정적인 행동으로 하락합니다.'),
           actions: <Widget>[
             TextButton(
               child: const Text('닫기'),

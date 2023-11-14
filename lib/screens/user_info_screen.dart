@@ -1,15 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
 import 'package:kumoh_road/screens/qr_register_screen.dart';
 import 'package:kumoh_road/screens/terms_service_screen.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
-import '../utilities/image_picker_util.dart';
-import '../utilities/url_launcher_util.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/user_info_section.dart';
 import 'developer_info_screen.dart';
@@ -24,10 +19,10 @@ class UserInfoScreen extends StatefulWidget {
 }
 
 class _UserInfoScreenState extends State<UserInfoScreen> {
-  final MobileScannerController _scannerController = MobileScannerController();
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<KakaoLoginProvider>(context);
+    userProvider.startListeningToUserChanges(); // Firestore의 변경사항을 실시간으로 감지하도록 설정
 
     return Scaffold(
       appBar: _buildAppBar(context, userProvider),
@@ -58,10 +53,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           onPressed: () => _showAdditionalInfoDialog(context, userProvider), // 설정 아이콘 클릭 시 대화상자 표시
         ),
       ],
-      centerTitle: false, // Aligns the title to the left
+      centerTitle: false,
       backgroundColor: Colors.white,
       elevation: 0,
-      automaticallyImplyLeading: false, // Removes the back button
+      automaticallyImplyLeading: false,
     );
   }
 
@@ -149,7 +144,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         children: [
           // 리뷰 목록 버튼
           _buildButton(
-            icon: Icons.star_border,
+            icon: Icons.thumb_up_outlined,
             label: '매너 평가',
             onPressed: () {
               Navigator.push(
@@ -160,7 +155,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
           // QR 코드 등록 버튼
           _buildButton(
-            icon: Icons.qr_code_scanner,
+            icon: Icons.qr_code,
             label: 'QR 코드 등록',
             onPressed: () {
               Navigator.push(
@@ -171,7 +166,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
           // 학생 인증 버튼
           _buildButton(
-            icon: Icons.school,
+            icon: Icons.school_outlined,
             label: '학생 인증',
             onPressed: () {
               // TODO: 학생 인증 화면으로 이동
