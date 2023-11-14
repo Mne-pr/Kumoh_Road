@@ -88,24 +88,39 @@ class _StudentVerificationScreenState extends State<StudentVerificationScreen> {
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 8.0),
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: Icon(isOTPRequested ? Icons.mail_outline : Icons.send),
+              label: Text(isOTPRequested ? '금오공과대학교 웹 메일 열기' : '웹 메일로 인증번호 발송'),
               onPressed: isOTPRequested ? () => launchURL('https://mail.kumoh.ac.kr/account/login.do') : sendOTP,
-              child: Text(isOTPRequested ? '금오공과대학교 웹메일 열기' : '인증번호 발송'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
             TextFormField(
               controller: otpController,
               decoration: const InputDecoration(labelText: '인증번호 입력'),
             ),
             const SizedBox(height: 8.0),
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.verified_user),
+              label: const Text('금오공과대학교 학생 인증'),
               onPressed: verifyOTP,
-              child: const Text('금오공과대학교 학생 인증'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
 
   @override
   void dispose() {
