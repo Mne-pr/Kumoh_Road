@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
 import 'package:kumoh_road/screens/qr_register_screen.dart';
+import 'package:kumoh_road/screens/student_verification_screen.dart';
 import 'package:kumoh_road/screens/terms_service_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             gender: userProvider.gender ?? "기타",
             mannerTemperature: userProvider.mannerTemperature ?? 0,
           ),
-          _buildUserInteractionButtons(context),
+          _buildUserInteractionButtons(context,userProvider),
           _buildInformationTile(context),
           _buildOtherOptionsTile(context, userProvider),
         ],
@@ -136,7 +137,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
-  Widget _buildUserInteractionButtons(BuildContext context) {
+  Widget _buildUserInteractionButtons(BuildContext context, KakaoLoginProvider userProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(),
       child: Row(
@@ -154,9 +155,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             },
           ),
           // QR 코드 등록 버튼
-          _buildButton(
+          _buildButtonWithCheckMark(
             icon: Icons.qr_code,
-            label: 'QR 코드 등록',
+            label: 'QR 등록',
+            isChecked: userProvider.qrCodeUrl != null,
             onPressed: () {
               Navigator.push(
                 context,
@@ -165,12 +167,47 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             },
           ),
           // 학생 인증 버튼
-          _buildButton(
+          _buildButtonWithCheckMark(
             icon: Icons.school_outlined,
             label: '학생 인증',
+            isChecked: userProvider.isStudentVerified,
             onPressed: () {
-              // TODO: 학생 인증 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => StudentVerificationScreen()),
+              );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButtonWithCheckMark({required IconData icon, required String label, required bool isChecked, required VoidCallback onPressed}) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.black,
+        padding: const EdgeInsets.all(10),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.black),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              children: [
+                if (isChecked)
+                  WidgetSpan(
+                    child: Icon(Icons.check, size: 18, color: Colors.grey),
+                  ),
+                TextSpan(
+                  text: label,
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
           ),
         ],
       ),
