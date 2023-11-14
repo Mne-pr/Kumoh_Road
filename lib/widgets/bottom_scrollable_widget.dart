@@ -120,7 +120,7 @@ class BusScheduleBox extends StatelessWidget {
   }
 }
 
-// 아직 확장성 고려하지 않음!!!
+
 class BottomScrollableWidget extends StatefulWidget {
   final BusStopBox busStop;
 
@@ -227,7 +227,7 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                     padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
                     itemCount: 50,
                     itemBuilder: (context, index) {
-                      return BusScheduleBox('구미역 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정');
+                      return BusScheduleBox('금오공대종점 -> 구미역', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정');
 
                     },
                   ),
