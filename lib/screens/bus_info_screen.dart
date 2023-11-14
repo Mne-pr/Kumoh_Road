@@ -20,6 +20,9 @@ class BusInfoScreen extends StatefulWidget {
 class _BusInfoScreenState extends State<BusInfoScreen> {
   late NaverMapController con;
   late BusStopBox currentBusStop = busStop1Info;
+  late OutlineCircleButton trainBtn;
+  late OutlineCircleButton schoolBtn;
+  late OutlineCircleButton currentBtn = schoolBtn;
 
   // final gumiTrainStationMark = NInfoWindow.onMap(id: "구미역", position: NLatLng(36.12827222, 128.3310162), text: "구미역");
   final busStop1 = NMarker(id: "구미역", position: NLatLng(36.12963461, 128.3293215),);
@@ -46,6 +49,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
     final busStop2Window = NInfoWindow.onMarker(id: busStop2.info.id, text: busStop2Info.mainText);
     final busStop3Window = NInfoWindow.onMarker(id: busStop3.info.id, text: busStop3Info.mainText);
     final busStop4Window = NInfoWindow.onMarker(id: busStop4.info.id, text: busStop4Info.mainText);
+
+
     void updateBusStop(final inpBusStop){
       setState(() { currentBusStop = inpBusStop; });
     }
@@ -55,6 +60,31 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
       if (double.parse(a.latitude.toStringAsFixed(8)) - b.latitude == 0.0) {print("0반환"); return 0;}
       else return 1;
     }
+
+    trainBtn = OutlineCircleButton(
+      child: Icon(Icons.train_outlined),
+      radius: 50.0,
+      borderSize: 0.5,
+      onTap: () async {
+        final curCameraPos = await con.getCameraPosition();
+        await con.updateCamera(gumiStationCameraUpdate);
+        busStop1.performClick();
+        currentBtn = schoolBtn;
+      }
+    );
+
+    schoolBtn = OutlineCircleButton(
+      child: Icon(Icons.school_outlined),
+      radius: 50.0,
+      borderSize: 0.5,
+      onTap: () async {
+        final curCameraPos = await con.getCameraPosition();
+        await con.updateCamera(kumohStationCameraUpdate);
+        busStop3.performClick();
+        currentBtn = trainBtn;
+      },
+    );
+
     return Scaffold(
       body: Stack(
         children: [
@@ -103,22 +133,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
               SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
               Row(children: [
                 SizedBox(width: MediaQuery.of(context).size.width * 0.05,),
-                OutlineCircleButton(
-                  child: Icon(Icons.ac_unit),
-                  radius: 50.0,
-                  borderSize: 0.5,
-                  onTap: () async {
-                    final curCameraPos = await con.getCameraPosition();
-                    if (isItGumiStation(curCameraPos.target, gumiStationPos.target) == 1){
-                      await con.updateCamera(gumiStationCameraUpdate);
-                      busStop1.performClick();
-                    }
-                    else{
-                      await con.updateCamera(kumohStationCameraUpdate);
-                      busStop3.performClick();
-                    }
-                  },
-                ),
+                currentBtn,
               ],),
             ],),
 
