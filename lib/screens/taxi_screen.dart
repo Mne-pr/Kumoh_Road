@@ -13,15 +13,9 @@ class TaxiScreen extends StatefulWidget {
 }
 
 class _TaxiScreenState extends State<TaxiScreen> {
-  String _selectedVehicle = '버스'; // 상단의 선택된 버튼 상태
-  final _arrivalsInformations = <String>['정보1', '정보2', '정보3'];
-  String? _selectedArrivalInfo;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedArrivalInfo = _arrivalsInformations[0];
-  }
+  final _startList = <String>['금오공과대학교', '구미종합터미널', '구미역'];
+  String _selectedStartInfo = "금오공과대학교";
+  bool _isSelectedKumohUniversity = true;
 
   @override
   Widget build(BuildContext context) {
@@ -30,32 +24,27 @@ class _TaxiScreenState extends State<TaxiScreen> {
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _buildArrivalInfoDropDownButton(context),
-                Padding(
-                  padding: const EdgeInsets.only(right: 15),
-                  child: Row(
-                    children: [
-                      _buildToggleButton(context, '버스'),
-                      _buildToggleButton(context, '기차'),
-                    ],
-                  ),
-                ),
+                _buildStartInfo(context),
+                // TODO: 도착 시간 정보 dropDownButton 만들기
+                if (!_isSelectedKumohUniversity) _buildArrivalInfo(context)
                 //TODO: 검색 버튼 만들기
-                //TODO: 메뉴 버튼 만들기
-                //TODO: 알림 모양 버튼 만들기
               ],
             ),
             const Divider(),
             FutureBuilder(
-                future: _buildPosts(context),
+                future: _fetchAndBuildPosts(context),
                 builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-                  if(snapshot.hasError) {
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    return const Center(child: CircularProgressIndicator());
+                  else if (snapshot.hasError)
                     return Center(child: Text('Error: ${snapshot.error}'));
+                  else if (snapshot.hasData)
+                    return snapshot.data!;
+                  else
+                    return const Center(child: Text('No data available'));
                   }
-                  return snapshot.data!;
-                }
             )
           ],
         ),
@@ -70,35 +59,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
     );
   }
 
-  Widget _buildToggleButton(BuildContext context, String argTitle) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 15, top: 5),
-      child: OutlinedButton(
-        onPressed: () {
-          setState(() {
-            _selectedVehicle = argTitle;
-          });
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: _selectedVehicle == argTitle
-              ? const Color(0xFF3F51B5)
-              : Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          side: BorderSide(color: _selectedVehicle == argTitle
-              ? const Color(0xFF3F51B5)
-              : Colors.black12),
-        ),
-        child: Text(
-          argTitle,
-          style: TextStyle(
-            color: _selectedVehicle == argTitle ? Colors.white : Colors.black26,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArrivalInfoDropDownButton(BuildContext context) {
+  Widget _buildStartInfo(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
@@ -106,18 +67,17 @@ class _TaxiScreenState extends State<TaxiScreen> {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             style: const TextStyle(
-                fontSize: 23,
+                fontSize: 20, // 폰트 크기 수정
                 fontWeight: FontWeight.bold,
                 color: Colors.black),
-            value: _selectedArrivalInfo,
+            value: _selectedStartInfo,
             onChanged: (String? newValue) {
               setState(() {
-                _selectedArrivalInfo = newValue!;
+                _selectedStartInfo = newValue ?? "invalid source";
+                _isSelectedKumohUniversity = newValue == "금오공과대학교";
               });
             },
-            // TODO: DB의 버스 또는 기차 게시글 읽어서 넣기
-            items: _arrivalsInformations.map<
-                DropdownMenuItem<String>>((String value) {
+            items: _startList.map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -129,28 +89,52 @@ class _TaxiScreenState extends State<TaxiScreen> {
     );
   }
 
-  Future<Widget> _buildPosts(BuildContext context) async {
-    double imgHeight = MediaQuery.of(context).size.height / 6 - 16; // 게시글 5개 정도만 보이도록
+  Widget _buildArrivalInfo(BuildContext context){
+    /*
+    * 1. _selectedStartInfo에 따라서 API에서 데이터를 읽기
+    * 2. 현재 시간 이후의 데이터만 드롭다운 버튼으로 출력하기
+    * */
+    return Center(child: Text("도착 정보"));
+  }
 
+  Future<Widget> _fetchAndBuildPosts(BuildContext context) async {
+    double imgHeight = MediaQuery.of(context).size.height / 6 - 16;
     String collectionName = "";
-    if(_selectedVehicle == "버스") {
-      collectionName = "express_bus_posts";
-    } else if(_selectedVehicle == "기차") {
-      collectionName = "train_posts";
-    }
+
+    if(_selectedStartInfo == "금오공과대학교") collectionName = "school_posts";
+    else if(_selectedStartInfo == "구미종합터미널") collectionName = "express_bus_posts";
+    else if(_selectedStartInfo == "구미역") collectionName = "train_posts";
+    //else // TODO: 예외 던지기(공부 후)
+
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionName).get();
     List<Map<String, dynamic>> documents = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-    print(documents[0]);
 
+    // Fetch writer's details for all documents
+    Map<String, Map<String, dynamic>> writersDetails = {};
+    for (var document in documents) {
+      String writerId = document["writer"]; // 각 게시글의 방장 id 읽기
+      DocumentSnapshot writerSnapshot = await FirebaseFirestore.instance.collection('users').doc(writerId).get(); // 방장 유저 정보 읽기
+      writersDetails[writerId] = writerSnapshot.data() as Map<String, dynamic>;
+    }
+
+    return _buildPosts(context, documents, writersDetails, imgHeight);
+  }
+
+  Widget _buildPosts(BuildContext context, List<Map<String, dynamic>> documents, Map<String, Map<String, dynamic>> writersDetails, double imgHeight) {
     return Expanded(
       child: ListView.separated(
-        itemCount: documents.length, // TODO: 실제 DB 데이터 크기로 변경
+        itemCount: documents.length,
         separatorBuilder: (BuildContext context, int index) => const Divider(),
         itemBuilder: (BuildContext context, int index) {
-          String title = documents[index]["title"];
-          DateTime createdTime = documents[index]["createdTime"].toDate();
-          List members = documents[index]["members"];
-          String writerId = documents[index]["writer"];
+          Map<String, dynamic> document = documents[index];
+          String title = document["title"];
+          DateTime createdTime = document["createdTime"].toDate();
+          List members = document["members"];
+          String writerId = document["writer"];
+
+          Map<String, dynamic>? writerDetails = writersDetails[writerId];
+          String writerName = writerDetails?['nickname'] ?? 'no name';
+          String writerGender = writerDetails?['gender'] ?? 'no gender';
 
           return Padding(
             padding: const EdgeInsets.only(left: 15),
@@ -167,7 +151,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                       child: ClipRRect(
                         borderRadius: const BorderRadius.all(Radius.circular(3)),
                         child: Image.network(
-                          documents[index]["image"], 
+                          documents[index]["image"],
                           width: imgHeight,
                           fit: BoxFit.cover,
                           errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
@@ -189,14 +173,14 @@ class _TaxiScreenState extends State<TaxiScreen> {
                         children: [
                           //게시글 제목
                           Text(
-                            title, 
+                            title,
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           // 글쓴이 및 생성 시간
-                          Text(
-                            '${createdTime.hour}시 ${createdTime.minute}분',
+                          Text( //
+                            '${writerName}(${writerGender}) ${createdTime.hour}시 ${createdTime.minute}분',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
