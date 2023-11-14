@@ -42,13 +42,6 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER"/>
-                <!-- "kakao${YOUR_NATIVE_APP_KEY}://${PRODUCT_NAME}" 형식의 앱 실행 스킴 설정 -->
-                <!-- 카카오톡 공유, 카카오톡 메시지 -->
-                <data android:host="kakaolink"
-                    android:scheme="kakaoc7b475e5111b80916e28e5e364d62631" />
-                <!-- 카카오스토리 -->
-                <data android:host="kakaostory"
-                    android:scheme="kakaoc7b475e5111b80916e28e5e364d62631" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
