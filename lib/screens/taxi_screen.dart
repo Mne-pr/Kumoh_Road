@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:kumoh_road/screens/post_details_screen.dart';
 import '../widgets/bottom_navigation_bar.dart';
 
 class TaxiScreen extends StatefulWidget {
@@ -190,79 +191,89 @@ class _TaxiScreenState extends State<TaxiScreen> {
 
           List comments = document["comments"];
 
-          return Padding(
-            padding: const EdgeInsets.only(left: 15),
-            child: SizedBox(
-              height: imgHeight,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 게시글 이미지
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.all(Radius.circular(3)),
-                        child: Image.network(
-                          documents[index]["image"],
-                          width: imgHeight,
-                          fit: BoxFit.cover,
-                          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                            return Image.asset(
-                              'assets/images/default_avatar.png',
-                              width: imgHeight,
-                              fit: BoxFit.cover,
-                            );
-                          },
+          print(writersDetails);
+
+          return InkWell(
+            onTap: () {
+              // TODO: 여기에 새 페이지로 이동하는 코드 작성
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => PostDetailsScreen(writerDetails: writerDetails)),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: SizedBox(
+                height: imgHeight,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 게시글 이미지
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.all(Radius.circular(3)),
+                          child: Image.network(
+                            documents[index]["image"],
+                            width: imgHeight,
+                            fit: BoxFit.cover,
+                            errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                              return Image.asset(
+                                'assets/images/default_avatar.png',
+                                width: imgHeight,
+                                fit: BoxFit.cover,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 5),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          //게시글 제목
-                          Text(
-                            title,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          // 글쓴이 및 생성 시간
-                          Text( //
-                            '${writerName}(${writerGender}) ${createdTime.hour}시 ${createdTime.minute}분',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10, left: 5),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //게시글 제목
+                            Text(
+                              title,
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          // 참여 인원 수
-                          Text(
-                            "${members.length + 1}/4",
-                            style: const TextStyle(
-                                color: Color(0xFF3F51B5),
-                                fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 20,),
-                          // 댓글 수
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Icon(Icons.question_answer_outlined, color: Colors.grey),
-                              Text('${comments.length}'), // TODO: 실제 댓글 수 데이터로 변경
-                            ],
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            // 글쓴이 및 생성 시간
+                            Text( //
+                              '${writerName}(${writerGender}) ${createdTime.hour}시 ${createdTime.minute}분',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // 참여 인원 수
+                            Text(
+                              "${members.length + 1}/4",
+                              style: const TextStyle(
+                                  color: Color(0xFF3F51B5),
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 20,),
+                            // 댓글 수
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Icon(Icons.question_answer_outlined, color: Colors.grey),
+                                Text('${comments.length}'), // TODO: 실제 댓글 수 데이터로 변경
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                ],
+                  ],
+                ),
               ),
             ),
           );
