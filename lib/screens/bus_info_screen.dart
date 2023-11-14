@@ -22,10 +22,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   late BusStopBox currentBusStop = busStop1Info;
 
   // final gumiTrainStationMark = NInfoWindow.onMap(id: "구미역", position: NLatLng(36.12827222, 128.3310162), text: "구미역");
-  final busStop1 = NMarker(id: "구미역(버스정류장)", position: NLatLng(36.12963461, 128.3293215),);
-  final busStop1Info = BusStopBox('구미역', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 3);
-  final busStop2 = NMarker(id: "농협(버스정류장)", position: NLatLng(36.12802335, 128.3331997),);
-  final busStop2Info = BusStopBox('농협', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 4);
+  final busStop1 = NMarker(id: "구미역", position: NLatLng(36.12963461, 128.3293215),);
+  final busStop1Info = BusStopBox('구미역', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 5);
+  final busStop2 = NMarker(id: "농협", position: NLatLng(36.12802335, 128.3331997),);
+  final busStop2Info = BusStopBox('농협', '경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', 12321, 2);
 
   // final kumohBusStationMark = NInfoWindow.onMap(id: "금오공대", position: NLatLng(36.14132749, 128.3955675), text: "금오공대");
   final busStop3 = NMarker(id: "금오공대종점", position: NLatLng(36.14317057, 128.3943957),);

@@ -225,9 +225,20 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                   child: ListView.builder(
                     controller: scrollController,
                     padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                    itemCount: 50,
+                    itemCount: busStop.numOfBus,
                     itemBuilder: (context, index) {
-                      return BusScheduleBox('금오공대종점 -> 구미역', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정');
+                      switch(busStop.mainText){
+                        case "구미역":
+                          return BusScheduleBox('구미역 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 190, '5분 후 도착예정');
+                        case "농협":
+                          return BusScheduleBox('농협 -> 금오공대종점', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 195, '5분 후 도착예정');
+                        case "금오공대종점":
+                          return BusScheduleBox('금오공대종점 -> 구미역', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 57, '5분 후 도착예정');
+                        case "금오공대입구(옥계중학교방면)":
+                          return BusScheduleBox('금오공대입구(옥계중학교방면) -> 구미역', '(비산동행정복지센터건너 - 비산동행정복지센터앞)', 21, '5분 후 도착예정');
+                        default:
+                          return Text("?");
+                      }
 
                     },
                   ),
