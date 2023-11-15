@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -13,34 +14,41 @@ class PathMapScreen extends StatefulWidget {
 }
 
 class _PathMapScreenState extends State<PathMapScreen> {
-  //장소 이름을 좌표로 변경하기 위한 api id
+  final _putStart = TextEditingController();
+  final _putEnd = TextEditingController();
+  late NaverMapController con;
+
   Map<String, String> headerss = {
     "X-NCP-APIGW-API-KEY-ID": "t2v0aiyv0u",
     "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"
   };
-  //장소를 좌표로 변경하는 api
-
-  var _putStart = TextEditingController();
-  var _putEnd = TextEditingController();
 
   @override
-  //좌표 변환 코드
   Future<List> get(String url) async {
-    http.Response response2 = await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$url"), headers: headerss);
-    String jsonData = utf8.decode(response2.bodyBytes);
-    var a = jsonDecode(jsonData)["addresses"][0]['x'];
-    var b = jsonDecode(jsonData)["addresses"][0]['y'];
-    List<dynamic> dot = [double.parse(a), double.parse(b)];
+    http.Response response = await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$url"), headers: headerss);
+    String jsonData = utf8.decode(response.bodyBytes);
+    var a = jsonDecode(jsonData)["addresses"][0]['y'];
+    var b = jsonDecode(jsonData)["addresses"][0]['x'];
+    var d = jsonDecode(jsonData)["addresses"][0]['addressElements'][6]["shortName"];
+    List<dynamic> dot = [d, double.parse(a), double.parse(b)];
     return dot;
   }
 
   void Get_Location() async{
-    List<dynamic> tmp = List.generate(3, (index) => 2, growable:false);
+    if(_putStart.text == "" && _putEnd.text == ""){
+    }
+    List<dynamic> tmp = List.generate(2, (index) => 3, growable:false);
     tmp[0] = await get(_putStart.text);
     tmp[1] = await get(_putEnd.text);
-    print(tmp[0]);
-    print(tmp[1]);
-    final controller = NCameraUpdate.scrollAndZoomTo(target: NLatLng(tmp[0][1], tmp[0][0]));
+    List<double> start = [tmp[0][1], tmp[0][2]];
+    List<double> end = [tmp[1][1], tmp[1][2]];
+    final Cpoint = NCameraUpdate.scrollAndZoomTo(target: NLatLng((start[0] + end[0]) / 2, (start[1] + end[1]) / 2), zoom:11.0,);
+    await con.updateCamera(Cpoint);
+    //_putStart.text = tmp[0][0];
+    //_putEnd.text = tmp[1][0];
+    final start_Marker = NMarker(id: tmp[0][0], position: NLatLng(tmp[0][1], tmp[0][2]));
+    final end_Marker = NMarker(id: tmp[1][0], position: NLatLng(tmp[1][1], tmp[1][2]));
+    con.addOverlayAll({start_Marker, end_Marker});
   }
 
   void dispose() {
@@ -129,7 +137,8 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   scaleBarEnable: false,
                   logoClickEnable: false,
                 ),
-                onMapReady: (final NaverMapController controller) {
+                onMapReady: (NaverMapController controller) {
+                  con = controller;
                 },
               ),
             ),
