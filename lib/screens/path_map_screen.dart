@@ -44,8 +44,11 @@ class _PathMapScreenState extends State<PathMapScreen> {
     List<double> end = [tmp[1][1], tmp[1][2]];
     final Cpoint = NCameraUpdate.scrollAndZoomTo(target: NLatLng((start[0] + end[0]) / 2, (start[1] + end[1]) / 2), zoom:11.0,);
     await con.updateCamera(Cpoint);
-    _putStart.text = tmp[0][0];
-    _putEnd.text = tmp[1][0];
+    //_putStart.text = tmp[0][0];
+    //_putEnd.text = tmp[1][0];
+    final start_Marker = NMarker(id: tmp[0][0], position: NLatLng(tmp[0][1], tmp[0][2]));
+    final end_Marker = NMarker(id: tmp[1][0], position: NLatLng(tmp[1][1], tmp[1][2]));
+    con.addOverlayAll({start_Marker, end_Marker});
   }
 
   void dispose() {
