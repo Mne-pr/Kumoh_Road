@@ -49,6 +49,7 @@ dependencies:
   mobile_scanner: ^3.5.2
   email_otp: ^2.1.1
   email_validator: ^2.1.17
+  fluttertoast: ^8.0.9
 
 dev_dependencies:
   flutter_test:
