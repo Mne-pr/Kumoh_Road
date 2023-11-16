@@ -20,6 +20,9 @@ class UserInfoScreen extends StatefulWidget {
 }
 
 class _UserInfoScreenState extends State<UserInfoScreen> {
+  late ScrollController _scrollController;
+  bool _showRightArrow = true;
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<KakaoLoginProvider>(context);
@@ -137,51 +140,123 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    // 스크롤 위치에 따라 화살표 표시 여부를 결정
+    if (_scrollController.position.maxScrollExtent - _scrollController.offset < 50) {
+      setState(() {
+        _showRightArrow = false;
+      });
+    } else {
+      setState(() {
+        _showRightArrow = true;
+      });
+    }
+  }
   Widget _buildUserInteractionButtons(BuildContext context, KakaoLoginProvider userProvider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // 리뷰 목록 버튼
-          _buildButton(
-            icon: Icons.thumb_up_outlined,
-            label: '매너 평가',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MannerTemperatureScreen()),
-              );
-            },
+    return Stack(
+      children: [
+        SizedBox(
+          height: 75.0,
+          child: ListView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            children: [
+              // 매너 평가 버튼
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                child: _buildButton(
+                  icon: Icons.thumb_up_outlined,
+                  label: '매너 평가',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MannerTemperatureScreen()),
+                    );
+                  },
+                ),
+              ),
+              // 배지 정보 버튼
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                child: _buildButton(
+                  icon: Icons.security_outlined,
+                  label: '배지 정보',
+                  onPressed: () {
+                    // 배지 정보 화면으로 이동하는 코드 구현
+                  },
+                ),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                child: _buildButton(
+                  icon: Icons.gavel_outlined,
+                  label: '신고 내용',
+                  onPressed: () {
+                    // 신고 내용 화면으로 이동하는 코드 구현
+                  },
+                ),
+              ),
+              // QR 코드 등록 버튼
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                child: _buildButtonWithCheckMark(
+                  icon: Icons.qr_code,
+                  label: 'QR 등록',
+                  isChecked: userProvider.qrCodeUrl != null,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => QRCodeRegistrationScreen()),
+                    );
+                  },
+                ),
+              ),
+              // 학생 인증 버튼
+              SizedBox(
+                width: MediaQuery.of(context).size.width / 3,
+                child: _buildButtonWithCheckMark(
+                  icon: Icons.school_outlined,
+                  label: '학생 인증',
+                  isChecked: userProvider.isStudentVerified,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => StudentVerificationScreen()),
+                    );
+                  },
+                ),
+              ),
+              // 추가 버튼들...
+            ],
           ),
-          // QR 코드 등록 버튼
-          _buildButtonWithCheckMark(
-            icon: Icons.qr_code,
-            label: 'QR 등록',
-            isChecked: userProvider.qrCodeUrl != null,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => QRCodeRegistrationScreen()),
-              );
-            },
+        ),
+        if (_showRightArrow)
+          Positioned(
+            right: 10,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Icon(Icons.arrow_forward_ios, color: Colors.grey),
+            ),
           ),
-          // 학생 인증 버튼
-          _buildButtonWithCheckMark(
-            icon: Icons.school_outlined,
-            label: '학생 인증',
-            isChecked: userProvider.isStudentVerified,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => StudentVerificationScreen()),
-              );
-            },
-          ),
-        ],
-      ),
+      ],
     );
   }
+
 
   Widget _buildButtonWithCheckMark({required IconData icon, required String label, required bool isChecked, required VoidCallback onPressed}) {
     return TextButton(
