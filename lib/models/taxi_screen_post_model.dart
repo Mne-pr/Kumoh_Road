@@ -4,9 +4,9 @@ class TaxiScreenPostModel{
   final String content;
   final DateTime createdTime;
   final int viewCount;
-  final List<String> commentsList;
+  final List<dynamic> commentsList;
   final String imageUrl;
-  final List<String> membersIdList;
+  final List<dynamic> membersIdList;
 
   TaxiScreenPostModel({
     required this.writerId,
