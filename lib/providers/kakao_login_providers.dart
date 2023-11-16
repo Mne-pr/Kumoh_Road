@@ -12,6 +12,7 @@ class KakaoLoginProvider with ChangeNotifier {
   List<Map<String, dynamic>>? _mannerList;
   List<Map<String, dynamic>>? _unmannerList;
   String? _qrCodeUrl;
+  bool _isStudentVerified = false;
   StreamSubscription<DocumentSnapshot>? _userChangesSubscription;
 
   User? get user => _user;
@@ -22,6 +23,7 @@ class KakaoLoginProvider with ChangeNotifier {
   List<Map<String, dynamic>>? get mannerList => _mannerList;
   List<Map<String, dynamic>>? get unmannerList => _unmannerList;
   String? get qrCodeUrl => _qrCodeUrl;
+  bool get isStudentVerified => _isStudentVerified;
 
   Future<void> login() async {
     try {
@@ -63,7 +65,6 @@ class KakaoLoginProvider with ChangeNotifier {
       if (data?['email'] != email) updates['email'] = email;
       if (data?['profileImageUrl'] != profileImageUrl) updates['profileImageUrl'] = profileImageUrl;
       if (data?['nickname'] != nickname) updates['nickname'] = nickname;
-
       if (updates.isNotEmpty) {
         await userDocument.update(updates);
       }
@@ -89,6 +90,7 @@ class KakaoLoginProvider with ChangeNotifier {
           {'content': '합승 중 타인에 대한 불편한 발언을 했어요.', 'votes': 0},
         ],
         'qrCodeUrl': _qrCodeUrl,
+        'studentVerified' : _isStudentVerified,
       });
     }
     notifyListeners();
@@ -121,6 +123,7 @@ class KakaoLoginProvider with ChangeNotifier {
     _mannerList = List<Map<String, dynamic>>.from(data?['mannerList'] ?? []);
     _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
     _qrCodeUrl = data?['qrCodeUrl'];
+    _isStudentVerified = data?['isStudentVerified'] ?? false;
   }
 
   // 리소스 정리 메서드
@@ -131,7 +134,7 @@ class KakaoLoginProvider with ChangeNotifier {
   }
 
   // 사용자 정보 업데이트 메서드
-  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url}) async {
+  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url, bool? isStudentVerified}) async {
     if (_user != null) {
       var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
       var updateData = <String, dynamic>{};
@@ -152,6 +155,9 @@ class KakaoLoginProvider with ChangeNotifier {
       }
       if (url != null) {
         updateData['qrCodeUrl'] = url;
+      }
+      if (isStudentVerified != null) {
+        updateData['isStudentVerified'] = isStudentVerified;
       }
       if (updateData.isNotEmpty) {
         await userDocument.update(updateData);
@@ -203,5 +209,6 @@ class KakaoLoginProvider with ChangeNotifier {
     _mannerList = null;
     _unmannerList = null;
     _qrCodeUrl = null;
+    _isStudentVerified = false;
   }
 }
