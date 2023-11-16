@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:kumoh_road/screens/loading_screen.dart';
 import 'package:kumoh_road/widgets/bottom_scrollable_widget.dart';
 import 'package:kumoh_road/widgets/outline_circle_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -37,6 +38,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   late OutlineCircleButton schoolBtn;
   late OutlineCircleButton currentBtn = schoolBtn;
 
+  bool isLoading = true;
+
   // 임시 변수
   late temp forBusList;
   
@@ -47,7 +50,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
       topContent: currentBusStop,
       restContent: temp(busStop: currentBusStop ),
       bottomLength: 0.17,
-      topLength: 1.0,
+      topLength: 0.9,
       key: UniqueKey(),
     );
 
@@ -95,10 +98,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-
             // 1.1 네이버맵을 가장 아래쪽(z)에 배치
             NaverMap(
-
               // 1.1.1 맵 초기화 옵션 지정
               options: const NaverMapViewOptions(
                 minZoom: 12, maxZoom: 18, pickTolerance: 8, locale: Locale('kr'),
@@ -114,7 +115,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
                 // 1.1.2.1 맵 컨트롤러 등록
                 con = controller;
                 // 1.1.2.2 마커를 맵에 등록
-                con.addOverlayAll({busStop1, busStop2, busStop3, busStop4});
+                con.addOverlayAll({busStop1, busStop2, busStop3, busStop4,});
                 // 1.1.2.3 각 마커를 클릭했을 때의 이벤트 지정
                 busStop1.setOnTapListener((overlay) {
                   updateBusStop(busStop1Info); busStop1.openInfoWindow(busStop1Window);
@@ -136,15 +137,14 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
               },
 
             ),
-
             // 1.2 위치 지정하여 버튼 배치. SizeBox를 사용하기 위해 Column 사용함
             Column(children: [
               SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
               Row(children: [SizedBox(width: MediaQuery.of(context).size.width * 0.05,),currentBtn,],),],
             ),
-
             // 1.3 선택한 버스정류장에 대한 정보 표시하는 창 배치
             bottomScrollWidget,
+            LoadingScreen(miliTime: 500),
           ],
         ),
       ),
