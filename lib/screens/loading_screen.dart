@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../widgets/loding_indicator_widget.dart';
 
 class LoadingScreen extends StatefulWidget {
+  final int miliTime;
+  LoadingScreen({this.miliTime = 1000});
+
   @override
   _LoadingScreenState createState() => _LoadingScreenState();
 }
@@ -18,7 +21,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   void loading() {
-    Timer(Duration(seconds: 1), () {
+    Timer(Duration(milliseconds: widget.miliTime), () {
       setState(() {
         isLoading = false;
       });

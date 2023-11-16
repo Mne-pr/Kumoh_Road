@@ -144,7 +144,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
             ),
             // 1.3 선택한 버스정류장에 대한 정보 표시하는 창 배치
             bottomScrollWidget,
-            LoadingScreen(),
+            LoadingScreen(miliTime: 500),
           ],
         ),
       ),
