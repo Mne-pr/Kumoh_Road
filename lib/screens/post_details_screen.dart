@@ -1,11 +1,20 @@
+import 'dart:io';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/screens/main_screen.dart';
 import 'package:kumoh_road/widgets/user_info_section.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../utilities/image_picker_util.dart';
 
 class PostDetailsScreen extends StatefulWidget {
   final Map<String, dynamic>? writerDetails;
+  final Map<String, dynamic>? post;
   PostDetailsScreen({
     super.key,
     required this.writerDetails,
+    required this.post
   });
 
   @override
@@ -13,6 +22,7 @@ class PostDetailsScreen extends StatefulWidget {
 }
 
 class _PostDetailsScreenState extends State<PostDetailsScreen> {
+  String? _imagePath; // 촬영한 사진의 경로를 저장하는 변수
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +31,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     int writerAge = widget.writerDetails!['age'] ?? 20;
     String writerGender = widget.writerDetails!['gender'] ?? "성별 없음";
     double mannerTemperature = widget.writerDetails!['mannerTemperature'] ?? 0;
-
+    double screenHeight = MediaQuery.of(context).size.height;
+    
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // _buildImageWidget(context),
+            _buildButtonSection(context),
+            _buildImageSection(context),
             UserInfoSection(
               nickname: writerName,
               imageUrl: writerImageUrl,
@@ -34,7 +46,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
               gender: writerGender,
               mannerTemperature: mannerTemperature,
             ),
-            // _buildPost(context),
+            // _buildPostContentSection(context),
+            // _buildViewCountSection(context)
             // _buildReviews(context),
             // _buildComments(context),
             // _buildBottom(context),
@@ -44,30 +57,50 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     );
   }
 
-  // Widget _buildImageWidget(BuildContext context) {
-  //   return AspectRatio(
-  //     aspectRatio: 1,
-  //     child: Padding(
-  //       padding: const EdgeInsets.all(10),
-  //       child: ClipRRect(
-  //         borderRadius: const BorderRadius.all(Radius.circular(3)),
-  //         child: Image.network(
-  //           documents[index]["image"],
-  //           width: imgHeight,
-  //           fit: BoxFit.cover,
-  //           errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-  //             return Image.asset(
-  //               'assets/images/default_avatar.png',
-  //               width: imgHeight,
-  //               fit: BoxFit.cover,
-  //             );
-  //           },
-  //         ),
-  //       ),
-  //     ),
-  //   ),
-  // }
-  //
+  Widget _buildButtonSection(BuildContext context){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        IconButton(onPressed: (){ Navigator.of(context).pop(); }, icon: const Icon(Icons.arrow_back_ios_outlined)),
+        IconButton(onPressed: (){
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const MainScreen(),
+            ),
+          );
+        }, icon: const Icon(Icons.home_outlined)),
+      ],
+    );
+  }
+
+  Widget _buildImageSection(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        if (await Permission.camera.request().isGranted) {
+          final File? imageFile = await ImagePickerUtils.pickImageFromCamera();
+          if (imageFile != null) {
+            setState(() {
+              _imagePath = imageFile.path;
+            });
+          }
+        }
+      },
+      child: Column(
+        children: [
+          Center(
+            child: _imagePath == null ? const Icon(Icons.camera_alt) : Image.file(
+              File(_imagePath!),
+              fit: BoxFit.contain,
+              height: MediaQuery.of(context).size.height / 3,
+            ),
+          ),
+          Visibility(
+              visible: _imagePath == null ? true : false,
+              child: const Center(child: Text("사진 촬영"))),
+        ],
+      ),
+    );
+  }
+
   // Widget _buildUserInformation(BuildContext context) {}
   //
   // Widget _buildPost(BuildContext context) {}

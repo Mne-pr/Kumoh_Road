@@ -50,6 +50,8 @@ dependencies:
   email_otp: ^2.1.1
   email_validator: ^2.1.17
   fluttertoast: ^8.0.9
+  camera: ^0.10.5+5
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:
