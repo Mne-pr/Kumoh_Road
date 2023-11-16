@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import "package:http/http.dart" as http;
 
 class PathMapScreen extends StatefulWidget {
@@ -14,52 +15,99 @@ class PathMapScreen extends StatefulWidget {
 }
 
 class _PathMapScreenState extends State<PathMapScreen> {
-  final _putStart = TextEditingController();
-  final _putEnd = TextEditingController();
-  late NaverMapController con;
+  //text 변수
+  final originAddress = TextEditingController();
+  final destinationAddress = TextEditingController();
+  late NaverMapController mapController;
+  Map<String, String> headerss = {"X-NCP-APIGW-API-KEY-ID": "t2v0aiyv0u", "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"};
+  List<String> inputString = List.filled(2, "");
+  List<dynamic> coordinateList = List.generate(2, (index) => 5, growable: false); //구조[응답상태, 응답 데이터 수, 이름, 위도, 경도]
+  List<dynamic> markerList = List.generate(2, (index) => null, growable: false);
 
-  Map<String, String> headerss = {
-    "X-NCP-APIGW-API-KEY-ID": "t2v0aiyv0u",
-    "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"
-  };
-
-  @override
-  Future<List> get(String url) async {
-    http.Response response = await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$url"), headers: headerss);
-    String jsonData = utf8.decode(response.bodyBytes);
-    var a = jsonDecode(jsonData)["addresses"][0]['y'];
-    var b = jsonDecode(jsonData)["addresses"][0]['x'];
-    var d = jsonDecode(jsonData)["addresses"][0]['addressElements'][6]["shortName"];
-    List<dynamic> dot = [d, double.parse(a), double.parse(b)];
-    return dot;
+  //주소 입력 오류 출력 Toast
+  void viewError(String errorMessage) {
+    Fluttertoast.showToast(
+      msg: errorMessage,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.red,
+      fontSize: 20,
+      textColor: Colors.black,
+    );
   }
 
-  void Get_Location() async{
-    if(_putStart.text == "" && _putEnd.text == ""){
+  Future<List> getCoordinate(String pointAddress) async {
+    http.Response response =
+        await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$pointAddress"), headers: headerss);
+    if (response.statusCode == 200) {
+      String jsonData = utf8.decode(response.bodyBytes);
+      int checkResponse = jsonDecode(jsonData)["meta"]["totalCount"];
+      if (checkResponse >= 1) {
+        String pointName = jsonDecode(jsonData)["addresses"][0]["addressElements"][6]["shortName"];
+        double pointLat = double.parse(jsonDecode(jsonData)["addresses"][0]["y"]);
+        double pointLon = double.parse(jsonDecode(jsonData)["addresses"][0]["x"]);
+        List<dynamic> tempList = [response.statusCode, checkResponse, pointName, pointLat, pointLon];
+        return tempList;
+      } else {
+        List<dynamic> tempList = [response.statusCode, checkResponse, 0, 0, 0];
+        return tempList;
+      }
+    } else {
+      List<dynamic> tempList = [response.statusCode, -1, 0, 0, 0];
+      return tempList;
     }
-    List<dynamic> tmp = List.generate(2, (index) => 3, growable:false);
-    tmp[0] = await get(_putStart.text);
-    tmp[1] = await get(_putEnd.text);
-    List<double> start = [tmp[0][1], tmp[0][2]];
-    List<double> end = [tmp[1][1], tmp[1][2]];
-    final Cpoint = NCameraUpdate.scrollAndZoomTo(target: NLatLng((start[0] + end[0]) / 2, (start[1] + end[1]) / 2), zoom:11.0,);
-    await con.updateCamera(Cpoint);
-    //_putStart.text = tmp[0][0];
-    //_putEnd.text = tmp[1][0];
-    final start_Marker = NMarker(id: tmp[0][0], position: NLatLng(tmp[0][1], tmp[0][2]));
-    final end_Marker = NMarker(id: tmp[1][0], position: NLatLng(tmp[1][1], tmp[1][2]));
-    con.addOverlayAll({start_Marker, end_Marker});
   }
 
-  void dispose() {
-    _putStart.dispose();
-    _putEnd.dispose();
-    super.dispose();
+  void moveMap() async {
+    final movePoint = NCameraUpdate.scrollAndZoomTo(
+      target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2, (coordinateList[0][4] + coordinateList[1][4]) / 2),
+      zoom: 11.5,
+    );
+    markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]));
+    markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]));
+    await mapController.updateCamera(movePoint);
+    await mapController.addOverlayAll({markerList[0], markerList[1]});
+  }
+
+  void getPath() async {
+    if (inputString[0] == "" || inputString[1] == "") {
+      inputString[0] = originAddress.text;
+      inputString[1] = destinationAddress.text;
+      viewError("주소가 입력되지 않았습니다");
+    } else {
+      if (inputString[0] != originAddress.text) {
+        inputString[0] = originAddress.text;
+        coordinateList[0] = await getCoordinate(inputString[0]);
+        print("출발지 주소 API 호출");
+      } else {
+        viewError("같은 출발지 입력");
+      }
+      if (inputString[1] != destinationAddress.text) {
+        inputString[1] = destinationAddress.text;
+        coordinateList[1] = await getCoordinate(inputString[1]);
+        print("도착지 주소 API 호출");
+      } else {
+        viewError("같은 도착지 입력");
+      }
+      if (coordinateList[0][0] == 200 && coordinateList[1][0] == 200) {
+        if (coordinateList[0][1] == 0 && coordinateList[1][1] == 0) {
+          viewError("주소 정보가 잘못되었습니다");
+        } else if (coordinateList[0][1] == 0) {
+          viewError("출발지 주소가 잘못되었습니다");
+        } else if (coordinateList[1][1] == 0) {
+          viewError("도착지 정보가 잘못되었습니다");
+        } else {
+          print(coordinateList);
+          moveMap();
+        }
+      } else {
+        viewError("오류입니다");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const Baseposition = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
+    const basePosition = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -71,15 +119,14 @@ class _PathMapScreenState extends State<PathMapScreen> {
               margin: const EdgeInsets.fromLTRB(20, 10, 20, 5),
               height: 35,
               child: TextField(
-                controller: _putStart,
+                controller: originAddress,
                 textAlignVertical: TextAlignVertical.bottom,
                 textAlign: TextAlign.left,
                 decoration: const InputDecoration(
                   hintText: "출발지를 입력하세요",
                   filled: true,
                   fillColor: Colors.black12,
-                  enabledBorder:
-                  OutlineInputBorder(borderSide: BorderSide.none),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.black54,
@@ -93,15 +140,14 @@ class _PathMapScreenState extends State<PathMapScreen> {
               margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
               height: 35,
               child: TextField(
-                controller: _putEnd,
+                controller: destinationAddress,
                 textAlignVertical: TextAlignVertical.bottom,
                 textAlign: TextAlign.left,
                 decoration: const InputDecoration(
                   hintText: "도착지를 입력하세요",
                   filled: true,
                   fillColor: Colors.black12,
-                  enabledBorder:
-                      OutlineInputBorder(borderSide: BorderSide.none),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.black54,
@@ -112,19 +158,19 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => Get_Location(),
+              onPressed: () => getPath(),
               child: const Text('경로 탐색'),
             ),
             Expanded(
               child: NaverMap(
                 options: const NaverMapViewOptions(
-                  minZoom: 12,
+                  minZoom: 10,
                   maxZoom: 18,
                   pickTolerance: 8,
                   locale: Locale('kr'),
                   mapType: NMapType.basic,
                   liteModeEnable: true,
-                  initialCameraPosition: Baseposition,
+                  initialCameraPosition: basePosition,
                   activeLayerGroups: [
                     NLayerGroup.building,
                     NLayerGroup.mountain,
@@ -138,7 +184,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   logoClickEnable: false,
                 ),
                 onMapReady: (NaverMapController controller) {
-                  con = controller;
+                  mapController = controller;
                 },
               ),
             ),
