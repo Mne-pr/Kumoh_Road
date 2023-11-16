@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/screens/main_screen.dart';
 import 'package:kumoh_road/widgets/user_info_section.dart';
 
 class PostDetailsScreen extends StatefulWidget {
@@ -26,7 +27,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // _buildImageWidget(context),
+            _buildButtonSection(context),
+            // _buildImageSection(context),
             UserInfoSection(
               nickname: writerName,
               imageUrl: writerImageUrl,
@@ -34,13 +36,29 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
               gender: writerGender,
               mannerTemperature: mannerTemperature,
             ),
-            // _buildPost(context),
+            // _buildPostContentSection(context),
+            // _buildViewCountSection(context)
             // _buildReviews(context),
             // _buildComments(context),
             // _buildBottom(context),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildButtonSection(BuildContext context){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        IconButton(onPressed: (){ Navigator.of(context).pop(); }, icon: const Icon(Icons.arrow_back_ios_outlined)),
+        IconButton(onPressed: (){
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const MainScreen(),
+            ),
+          );
+        }, icon: const Icon(Icons.home_outlined)),
+      ],
     );
   }
 

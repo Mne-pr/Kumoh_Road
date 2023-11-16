@@ -173,7 +173,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
     return _buildPosts(context, documents, writersDetails, imgHeight);
   }
 
-  Widget _buildPosts(BuildContext context, List<Map<String, dynamic>> documents, Map<String, Map<String, dynamic>> writersDetails, double imgHeight) {
+  Widget _buildPosts(BuildContext context, List<Map<String, dynamic>> documents, Map<String, Map<String, dynamic>> argWritersDetails, double imgHeight) {
     return Expanded(
       child: ListView.separated(
         itemCount: documents.length,
@@ -185,17 +185,14 @@ class _TaxiScreenState extends State<TaxiScreen> {
           List members = document["members"];
           String writerId = document["writer"];
 
-          Map<String, dynamic>? writerDetails = writersDetails[writerId];
+          Map<String, dynamic>? writerDetails = argWritersDetails[writerId];
           String writerName = writerDetails?['nickname'] ?? 'no name';
           String writerGender = writerDetails?['gender'] ?? 'no gender';
 
           List comments = document["comments"];
 
-          print(writersDetails);
-
           return InkWell(
             onTap: () {
-              // TODO: 여기에 새 페이지로 이동하는 코드 작성
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => PostDetailsScreen(writerDetails: writerDetails)),
               );
