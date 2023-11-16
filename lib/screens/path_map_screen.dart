@@ -25,7 +25,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
   List<dynamic> markerList = List.generate(2, (index) => null, growable: false);
 
   //주소 입력 오류 출력 Toast
-  void viewError(String errorMessage) {
+  void errorView(String errorMessage) {
     Fluttertoast.showToast(
       msg: errorMessage,
       gravity: ToastGravity.BOTTOM,
@@ -69,38 +69,31 @@ class _PathMapScreenState extends State<PathMapScreen> {
   }
 
   void getPath() async {
-    if (inputString[0] == "" || inputString[1] == "") {
-      inputString[0] = originAddress.text;
-      inputString[1] = destinationAddress.text;
-      viewError("주소가 입력되지 않았습니다");
+    if (originAddress.text == "" || destinationAddress.text == "") {
+      errorView("주소 입력이 비어있습니다");
     } else {
       if (inputString[0] != originAddress.text) {
         inputString[0] = originAddress.text;
         coordinateList[0] = await getCoordinate(inputString[0]);
-        print("출발지 주소 API 호출");
-      } else {
-        viewError("같은 출발지 입력");
+        print("출발지 API 호출함");
       }
       if (inputString[1] != destinationAddress.text) {
         inputString[1] = destinationAddress.text;
         coordinateList[1] = await getCoordinate(inputString[1]);
-        print("도착지 주소 API 호출");
-      } else {
-        viewError("같은 도착지 입력");
+        print("도착지 API 호출함");
       }
       if (coordinateList[0][0] == 200 && coordinateList[1][0] == 200) {
         if (coordinateList[0][1] == 0 && coordinateList[1][1] == 0) {
-          viewError("주소 정보가 잘못되었습니다");
+          errorView("잘못된 주소입니다");
         } else if (coordinateList[0][1] == 0) {
-          viewError("출발지 주소가 잘못되었습니다");
+          errorView("잘못된 출발지 주소입니다");
         } else if (coordinateList[1][1] == 0) {
-          viewError("도착지 정보가 잘못되었습니다");
+          errorView("잘못된 도착지 주소입니다");
         } else {
-          print(coordinateList);
           moveMap();
         }
       } else {
-        viewError("오류입니다");
+        errorView("Error:response is Not 200");
       }
     }
   }
