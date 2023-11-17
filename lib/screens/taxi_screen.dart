@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kumoh_road/screens/post_details_screen.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../widgets/loding_indicator_widget.dart';
 
 class TaxiScreen extends StatefulWidget {
   const TaxiScreen({Key? key}) : super(key: key);
@@ -36,7 +37,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                 future: _fetchAndBuildPosts(context),
                 builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting)
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(child: LoadingIndicatorWidget());
                   else if (snapshot.hasError)
                     return Center(child: Text('Error: ${snapshot.error}'));
                   else if (snapshot.hasData)
@@ -173,31 +174,28 @@ class _TaxiScreenState extends State<TaxiScreen> {
     return _buildPosts(context, documents, writersDetails, imgHeight);
   }
 
-  Widget _buildPosts(BuildContext context, List<Map<String, dynamic>> documents, Map<String, Map<String, dynamic>> writersDetails, double imgHeight) {
+  Widget _buildPosts(BuildContext context, List<Map<String, dynamic>> documents, Map<String, Map<String, dynamic>> argWritersDetails, double imgHeight) {
     return Expanded(
       child: ListView.separated(
         itemCount: documents.length,
         separatorBuilder: (BuildContext context, int index) => const Divider(),
         itemBuilder: (BuildContext context, int index) {
-          Map<String, dynamic> document = documents[index];
-          String title = document["title"];
-          DateTime createdTime = document["createdTime"].toDate();
-          List members = document["members"];
-          String writerId = document["writer"];
+          Map<String, dynamic> post = documents[index];
+          String title = post["title"];
+          DateTime createdTime = post["createdTime"].toDate();
+          List members = post["members"];
+          String writerId = post["writer"];
 
-          Map<String, dynamic>? writerDetails = writersDetails[writerId];
+          Map<String, dynamic>? writerDetails = argWritersDetails[writerId];
           String writerName = writerDetails?['nickname'] ?? 'no name';
           String writerGender = writerDetails?['gender'] ?? 'no gender';
 
-          List comments = document["comments"];
-
-          print(writersDetails);
+          List comments = post["comments"];
 
           return InkWell(
             onTap: () {
-              // TODO: 여기에 새 페이지로 이동하는 코드 작성
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => PostDetailsScreen(writerDetails: writerDetails)),
+                MaterialPageRoute(builder: (context) => PostDetailsScreen(writerDetails: writerDetails, post: post)),
               );
             },
             child: Padding(
