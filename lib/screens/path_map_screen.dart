@@ -57,6 +57,21 @@ class _PathMapScreenState extends State<PathMapScreen> {
     }
   }
 
+  Future<List> getPath() async {
+    http.Response response = await http.get(
+        Uri.parse(
+            "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start=${coordinateList[0][4]},${coordinateList[0][3]}&goal=${coordinateList[1][4]},${coordinateList[1][3]}&option={탐색옵션}"),
+        headers: headerss);
+    String jsonData = utf8.decode(response.bodyBytes);
+    List<dynamic> tempList = jsonDecode(jsonData)["route"]["traoptimal"][0]["path"];
+    List<dynamic> tcoordList =
+        List.generate(tempList.length, (index) => null, growable: false);
+    for(int i = 0; i < tempList.length; i++){
+      tcoordList[i] = NLatLng(tempList[i][1], tempList[i][0]);
+    }
+    return tcoordList;
+  }
+
   void moveMap() async {
     final movePoint = NCameraUpdate.scrollAndZoomTo(
       target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2, (coordinateList[0][4] + coordinateList[1][4]) / 2),
@@ -64,11 +79,18 @@ class _PathMapScreenState extends State<PathMapScreen> {
     );
     markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]));
     markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]));
+    List<dynamic> tempList = await getPath();
+    List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => NLatLng(0.0, 0.0));
+    for(int i = 0; i < tempList.length; i++){
+      pathCoordinate[i] = tempList[i];
+    }
+    final tempLine = NPolylineOverlay(id: "test", coords: pathCoordinate, color: Colors.red, width: 5);
+    await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
-    await mapController.addOverlayAll({markerList[0], markerList[1]});
+    await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
   }
 
-  void getPath() async {
+  void mapSet() async {
     if (originAddress.text == "" || destinationAddress.text == "") {
       errorView("주소 입력이 비어있습니다");
     } else {
@@ -90,6 +112,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
         } else if (coordinateList[1][1] == 0) {
           errorView("잘못된 도착지 주소입니다");
         } else {
+          print(coordinateList);
           moveMap();
         }
       } else {
@@ -151,7 +174,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => getPath(),
+              onPressed: () => mapSet(),
               child: const Text('경로 탐색'),
             ),
             Expanded(
