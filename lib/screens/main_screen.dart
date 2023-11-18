@@ -83,13 +83,13 @@ class _MainScreenState extends State<MainScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.person),
-            title: const Text('손현락 유저 프로필 보기(테스트 용 예시)'),
+            title: const Text('송제용 유저 프로필 보기(테스트 용 예시)'),
             onTap: () {
               // OtherUserProfileScreen으로 이동하며 userID를 전달합니다.
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const OtherUserProfileScreen(userId: '3155682358'),
+                  builder: (context) => const OtherUserProfileScreen(userId: '3153999885'),
                 ),
               );
             },

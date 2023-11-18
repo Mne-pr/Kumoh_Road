@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/screens/report_user_screen.dart';
 import '../models/user_model.dart';
 import '../widgets/user_info_section.dart';
 
@@ -72,7 +73,12 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             title: const Text('신고하기'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // 신고하기 기능을 구현
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ReportUserScreen(reportedUserId: widget.userId, reportedUserName: otherUser!.nickname),
+                ),
+              );
             },
           ),
           // ... 추가 UI 구성 요소 ...
