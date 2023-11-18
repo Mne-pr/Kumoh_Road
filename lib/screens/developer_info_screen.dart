@@ -12,7 +12,7 @@ class DeveloperInfoScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
-        titleSpacing: -5.0,
+        centerTitle: true,
       ),
       body: ListView(
         children: const [

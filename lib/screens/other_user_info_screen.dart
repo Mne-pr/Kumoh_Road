@@ -40,7 +40,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
-        titleSpacing: -5.0,
+        centerTitle: true,
       ),
       body: otherUser == null
           ? const Center(child: CircularProgressIndicator()) // 사용자 정보를 불러오는 동안 로딩 인디케이터를 표시합니다.

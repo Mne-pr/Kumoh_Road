@@ -50,7 +50,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   AppBar _buildAppBar(BuildContext context, KakaoLoginProvider userProvider) {
     return AppBar(
-      title: const Text('나의 정보', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+      title: const Text('나의 정보', style: TextStyle(color: Colors.black)),
       actions: [
         IconButton(
           icon: const Icon(Icons.settings, color: Colors.black),
