@@ -32,22 +32,16 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
     }
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: const Text('프로필', style: TextStyle(color: Colors.black)),
-      backgroundColor: Colors.white,
-      elevation: 1,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        title: const Text('프로필', style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
+        titleSpacing: -5.0,
+      ),
       body: otherUser == null
           ? const Center(child: CircularProgressIndicator()) // 사용자 정보를 불러오는 동안 로딩 인디케이터를 표시합니다.
           : ListView(
