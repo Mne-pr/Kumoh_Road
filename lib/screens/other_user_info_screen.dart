@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/screens/report_user_screen.dart';
 import '../models/user_model.dart';
+import '../widgets/manner_detail_widget.dart';
 import '../widgets/user_info_section.dart';
+import 'other_user_manner_screen.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
   final String userId;
@@ -66,7 +68,15 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             title: const Text('받은 매너 평가'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // 매너 평가 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtherUserMannerScreen(
+                    mannerList: otherUser!.mannerList ?? [],
+                    unmannerlyList: otherUser!.unmannerList ?? [],
+                  ),
+                ),
+              );
             },
           ),
           ListTile(
@@ -81,7 +91,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
               );
             },
           ),
-          // ... 추가 UI 구성 요소 ...
         ],
       ),
     );
