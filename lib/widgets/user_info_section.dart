@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
  * 여러 화면에서 편하게 사용자 정보를 보여줄 수 있도록한다.
  * 파이어베이스 또는 userProvider 모두 사용할 수 있도록 변수를 통해 받아올 수 있도록 함.
  */
-class UserInfoSection extends StatelessWidget {
+class UserInfoSection extends StatefulWidget {
   final String nickname;
   final String imageUrl;
   final int age;
@@ -20,15 +20,27 @@ class UserInfoSection extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _UserInfoSectionState createState() => _UserInfoSectionState();
+}
+
+class _UserInfoSectionState extends State<UserInfoSection> {
+  late ImageProvider backgroundImage;
+
+  @override
+  void initState() {
+    super.initState();
+    backgroundImage = NetworkImage(widget.imageUrl);
+  }
+
+  @override
   Widget build(BuildContext context) {
     Color temperatureColor;
     String temperatureEmoji;
 
-    // 금오온도에 따른 색상 및 이모지 설정
-    if (mannerTemperature >= 37.5) {
+    if (widget.mannerTemperature >= 37.5) {
       temperatureColor = Colors.red;
       temperatureEmoji = '🥵'; // Hot face
-    } else if (mannerTemperature >= 36.5 && mannerTemperature < 37.5) {
+    } else if (widget.mannerTemperature >= 36.5 && widget.mannerTemperature < 37.5) {
       temperatureColor = Colors.orange;
       temperatureEmoji = '😊'; // Smiling face
     } else {
@@ -45,10 +57,13 @@ class UserInfoSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CircleAvatar(
-                backgroundImage: imageUrl.isNotEmpty
-                    ? NetworkImage(imageUrl)
-                    : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                 radius: 32,
+                backgroundImage: backgroundImage,
+                onBackgroundImageError: (_, __) {
+                  setState(() {
+                    backgroundImage = const AssetImage('assets/images/default_avatar.png');
+                  });
+                },
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -56,14 +71,14 @@ class UserInfoSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      nickname,
+                      widget.nickname,
                       style: const TextStyle(fontSize: 20),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "$age세 ($gender)",
+                          "${widget.age}세 (${widget.gender})",
                           style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         InkWell(
@@ -95,7 +110,7 @@ class UserInfoSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                '$mannerTemperature°C $temperatureEmoji',
+                '${widget.mannerTemperature}°C $temperatureEmoji',
                 style: TextStyle(
                   fontSize: 16,
                   color: temperatureColor,
@@ -108,7 +123,7 @@ class UserInfoSection extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: mannerTemperature / 100,
+              value: widget.mannerTemperature / 100,
               backgroundColor: Colors.grey[300],
               color: temperatureColor,
               minHeight: 10,

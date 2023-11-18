@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
 import 'package:kumoh_road/screens/privacy_policy_screen.dart';
 import 'package:kumoh_road/screens/qr_register_screen.dart';
+import 'package:kumoh_road/screens/report_list_screen.dart';
 import 'package:kumoh_road/screens/student_verification_screen.dart';
 import 'package:kumoh_road/screens/terms_service_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -33,10 +34,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       body: ListView(
         children: [
           UserInfoSection(
-            nickname: userProvider.user?.kakaoAccount?.profile?.nickname ?? "사용자 정보 오류",
-            imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? "assets/images/default_avatar.png",
+            nickname: userProvider.user?.kakaoAccount?.profile?.nickname ?? 'N/A',
+            imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? 'https://k.kakaocdn.net/dn/1G9kp/btsAot8liOn/8CWudi3uy07rvFNUkk3ER0/img_640x640.jpg',
             age: userProvider.age ?? 0,
-            gender: userProvider.gender ?? "기타",
+            gender: userProvider.gender ?? 'N/A',
             mannerTemperature: userProvider.mannerTemperature ?? 0,
           ),
           _buildUserInteractionButtons(context,userProvider),
@@ -50,7 +51,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   AppBar _buildAppBar(BuildContext context, KakaoLoginProvider userProvider) {
     return AppBar(
-      title: const Text('나의 정보', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+      title: const Text('나의 정보', style: TextStyle(color: Colors.black)),
       actions: [
         IconButton(
           icon: const Icon(Icons.settings, color: Colors.black),
@@ -204,9 +205,12 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 width: MediaQuery.of(context).size.width / 3,
                 child: _buildButton(
                   icon: Icons.gavel_outlined,
-                  label: '신고 내용',
+                  label: '신고 내역',
                   onPressed: () {
-                    // 신고 내용 화면으로 이동하는 코드 구현
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ReportListScreen()),
+                    );
                   },
                 ),
               ),
@@ -235,7 +239,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => StudentVerificationScreen()),
+                      MaterialPageRoute(builder: (context) => const StudentVerificationScreen()),
                     );
                   },
                 ),
@@ -245,7 +249,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
         ),
         if (_showRightArrow)
-          Positioned(
+          const Positioned(
             right: 10,
             top: 0,
             bottom: 0,
@@ -274,12 +278,12 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             text: TextSpan(
               children: [
                 if (isChecked)
-                  WidgetSpan(
+                  const WidgetSpan(
                     child: Icon(Icons.check, size: 18, color: Colors.grey),
                   ),
                 TextSpan(
                   text: label,
-                  style: TextStyle(color: Colors.black),
+                  style: const TextStyle(color: Colors.black),
                 ),
               ],
             ),

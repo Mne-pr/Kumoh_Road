@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/main_screen_button_model.dart';
 import '../utilities/url_launcher_util.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/main_screen_button.dart';
+import 'other_user_info_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -53,29 +53,48 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 3.5 / 1,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return MainScreenButton(
-            icon: item.icon,
-            title: item.title,
-            color: item.color,
+      body: Column(
+        children: [
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3.5 / 1,
+              ),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return MainScreenButton(
+                  icon: item.icon,
+                  title: item.title,
+                  color: item.color,
+                  onTap: () {
+                    if (item.title == '날씨 정보') {
+                      Navigator.pushNamed(context, '/weather_info_screen');
+                    } else if (item.title == 'AI Chat') {
+                      Navigator.pushNamed(context, '/gpt_screen');
+                    } else {
+                      launchURL(item.url);
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('송제용 유저 프로필 보기(테스트 용 예시)'),
             onTap: () {
-              if (item.title == '날씨 정보') {
-                Navigator.pushNamed(context, '/weather_info_screen');
-              } else if (item.title == 'AI Chat') {
-                Navigator.pushNamed(context, '/gpt_screen');
-              } else {
-                launchURL(item.url);
-              }
+              // OtherUserProfileScreen으로 이동하며 userID를 전달합니다.
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OtherUserProfileScreen(userId: '3153999885'),
+                ),
+              );
             },
-          );
-        },
+          ),
+        ],
       ),
       bottomNavigationBar: const CustomBottomNavigationBar(
         selectedIndex: 0,
