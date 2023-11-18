@@ -33,10 +33,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       body: ListView(
         children: [
           UserInfoSection(
-            nickname: userProvider.user?.kakaoAccount?.profile?.nickname ?? "사용자 정보 오류",
-            imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? "assets/images/default_avatar.png",
+            nickname: userProvider.user?.kakaoAccount?.profile?.nickname ?? 'N/A',
+            imageUrl: userProvider.user?.kakaoAccount?.profile?.profileImageUrl ?? 'https://k.kakaocdn.net/dn/1G9kp/btsAot8liOn/8CWudi3uy07rvFNUkk3ER0/img_640x640.jpg',
             age: userProvider.age ?? 0,
-            gender: userProvider.gender ?? "기타",
+            gender: userProvider.gender ?? 'N/A',
             mannerTemperature: userProvider.mannerTemperature ?? 0,
           ),
           _buildUserInteractionButtons(context,userProvider),

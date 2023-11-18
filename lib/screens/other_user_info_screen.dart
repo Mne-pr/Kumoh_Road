@@ -53,7 +53,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             gender: otherUser!.gender,
             mannerTemperature: otherUser!.mannerTemperature,
           ),
-          Divider(),
+          const Divider(),
           ListTile(
             title: const Text('배지 정보 조회'),
             trailing: const Icon(Icons.chevron_right),
