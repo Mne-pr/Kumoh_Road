@@ -33,7 +33,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   // 상태 저장하기 위한 변수
   late NaverMapController con;
   late BusStopBox currentBusStop = busStop1Info;
-  late BusScheduleBox busList = BusScheduleBox(busList: null);
+  late BusScheduleBox busList = BusScheduleBox(busList: BusApiRes.fromJson({}));
 
   late OutlineCircleButton trainBtn;
   late OutlineCircleButton schoolBtn;
@@ -77,15 +77,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
         if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
         else { throw Exception('Failed to load buses info');}
       } catch(e) {
-        print('에러의 정체는? $e');
-        return BusApiRes(buses: []);
+        return BusApiRes.fromJson({});
       }
     }
 
     // 위젯을 업데이트하는 함수. 이때 api 사용하여 버스정류장의 정보 알아올 것
     void updateBusStop(BusStopBox inpBusStop) async {
       BusApiRes res = await fetchBusInfo(inpBusStop.code);
-      print("리턴됨? ${res.buses}");
 
       setState(() {
         busList = BusScheduleBox(busList: res);
