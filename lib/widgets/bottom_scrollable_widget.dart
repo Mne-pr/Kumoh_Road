@@ -4,14 +4,15 @@ import 'package:flutter/material.dart';
 // 스크롤 시 나타나는 부가효과 삭제위함
 class NoGlowScrollBehavior extends ScrollBehavior {}
 
+// topContent, restContent 모두 null을 넣을 수 있음
 class BottomScrollableWidget extends StatefulWidget {
   final Widget? topContent; // 상단 고정 콘텐츠
-  final Widget restContent; // 하단 고정 콘텐츠
+  final Widget? restContent; // 하단 고정 콘텐츠
   final double bottomLength;
   final double topLength;
 
   const BottomScrollableWidget({
-    this.topContent, required this.restContent,
+    this.topContent, this.restContent,
     required this.bottomLength, required this.topLength,
     super.key
   });
@@ -79,7 +80,11 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                 Positioned.fill(
                   top: MediaQuery.of(context).size.height * (widget.bottomLength-0.02),
                   child: SingleChildScrollView( // 여기 나머지 것들
-                      child: widget.restContent,
+                      child: Stack(
+                        children: [
+                          widget.restContent ?? SizedBox.shrink(),
+                        ],
+                      ),
                   ),
                 ),
               ],
