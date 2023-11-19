@@ -75,9 +75,9 @@ class BusScheduleBoxUnit extends StatelessWidget {
   final String mainText;
   final String subText;
   final String arriveText;
-  final int num;
+  final String num;
 
-  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num=0, this.arriveText="", super.key});
+  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num="", this.arriveText="", super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +139,7 @@ class _BusScheduleBoxState extends State<BusScheduleBox> {
 
     if (widget.busList != null){
       for (int i=0; i <  widget.busList!.buses.length; i++){
-        children.add(BusScheduleBoxUnit(mainText: '예시 (${widget.busList!.buses[i].nodenm} -> 도착지)',
+        children.add(BusScheduleBoxUnit(mainText: '예시 (${widget.busList!.buses[i].nodenm} -> 도착 정류장)',
           subText: '정류장 몇 남았는지',
           num: widget.busList!.buses[i].routeno,
           arriveText: '${(widget.busList!.buses[i].arrtime/60).toInt()}분 ${widget.busList!.buses[i].arrtime%60}초 후 도착',));

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -39,12 +40,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   late OutlineCircleButton schoolBtn;
   late OutlineCircleButton bussBtn;
   late OutlineCircleButton currentBtn = schoolBtn;
+  late String serviceKey;
 
   bool isLoading = true;
 
   @override
   Widget build(BuildContext context) {
-    
+
     // 초기 버스 정보 표시할 더미위젯
     final bottomScrollWidget = BottomScrollableWidget(
       topContent: currentBusStop,
@@ -53,6 +55,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
       topLength: 0.9,
       key: UniqueKey(),
     );
+
+    void getServiceKey() async {
+      final contents = await File('api_keys.json').readAsString();
+      serviceKey = jsonDecode(contents)['TagoKey'];
+    }
 
     // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
     const gumiStationPos =  NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
@@ -66,7 +73,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
     final busStop4Window = NInfoWindow.onMarker(id: busStop4.info.id, text: busStop4Info.mainText);
     // 해당 정류장에 도착할 버스 api 호출에 필요한 정보
     final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
-    final serviceKey = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
+    getServiceKey();
 
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {

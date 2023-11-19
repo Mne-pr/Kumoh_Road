@@ -4,7 +4,7 @@ class Bus{
   final String nodeid;
   final String nodenm;
   final String routeid;
-  final int routeno;
+  final String routeno;
   final String routetp;
   final String vehicletp;
 
@@ -19,7 +19,7 @@ class Bus{
       nodeid: json['nodeid'],
       nodenm: json['nodenm'],
       routeid: json['routeid'],
-      routeno: json['routeno'],
+      routeno: json['routeno'].toString(),
       routetp: json['routetp'],
       vehicletp: json['vehicletp'],
     );
@@ -33,7 +33,9 @@ class BusApiRes {
 
   factory BusApiRes.fromJson(Map<String, dynamic> json) {
     var item = json['response']['body']['items']['item'];
+
     List<dynamic> itemList = (item is List) ? item : [item];
+
     List<Bus> busList = itemList.map((i) => Bus.fromJson(i)).toList();
 
     return BusApiRes(

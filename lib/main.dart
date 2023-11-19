@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
@@ -10,13 +13,16 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
+  final contents = await File('api_keys.json').readAsString();
+  final keys = jsonDecode(contents);
+
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(systemNavigationBarColor: Colors.white,));
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
-  KakaoSdk.init(nativeAppKey: 'c7b475e5111b80916e28e5e364d62631');
+  KakaoSdk.init(nativeAppKey: keys['KakaoKey']);
 
   await NaverMapSdk.instance.initialize(
-      clientId: "t2v0aiyv0u",
+      clientId: keys['NaverKey'],
       onAuthFailed: (ex) {
         print("네이버맵 로그인 오류 : $ex");
       }
