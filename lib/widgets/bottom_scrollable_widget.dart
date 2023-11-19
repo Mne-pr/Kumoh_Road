@@ -10,9 +10,10 @@ class BottomScrollableWidget extends StatefulWidget {
   final Widget? restContent; // 하단 고정 콘텐츠
   final double bottomLength;
   final double topLength;
+  final double intervalTopBotom;
 
   const BottomScrollableWidget({
-    this.topContent, this.restContent,
+    this.topContent, this.restContent, this.intervalTopBotom=0,
     required this.bottomLength, required this.topLength,
     super.key
   });
@@ -78,15 +79,30 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                 ),
 
                 Positioned.fill(
-                  top: MediaQuery.of(context).size.height * (widget.bottomLength-0.02),
-                  child: SingleChildScrollView( // 여기 나머지 것들
-                      child: Stack(
-                        children: [
-                          widget.restContent ?? SizedBox.shrink(),
-                        ],
+                  top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      SingleChildScrollView( // 여기 나머지 것들
+                        child: Stack(
+                          children: [
+                            widget.restContent ?? SizedBox.shrink(),
+                          ],
+                        ),
                       ),
-                  ),
+                    ],
+                  )
                 ),
+                // Positioned.fill(
+                //   top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
+                //   child: SingleChildScrollView( // 여기 나머지 것들
+                //       child: Stack(
+                //         children: [
+                //           widget.restContent ?? SizedBox.shrink(),
+                //         ],
+                //       ),
+                //   ),
+                // ),
               ],
             ),
           ),

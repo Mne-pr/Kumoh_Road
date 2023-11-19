@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -34,7 +33,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   // 상태 저장하기 위한 변수
   late NaverMapController con;
   late BusStopBox currentBusStop = busStop1Info;
-  late BusScheduleBox busList = BusScheduleBox(busList: null);
+  late BusScheduleBox busList = BusScheduleBox(busList: BusApiRes.fromJson({}));
 
   late OutlineCircleButton trainBtn;
   late OutlineCircleButton schoolBtn;
@@ -51,6 +50,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
     final bottomScrollWidget = BottomScrollableWidget(
       topContent: currentBusStop,
       restContent: busList,
+      intervalTopBotom: 0.085,
       bottomLength: 0.17,
       topLength: 0.9,
       key: UniqueKey(),
@@ -72,9 +72,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
 
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
-      final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serviceKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
-      if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
-      else { throw Exception('Failed to load buses info');}
+      try{
+        final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serviceKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
+        if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
+        else { throw Exception('Failed to load buses info');}
+      } catch(e) {
+        return BusApiRes.fromJson({});
+      }
     }
 
     // 위젯을 업데이트하는 함수. 이때 api 사용하여 버스정류장의 정보 알아올 것
@@ -83,7 +87,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
 
       setState(() {
         busList = BusScheduleBox(busList: res);
-        inpBusStop.numOfBus = res.buses.length;
         currentBusStop = inpBusStop;
       });
     }

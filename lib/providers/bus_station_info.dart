@@ -32,11 +32,16 @@ class BusApiRes {
   BusApiRes({required this.buses});
 
   factory BusApiRes.fromJson(Map<String, dynamic> json) {
-    var item = json['response']['body']['items']['item'];
+    List<Bus> busList;
 
-    List<dynamic> itemList = (item is List) ? item : [item];
-
-    List<Bus> busList = itemList.map((i) => Bus.fromJson(i)).toList();
+    try{
+      var item = json['response']['body']['items']['item'];
+      List<dynamic> itemList = (item is List) ? item : [item];
+      busList = itemList.map((i) => Bus.fromJson(i)).toList();
+      busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
+    } catch(e) {
+      busList = [];
+    }
 
     return BusApiRes(
       buses: busList
