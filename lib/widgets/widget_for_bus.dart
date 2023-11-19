@@ -1,14 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/providers/bus_station_info.dart';
 
-// 차피 하나만 하면 되므로 수정 가능성 낮음
+// 버스정류장에 대한 정보 출력하는 위젯 - 상태가 아닌데 상태로 사용하는 게 문제발생가능있음. 나중에 분리하던가 할 것
 class BusStopBox extends StatelessWidget {
   final String mainText;
   final String subText;
-  final int numOfBus;
+  var numOfBus;
+  final String code;
   final int id;
 
-  BusStopBox({this.mainText="", this.subText="", this.id=0, this.numOfBus=0, super.key});
+  BusStopBox({this.mainText="", this.subText="", this.code="", this.id=0, this.numOfBus=0, super.key});
+
+  void setNumOfBus(int num_of_bus){
+    numOfBus = num_of_bus;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,14 +70,14 @@ class BusStopBox extends StatelessWidget {
   }
 }
 
-// 데이터를 배열로 받아야 해서 수정 가능성 높음
-class BusScheduleBox extends StatelessWidget {
+// 버스정류장의 각 도착할 버스에 대한 정보 출력하는 위젯 - 도착 시간에 따라 색을 바꿔야 할 거 같아.
+class BusScheduleBoxUnit extends StatelessWidget {
   final String mainText;
   final String subText;
   final String arriveText;
-  final int num;
+  final String num;
 
-  const BusScheduleBox({this.mainText="", this.subText="", this.num=0, this.arriveText="", super.key});
+  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num="", this.arriveText="", super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -115,50 +121,28 @@ class BusScheduleBox extends StatelessWidget {
   }
 }
 
+// 버스정류장의 버스 도착정보를 통틀어 출력하는 위젯 - BusScheduleBox 사용함
+class BusScheduleBox extends StatefulWidget {
+  final BusApiRes? busList;
 
-// 진짜 임시임!!!!!! 시연용
-class temp extends StatefulWidget {
-  final BusStopBox busStop;
-
-  const temp({required this.busStop, super.key});
+  const BusScheduleBox({this.busList, super.key});
 
   @override
-  State<temp> createState() => _tempState();
+  State<BusScheduleBox> createState() => _BusScheduleBoxState();
 }
 
-class _tempState extends State<temp> {
+class _BusScheduleBoxState extends State<BusScheduleBox> {
 
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [];
-    for (int i=0; i < widget.busStop.numOfBus; i++) {
-      switch (widget.busStop.mainText) {
-        case "구미역":
-          children.add(BusScheduleBox(mainText: '구미역 -> 금오공대종점',
-              subText: '(비산동행정복지센터건너 - 비산동행정복지센터앞)',
-              num: 190,
-              arriveText: '5분 후 도착예정'));
-          break;
-        case "농협":
-          children.add(BusScheduleBox(mainText: '농협 -> 금오공대종점',
-              subText: '(비산동행정복지센터건너 - 비산동행정복지센터앞)',
-              num: 195,
-              arriveText: '5분 후 도착예정'));
-          break;
-        case "금오공대종점":
-          children.add(BusScheduleBox(mainText: '금오공대종점 -> 구미역',
-              subText: '(비산동행정복지센터건너 - 비산동행정복지센터앞)',
-              num: 57,
-              arriveText: '5분 후 도착예정'));
-          break;
-        case "금오공대입구(옥계중학교방면)":
-          children.add(BusScheduleBox(mainText: '금오공대입구(옥계중학교방면) -> 구미역',
-              subText: '(비산동행정복지센터건너 - 비산동행정복지센터앞)',
-              num: 21,
-              arriveText: '5분 후 도착예정'));
-          break;
-        default:
-          SizedBox(height: 0);
+
+    if (widget.busList != null){
+      for (int i=0; i <  widget.busList!.buses.length; i++){
+        children.add(BusScheduleBoxUnit(mainText: '예시 (${widget.busList!.buses[i].nodenm} -> 도착 정류장)',
+          subText: '정류장 몇 남았는지',
+          num: widget.busList!.buses[i].routeno,
+          arriveText: '${(widget.busList!.buses[i].arrtime/60).toInt()}분 ${widget.busList!.buses[i].arrtime%60}초 후 도착',));
       }
     }
 
