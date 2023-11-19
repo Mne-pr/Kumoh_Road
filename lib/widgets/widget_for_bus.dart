@@ -56,9 +56,8 @@ class BusScheduleBoxUnit extends StatelessWidget {
   final String subText;
   final String arriveText;
   final String num;
-  final int numOfBus;
 
-  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num="", this.arriveText="", this.numOfBus=0, super.key});
+  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num="", this.arriveText="", super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -90,21 +89,6 @@ class BusScheduleBoxUnit extends StatelessWidget {
                     '$arriveText',
                     style: TextStyle(fontSize: 14, color: Colors.red),
                   ),
-                  SizedBox(height: 5),
-                  Divider(),
-                  SizedBox(height: 3),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      SizedBox(width: 20),
-                      Text(
-                        '전체 노선 $numOfBus대',
-                        style:
-                        TextStyle(fontSize: 13, color: CupertinoColors.inactiveGray),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 5),
                 ],
               ),
             ),
@@ -130,17 +114,32 @@ class _BusScheduleBoxState extends State<BusScheduleBox> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> children = [];
+    List<Widget> children = [
+      SizedBox(height: 10), Divider(),
+      SizedBox(height: 1),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(width: 20),
+          Text(
+            '전체 노선 ${widget.busList?.buses.length}대',
+            style:
+            TextStyle(fontSize: 13, color: CupertinoColors.inactiveGray),
+          ),
+        ],
+      ),
+      SizedBox(height: 1),
+    ];
 
     if (widget.busList != null){
       for (int i=0; i < widget.busList!.buses.length; i++){
         children.add(BusScheduleBoxUnit(mainText: '예시 (${widget.busList!.buses[i].nodenm} -> 도착 정류장)',
-          numOfBus: widget.busList!.buses.length,
           subText: '정류장 몇 남았는지',
           num: widget.busList!.buses[i].routeno,
           arriveText: '${(widget.busList!.buses[i].arrtime/60).toInt()}분 ${widget.busList!.buses[i].arrtime%60}초 후 도착',));
       }
     }
+    children.add(Divider(),);
 
     return SingleChildScrollView(
       child: Padding(
