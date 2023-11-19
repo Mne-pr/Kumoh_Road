@@ -6,15 +6,10 @@ import 'package:kumoh_road/providers/bus_station_info.dart';
 class BusStopBox extends StatelessWidget {
   final String mainText;
   final String subText;
-  var numOfBus;
   final String code;
   final int id;
 
-  BusStopBox({this.mainText="", this.subText="", this.code="", this.id=0, this.numOfBus=0, super.key});
-
-  void setNumOfBus(int num_of_bus){
-    numOfBus = num_of_bus;
-  }
+  BusStopBox({this.mainText="", this.subText="", this.code="", this.id=0, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,21 +45,6 @@ class BusStopBox extends StatelessWidget {
           ],
         ),
         SizedBox(height: 5),
-        Divider(),
-        SizedBox(height: 3),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            SizedBox(width: 20),
-            Text(
-              '전체 노선 $numOfBus대',
-              style:
-              TextStyle(fontSize: 13, color: CupertinoColors.inactiveGray),
-            ),
-          ],
-        ),
-        SizedBox(height: 5),
-
       ],
     );
   }
@@ -76,8 +56,9 @@ class BusScheduleBoxUnit extends StatelessWidget {
   final String subText;
   final String arriveText;
   final String num;
+  final int numOfBus;
 
-  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num="", this.arriveText="", super.key});
+  const BusScheduleBoxUnit({this.mainText="", this.subText="", this.num="", this.arriveText="", this.numOfBus=0, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +90,21 @@ class BusScheduleBoxUnit extends StatelessWidget {
                     '$arriveText',
                     style: TextStyle(fontSize: 14, color: Colors.red),
                   ),
-                  SizedBox(height: 5)
+                  SizedBox(height: 5),
+                  Divider(),
+                  SizedBox(height: 3),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SizedBox(width: 20),
+                      Text(
+                        '전체 노선 $numOfBus대',
+                        style:
+                        TextStyle(fontSize: 13, color: CupertinoColors.inactiveGray),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 5),
                 ],
               ),
             ),
@@ -138,8 +133,9 @@ class _BusScheduleBoxState extends State<BusScheduleBox> {
     List<Widget> children = [];
 
     if (widget.busList != null){
-      for (int i=0; i <  widget.busList!.buses.length; i++){
+      for (int i=0; i < widget.busList!.buses.length; i++){
         children.add(BusScheduleBoxUnit(mainText: '예시 (${widget.busList!.buses[i].nodenm} -> 도착 정류장)',
+          numOfBus: widget.busList!.buses.length,
           subText: '정류장 몇 남았는지',
           num: widget.busList!.buses[i].routeno,
           arriveText: '${(widget.busList!.buses[i].arrtime/60).toInt()}분 ${widget.busList!.buses[i].arrtime%60}초 후 도착',));

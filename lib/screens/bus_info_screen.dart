@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -83,7 +82,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
 
       setState(() {
         busList = BusScheduleBox(busList: res);
-        inpBusStop.numOfBus = res.buses.length;
         currentBusStop = inpBusStop;
       });
     }
