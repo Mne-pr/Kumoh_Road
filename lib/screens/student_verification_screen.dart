@@ -75,7 +75,7 @@ class _StudentVerificationScreenState extends State<StudentVerificationScreen> {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
-        titleSpacing: -5.0,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -25,7 +25,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
   List<dynamic> markerList = List.generate(2, (index) => null, growable: false);
 
   //주소 입력 오류 출력 Toast
-  void viewError(String errorMessage) {
+  void errorView(String errorMessage) {
     Fluttertoast.showToast(
       msg: errorMessage,
       gravity: ToastGravity.BOTTOM,
@@ -57,6 +57,21 @@ class _PathMapScreenState extends State<PathMapScreen> {
     }
   }
 
+  Future<List> getPath() async {
+    http.Response response = await http.get(
+        Uri.parse(
+            "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start=${coordinateList[0][4]},${coordinateList[0][3]}&goal=${coordinateList[1][4]},${coordinateList[1][3]}&option={탐색옵션}"),
+        headers: headerss);
+    String jsonData = utf8.decode(response.bodyBytes);
+    List<dynamic> tempList = jsonDecode(jsonData)["route"]["traoptimal"][0]["path"];
+    List<dynamic> tcoordList =
+        List.generate(tempList.length, (index) => null, growable: false);
+    for(int i = 0; i < tempList.length; i++){
+      tcoordList[i] = NLatLng(tempList[i][1], tempList[i][0]);
+    }
+    return tcoordList;
+  }
+
   void moveMap() async {
     final movePoint = NCameraUpdate.scrollAndZoomTo(
       target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2, (coordinateList[0][4] + coordinateList[1][4]) / 2),
@@ -64,43 +79,44 @@ class _PathMapScreenState extends State<PathMapScreen> {
     );
     markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]));
     markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]));
+    List<dynamic> tempList = await getPath();
+    List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => NLatLng(0.0, 0.0));
+    for(int i = 0; i < tempList.length; i++){
+      pathCoordinate[i] = tempList[i];
+    }
+    final tempLine = NPolylineOverlay(id: "test", coords: pathCoordinate, color: Colors.red, width: 5);
+    await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
-    await mapController.addOverlayAll({markerList[0], markerList[1]});
+    await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
   }
 
-  void getPath() async {
-    if (inputString[0] == "" || inputString[1] == "") {
-      inputString[0] = originAddress.text;
-      inputString[1] = destinationAddress.text;
-      viewError("주소가 입력되지 않았습니다");
+  void mapSet() async {
+    if (originAddress.text == "" || destinationAddress.text == "") {
+      errorView("주소 입력이 비어있습니다");
     } else {
       if (inputString[0] != originAddress.text) {
         inputString[0] = originAddress.text;
         coordinateList[0] = await getCoordinate(inputString[0]);
-        print("출발지 주소 API 호출");
-      } else {
-        viewError("같은 출발지 입력");
+        print("출발지 API 호출함");
       }
       if (inputString[1] != destinationAddress.text) {
         inputString[1] = destinationAddress.text;
         coordinateList[1] = await getCoordinate(inputString[1]);
-        print("도착지 주소 API 호출");
-      } else {
-        viewError("같은 도착지 입력");
+        print("도착지 API 호출함");
       }
       if (coordinateList[0][0] == 200 && coordinateList[1][0] == 200) {
         if (coordinateList[0][1] == 0 && coordinateList[1][1] == 0) {
-          viewError("주소 정보가 잘못되었습니다");
+          errorView("잘못된 주소입니다");
         } else if (coordinateList[0][1] == 0) {
-          viewError("출발지 주소가 잘못되었습니다");
+          errorView("잘못된 출발지 주소입니다");
         } else if (coordinateList[1][1] == 0) {
-          viewError("도착지 정보가 잘못되었습니다");
+          errorView("잘못된 도착지 주소입니다");
         } else {
           print(coordinateList);
           moveMap();
         }
       } else {
-        viewError("오류입니다");
+        errorView("Error:response is Not 200");
       }
     }
   }
@@ -158,7 +174,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => getPath(),
+              onPressed: () => mapSet(),
               child: const Text('경로 탐색'),
             ),
             Expanded(

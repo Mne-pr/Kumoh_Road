@@ -25,6 +25,10 @@ class KakaoLoginProvider with ChangeNotifier {
   String? get qrCodeUrl => _qrCodeUrl;
   bool get isStudentVerified => _isStudentVerified;
 
+  String? getCurrentUserId() {
+    return _user?.id.toString();
+  }
+
   Future<void> login() async {
     try {
       bool isInstalled = await isKakaoTalkInstalled();
