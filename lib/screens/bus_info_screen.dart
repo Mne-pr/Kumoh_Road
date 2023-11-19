@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:kumoh_road/screens/loading_screen.dart';
@@ -6,6 +8,7 @@ import 'package:kumoh_road/widgets/outline_circle_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/widget_for_bus.dart';
+import 'package:http/http.dart' as http;
 
 // 네이버지도 이슈
 // [import android.os.Bundle], [override fun onCreate..] : naver map api 이슈 해결위한 추가
@@ -30,6 +33,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   final busStop2Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:4, mainText:'농협');
   final busStop3Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:9, mainText:'금오공대종점');
   final busStop4Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:3, mainText:'금오공대입구(옥계중학교방면)');
+
 
   // 상태 저장하기 위한 변수
   late NaverMapController con;
@@ -144,7 +148,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
             ),
             // 1.3 선택한 버스정류장에 대한 정보 표시하는 창 배치
             bottomScrollWidget,
-            LoadingScreen(miliTime: 500),
+            LoadingScreen(miliTime: 750),
           ],
         ),
       ),

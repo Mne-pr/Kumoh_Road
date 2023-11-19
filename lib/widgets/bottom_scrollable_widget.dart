@@ -62,8 +62,14 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                               ),
                             ),
                           ),
+
                           // 여기 상단에 고정하고 싶은 것들
-                          widget.topContent ?? SizedBox.shrink(),
+                          Stack(
+                            children: [
+                              widget.topContent ?? SizedBox.shrink(),
+                              SizedBox(height: MediaQuery.of(context).size.height* widget.bottomLength),
+                            ],
+                          ),
                         ],
                       ),
                     ],
@@ -71,10 +77,10 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                 ),
 
                 Positioned.fill(
-                  top: MediaQuery.of(context).size.height * 0.15,
-                  child: SingleChildScrollView(
+                  top: MediaQuery.of(context).size.height * (widget.bottomLength-0.02),
+                  child: SingleChildScrollView( // 여기 나머지 것들
                       child: widget.restContent,
-                  ),// 여기 나머지 것들
+                  ),
                 ),
               ],
             ),
