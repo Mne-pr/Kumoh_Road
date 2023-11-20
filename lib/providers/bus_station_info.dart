@@ -1,3 +1,17 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+// 버스정류장
+class BusSt{
+  final String mainText;
+  final String subText;
+  final String code;
+  final int id;
+
+  BusSt({this.mainText="", this.subText="",this.code="", this.id=0});
+}
+
+// 버스
 class Bus{
   final int arrprevstationcnt;
   final int arrtime;
@@ -26,6 +40,7 @@ class Bus{
   }
 }
 
+// api로 버스정류장의 버스목록 읽어오기
 class BusApiRes {
   final List<Bus> buses;
 
@@ -45,6 +60,36 @@ class BusApiRes {
 
     return BusApiRes(
       buses: busList
+    );
+  }
+}
+
+
+// 버스정류장 위젯
+class SubWidget extends StatelessWidget {
+  final VoidCallback onClick; // 클릭 이벤트를 위한 콜백
+  final BusSt busStation;
+  final int numOfBus;
+
+  const SubWidget({Key? key, required this.onClick, required this.busStation, required this.numOfBus}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onClick,
+      child: Container(
+        decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [ // 위아래 그림자
+              BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 0, blurRadius: 10, offset: Offset(0,-5)),
+              BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 0, blurRadius: 10, offset: Offset(0, 5)),
+            ]
+        ),
+        height: 100,
+        child: Center(
+            child: Text('버스 수 : ${numOfBus}, 정류장 이름 : ${busStation.mainText}')
+        ),
+      ),
     );
   }
 }
