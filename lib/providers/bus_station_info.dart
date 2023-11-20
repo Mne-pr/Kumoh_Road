@@ -93,3 +93,39 @@ class SubWidget extends StatelessWidget {
     );
   }
 }
+
+
+class CustomAnimatedWidget extends StatelessWidget {
+  final Animation<double> animation;
+  final List<Bus> busList;
+
+  CustomAnimatedWidget({
+    Key? key,
+    required this.animation,
+    required this.busList,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return Container(
+          margin: EdgeInsets.only(bottom: animation.value), // 애니메이션 값에 따라 위치 조정
+          height: MediaQuery.of(context).size.height / 2,
+          color: Colors.white,
+          child: ListView.builder(
+              itemCount: busList.length,
+              itemBuilder: (context, index) {
+                Bus bus = busList[index];
+                return ListTile(
+                  title: Text("버스 : ${bus.routeno}"),
+                  subtitle: Text("남은 시간 : ${bus.arrtime}"),
+                );
+              }
+          ),
+        );
+      },
+    );
+  }
+}

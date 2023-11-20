@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/bus_station_info.dart';
+// 사용하지 않음 2 - 아직 확실하지 않아 못 버리는 중임
+
 
 // 버스정류장에 대한 정보 출력하는 위젯 - 상태가 아닌데 상태로 사용하는 게 문제발생가능있음. 나중에 분리하던가 할 것
 class BusStopBox extends StatelessWidget {

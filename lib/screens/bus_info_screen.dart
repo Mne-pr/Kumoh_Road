@@ -7,7 +7,6 @@ import 'package:kumoh_road/screens/loading_screen.dart';
 import 'package:kumoh_road/widgets/outline_circle_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../widgets/bottom_navigation_bar.dart';
-import '../widgets/widget_for_bus.dart';
 import 'package:http/http.dart' as http;
 
 class BusInfoScreen extends StatefulWidget {
@@ -17,7 +16,7 @@ class BusInfoScreen extends StatefulWidget {
   State<BusInfoScreen> createState() => _BusInfoScreenState();
 }
 
-class _BusInfoScreenState extends State<BusInfoScreen> with SingleTickerProviderStateMixin {
+class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateMixin {
 
   // api 호출
   final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
@@ -40,13 +39,19 @@ class _BusInfoScreenState extends State<BusInfoScreen> with SingleTickerProvider
   // 상태 저장하기 위한 변수
   late NaverMapController con;
   late int curBusStop = 0; late List<OutlineCircleButton> buttons; late int curButton = 2;
-  late BusScheduleBox busList = BusScheduleBox(busList: BusApiRes.fromJson({}));
+  late List<Bus> busList = [];
   int numOfBus = 0;
   bool isLoading = true;
 
-  late AnimationController anicon;
-  late CurvedAnimation curveAni;
-  late Animation<double> animation;
+  // 버스정류장 담당 애니메이션
+  late AnimationController busStAnicon;
+  late CurvedAnimation busStCurveAni;
+  late Animation<double> busStAni;
+
+  // 버스리스트 담당 애니메이션
+  late AnimationController busListAnicon;
+  late Animation<double> busListAni;
+
 
   // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
   static const gumiPos =  NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
@@ -100,22 +105,30 @@ class _BusInfoScreenState extends State<BusInfoScreen> with SingleTickerProvider
       NInfoWindow.onMarker(id: busStopMarks[3].info.id, text: busStopInfos[3].mainText),
     ];
 
-    anicon = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
-    curveAni = CurvedAnimation(parent: anicon, curve: Curves.easeInOutQuart);
-    animation = Tween(begin: 0.0, end: 0.0).animate(curveAni)
+    busStAnicon = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
+    busStCurveAni = CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutQuart);
+    busStAni = Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
       ..addListener(() { setState(() {}); }); // 애니메이션 값이 변할 때마다 위젯을 다시 빌드.
+
+    //busListAnicon = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
+    busListAni = Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
+      ..addListener(() { setState(() {}); });
+
   }
 
   @override
   Widget build(BuildContext context) {
 
     double screenHeight = MediaQuery.of(context).size.height * 0.78;
-    animation = Tween(begin: 0.0, end: screenHeight).animate(curveAni)
+    busStAni = Tween(begin: 0.0, end: screenHeight).animate(busStCurveAni)
+      ..addListener(() {setState(() {});});
+
+    busListAni = Tween(begin: -MediaQuery.of(context).size.height / 2, end: 0.0).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
     void _toggleSubWidgetPosition() {
-      if (anicon.isDismissed) { anicon.forward();}
-      else if (anicon.isCompleted) { anicon.reverse();}
+      if (busStAnicon.isDismissed) { busStAnicon.forward();}
+      else if (busStAnicon.isCompleted) { busStAnicon.reverse();}
     }
     print("수정용");
 
@@ -137,8 +150,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with SingleTickerProvider
       for (int i = 0; i < 4; i++){ if (busStop != i) try { busStopW[i].close(); } catch(e) {} }
 
       setState(() {
-        busList = BusScheduleBox(busList: res);
-        numOfBus = busList.busList.buses.length;
+        busList = res.buses;
+        numOfBus = busList.length;
         curBusStop = busStop;
       });
     }
@@ -173,19 +186,29 @@ class _BusInfoScreenState extends State<BusInfoScreen> with SingleTickerProvider
 
             // 1.2 위치 지정하여 버튼 배치. SizeBox를 사용하기 위해 Column 사용함
             Positioned(
-              top: MediaQuery.of(context).size.width * 0.05 + animation.value / 6,
+              top: MediaQuery.of(context).size.width * 0.05 + busStAni.value / 6,
               left: MediaQuery.of(context).size.width * 0.05,
               child: buttons[curButton],
             ),
 
+            // 아마 여기에 리스트위젯 넣을것
+            Positioned(
+              bottom: -MediaQuery.of(context).size.height * 0.8, left: 0, right: 0,
+              child: CustomAnimatedWidget(
+                animation: busStAni,
+                busList: busList,
+              ),
+            ),
+
             // 1.3 선택한 버스정류장에 대한 정보 표시하는 창 배치
             Positioned(
-              bottom: animation.value,
+              bottom: busStAni.value,
               left: 0, right: 0,
               height: MediaQuery.of(context).size.height * 0.125,
               child: SubWidget(onClick: _toggleSubWidgetPosition, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
             ),
 
+            // 1.4 로딩화면
             LoadingScreen(miliTime: 1000),
           ],
         ),
@@ -198,7 +221,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with SingleTickerProvider
 
   @override
   void dispose() {
-    anicon.dispose();
+    busListAnicon.dispose();
+    busStAnicon.dispose();
     super.dispose();
   }
 }
