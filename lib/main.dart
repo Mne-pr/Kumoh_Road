@@ -16,7 +16,7 @@ void main() async {
   KakaoSdk.init(nativeAppKey: 'c7b475e5111b80916e28e5e364d62631');
 
   await NaverMapSdk.instance.initialize(
-      clientId: "t2v0aiyv0u",
+      clientId: 't2v0aiyv0u',
       onAuthFailed: (ex) {
         print("네이버맵 로그인 오류 : $ex");
       }

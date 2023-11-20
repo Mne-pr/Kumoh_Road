@@ -14,7 +14,7 @@ class MiscOssLicenseScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
-        titleSpacing: -5.0, // AppBar 제목과 뒤로 가기 버튼 사이 간격 제거
+        centerTitle: true,
       ),
       body: SingleChildScrollView( // 긴 텍스트를 위해 SingleChildScrollView 사용
         padding: const EdgeInsets.all(16.0),

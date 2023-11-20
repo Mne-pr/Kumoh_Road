@@ -4,14 +4,16 @@ import 'package:flutter/material.dart';
 // 스크롤 시 나타나는 부가효과 삭제위함
 class NoGlowScrollBehavior extends ScrollBehavior {}
 
+// topContent, restContent 모두 null을 넣을 수 있음
 class BottomScrollableWidget extends StatefulWidget {
   final Widget? topContent; // 상단 고정 콘텐츠
-  final Widget restContent; // 하단 고정 콘텐츠
+  final Widget? restContent; // 하단 고정 콘텐츠
   final double bottomLength;
   final double topLength;
+  final double intervalTopBotom;
 
   const BottomScrollableWidget({
-    this.topContent, required this.restContent,
+    this.topContent, this.restContent, this.intervalTopBotom=0,
     required this.bottomLength, required this.topLength,
     super.key
   });
@@ -62,8 +64,14 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                               ),
                             ),
                           ),
+
                           // 여기 상단에 고정하고 싶은 것들
-                          widget.topContent ?? SizedBox.shrink(),
+                          Stack(
+                            children: [
+                              widget.topContent ?? SizedBox.shrink(),
+                              SizedBox(height: MediaQuery.of(context).size.height* widget.bottomLength),
+                            ],
+                          ),
                         ],
                       ),
                     ],
@@ -71,11 +79,30 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                 ),
 
                 Positioned.fill(
-                  top: MediaQuery.of(context).size.height * 0.15,
-                  child: SingleChildScrollView(
-                      child: widget.restContent,
-                  ),// 여기 나머지 것들
+                  top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      SingleChildScrollView( // 여기 나머지 것들
+                        child: Stack(
+                          children: [
+                            widget.restContent ?? SizedBox.shrink(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
                 ),
+                // Positioned.fill(
+                //   top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
+                //   child: SingleChildScrollView( // 여기 나머지 것들
+                //       child: Stack(
+                //         children: [
+                //           widget.restContent ?? SizedBox.shrink(),
+                //         ],
+                //       ),
+                //   ),
+                // ),
               ],
             ),
           ),

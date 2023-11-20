@@ -46,3 +46,4 @@ app.*.map.json
 # 파이어베이스 정보
 android/app/google-services.json
 lib/firebase_options.dart
+

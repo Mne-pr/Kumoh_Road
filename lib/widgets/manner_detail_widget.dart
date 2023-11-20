@@ -24,14 +24,6 @@ class MannerDetailsWidget extends StatelessWidget {
       ],
     );
   }
-  List<Map<String, dynamic>> _getFilteredMannerList(
-      List<Map<String, dynamic>>? manners) {
-    if (manners == null) {
-      return [];
-    }
-    return manners.where((manner) => manner['votes'] > 0).toList();
-  }
-
 
   Widget _buildSectionTitle(String title) {
     return Padding(

@@ -1,16 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:kumoh_road/providers/bus_station_info.dart';
 import 'package:kumoh_road/screens/loading_screen.dart';
 import 'package:kumoh_road/widgets/bottom_scrollable_widget.dart';
 import 'package:kumoh_road/widgets/outline_circle_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/widget_for_bus.dart';
-
-// 네이버지도 이슈
-// [import android.os.Bundle], [override fun onCreate..] : naver map api 이슈 해결위한 추가
-// https://note11.dev/flutter_naver_map/start/initial_setting
-// +ios 세팅 현재 불가능
+import 'package:http/http.dart' as http;
 
 class BusInfoScreen extends StatefulWidget {
   const BusInfoScreen({super.key});
@@ -26,29 +25,32 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
   final busStop2 = NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협");
   final busStop3 = NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점");
   final busStop4 = NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)");
-  final busStop1Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:13, mainText:'구미역');
-  final busStop2Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:4, mainText:'농협');
-  final busStop3Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:9, mainText:'금오공대종점');
-  final busStop4Info = BusStopBox(subText:'경상북도 구미시 선산읍 선산대로 1408 (동부리 327-5)', id:12321, numOfBus:3, mainText:'금오공대입구(옥계중학교방면)');
+  final busStop1Info = BusStopBox(code:"GMB80", id:10080,subText:'경상북도 구미시 구미중앙로 70',  mainText:'구미역');
+  final busStop2Info = BusStopBox(code:"GMB167",id:10167,subText:'경상북도 구미시 원평동 1008-40',mainText:'농협');
+  final busStop3Info = BusStopBox(code:"GMB132",id:10132,subText:'경상북도 구미시 거의동 550',    mainText:'금오공대종점');
+  final busStop4Info = BusStopBox(code:"GMB131",id:10131,subText:'경상북도 구미시 거의동 589-8',  mainText:'금오공대입구(옥계중학교방면)');
 
   // 상태 저장하기 위한 변수
   late NaverMapController con;
   late BusStopBox currentBusStop = busStop1Info;
+  late BusScheduleBox busList = BusScheduleBox(busList: BusApiRes.fromJson({}));
+
   late OutlineCircleButton trainBtn;
   late OutlineCircleButton schoolBtn;
+  late OutlineCircleButton bussBtn;
   late OutlineCircleButton currentBtn = schoolBtn;
+
 
   bool isLoading = true;
 
-  // 임시 변수
-  late temp forBusList;
-  
   @override
   Widget build(BuildContext context) {
-    // 버스 정보 표시할 위젯
+
+    // 초기 버스 정보 표시할 더미위젯
     final bottomScrollWidget = BottomScrollableWidget(
       topContent: currentBusStop,
-      restContent: temp(busStop: currentBusStop ),
+      restContent: busList,
+      intervalTopBotom: 0.085,
       bottomLength: 0.17,
       topLength: 0.9,
       key: UniqueKey(),
@@ -64,17 +66,44 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
     final busStop2Window = NInfoWindow.onMarker(id: busStop2.info.id, text: busStop2Info.mainText);
     final busStop3Window = NInfoWindow.onMarker(id: busStop3.info.id, text: busStop3Info.mainText);
     final busStop4Window = NInfoWindow.onMarker(id: busStop4.info.id, text: busStop4Info.mainText);
+    // 해당 정류장에 도착할 버스 api 호출에 필요한 정보
+    final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
+    final serviceKey = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
+
+    // 정류장의 정보 가져오는 함수
+    Future<BusApiRes> fetchBusInfo(final nodeId) async {
+      try{
+        final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serviceKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
+        if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
+        else { throw Exception('Failed to load buses info');}
+      } catch(e) {
+        return BusApiRes.fromJson({});
+      }
+    }
 
     // 위젯을 업데이트하는 함수. 이때 api 사용하여 버스정류장의 정보 알아올 것
-    void updateBusStop(final inpBusStop){
+    void updateBusStop(BusStopBox inpBusStop) async {
+      BusApiRes res = await fetchBusInfo(inpBusStop.code);
+
       setState(() {
+        busList = BusScheduleBox(busList: res);
         currentBusStop = inpBusStop;
       });
     }
 
+    // 정류장 버튼
+    bussBtn = OutlineCircleButton(
+        child: Icon(Icons.directions_bus_filled_outlined), radius: 50.0, borderSize: 0.5,
+        onTap: () async {
+          gumiStationCameraUpdate.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
+          await con.updateCamera(gumiStationCameraUpdate);
+          busStop1.performClick(); currentBtn = schoolBtn;
+        }
+    );
+
     // 구미역으로 이동하는 버튼
     trainBtn = OutlineCircleButton(
-      child: Icon(Icons.train_outlined), radius: 50.0, borderSize: 0.5,
+      child: Icon(Icons.tram_outlined), radius: 50.0, borderSize: 0.5,
       onTap: () async {
         gumiStationCameraUpdate.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
         await con.updateCamera(gumiStationCameraUpdate);
@@ -144,7 +173,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> {
             ),
             // 1.3 선택한 버스정류장에 대한 정보 표시하는 창 배치
             bottomScrollWidget,
-            LoadingScreen(miliTime: 500),
+            LoadingScreen(miliTime: 750),
           ],
         ),
       ),
