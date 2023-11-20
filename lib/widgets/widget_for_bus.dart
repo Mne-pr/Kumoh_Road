@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/providers/bus_station_info.dart';
+// 사용하지 않음 2 - 아직 확실하지 않아 못 버리는 중임
+
 
 // 버스정류장에 대한 정보 출력하는 위젯 - 상태가 아닌데 상태로 사용하는 게 문제발생가능있음. 나중에 분리하던가 할 것
 class BusStopBox extends StatelessWidget {
@@ -66,7 +68,7 @@ class BusScheduleBoxUnit extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(height: 5),
+            SizedBox(height: 8),
             Icon(Icons.directions_bus, color: Colors.blue, size: 25),
             SizedBox(width: 15),
             Expanded(
@@ -74,21 +76,12 @@ class BusScheduleBoxUnit extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   SizedBox(height: 2),
-                  Text(
-                    '$num | $mainText',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  Text('$num | $mainText',style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
                   SizedBox(height: 10),
-                  Text(
-                    '$subText',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                  Text('$subText',style: TextStyle(fontSize: 12, color: Colors.grey),),
                   SizedBox(height: 6),
                   // 남은 시간에 따라 색 바꾸는 것도 좋을듯?
-                  Text(
-                    '$arriveText',
-                    style: TextStyle(fontSize: 14, color: Colors.red),
-                  ),
+                  Text('$arriveText',style: TextStyle(fontSize: 14, color: Colors.red),),
                 ],
               ),
             ),
@@ -138,8 +131,6 @@ class _BusScheduleBoxState extends State<BusScheduleBox> {
         arriveText: '${(widget.busList.buses[i].arrtime/60).toInt()}분 ${widget.busList.buses[i].arrtime%60}초 후 도착',));
     }
 
-    if (widget.busList.buses.length != 0) {children.add(Divider(),);}
-
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.fromLTRB(10, 5, 10, 0),
@@ -148,3 +139,4 @@ class _BusScheduleBoxState extends State<BusScheduleBox> {
     );
   }
 }
+
