@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/kakao_login_providers.dart';
 import '../../utilities/report_manager.dart';
@@ -16,7 +18,8 @@ class _ReportListScreenState extends State<ReportListScreen> {
   @override
   void initState() {
     super.initState();
-    final kakaoLoginProvider = Provider.of<KakaoLoginProvider>(context, listen: false);
+    final kakaoLoginProvider = Provider.of<KakaoLoginProvider>(
+        context, listen: false);
     String? currentUserId = kakaoLoginProvider.getCurrentUserId();
 
     if (currentUserId != null) {
@@ -62,11 +65,19 @@ class _ReportListScreenState extends State<ReportListScreen> {
   }
 
   Widget _buildReportCard(Map<String, dynamic> report) {
-    IconData icon = Icons.report_problem; // 기본 아이콘
-    String reportTitle = '신고 내용'; // 기본 신고 제목
+    String reportType = ''; // 신고 유형
+    String reportTitle = '신고 내용'; // 신고 제목
     String reportDetail = report['reason']; // 신고 상세 내용
+    String reportTime = ''; // 신고 시간
 
-    // 신고 내용 파싱: '제목: 상세 내용'
+    // 신고 시간 파싱 및 포맷팅
+    if (report.containsKey('timestamp')) {
+      Timestamp timestamp = report['timestamp'];
+      DateTime reportedAt = timestamp.toDate();
+      reportTime = DateFormat('yyyy-MM-dd HH:mm').format(reportedAt);
+    }
+
+    // 기타 신고 내용 파싱 및 처리
     if (report['reason'].contains(':')) {
       var parts = report['reason'].split(':');
       reportTitle = parts[0].trim();
@@ -75,27 +86,41 @@ class _ReportListScreenState extends State<ReportListScreen> {
 
     switch (report['entityType']) {
       case 'user':
-        icon = Icons.person_outline;
+        reportType = '사용자 신고';
         break;
       case 'post':
-        icon = Icons.article;
+        reportType = '게시글 신고';
         break;
       case 'comment':
-        icon = Icons.comment;
+        reportType = '댓글 신고';
+        break;
+      default:
+        reportType = '기타 신고';
         break;
     }
 
     return Card(
       child: ListTile(
-        leading: Icon(icon, size: 38), // 아이콘 크기 조정
-        title: Text(reportTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(reportDetail),
-        trailing: Icon(
-          report['isHandledByAdmin'] ? Icons.check_circle : Icons
-              .hourglass_empty,
-          color: report['isHandledByAdmin'] ? Colors.green : Colors.blue,
+        title: Text('$reportType : $reportTitle', style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text('신고 내용: $reportDetail\n신고 시간: $reportTime'),
+        trailing: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              report['isHandledByAdmin'] ? Icons.check_circle : Icons.hourglass_empty,
+              color: report['isHandledByAdmin'] ? Colors.green : Colors.blue,
+            ),
+            Text(
+              report['isHandledByAdmin'] ? '처리됨' : '처리 중',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.grey,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
