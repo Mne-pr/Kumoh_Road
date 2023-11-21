@@ -124,44 +124,54 @@ class _TaxiScreenState extends State<TaxiScreen> {
     }
 
     List<InkWell> postWidgetList = [];
+    EdgeInsets topPadding = const EdgeInsets.only(top: 3);
+    EdgeInsets leftPadding = const EdgeInsets.only(left: 5);
+
     for(int i = 0; i < postList.length; i++){
       InkWell post = InkWell(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(builder: (context) => PostDetailsScreen(writerUserInfo: writerInfoList[i], postInfo: postList[i])));
         },
-        child: Padding( padding: const EdgeInsets.only(left: 15),
-          child: SizedBox( height: imgHeight,
-            child: Row( crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AspectRatio(aspectRatio: 1,
-                  child: Padding(padding: const EdgeInsets.all(10),
-                    child: ClipRRect(borderRadius: const BorderRadius.all(Radius.circular(3)),
-                      child: Image.network(postList[i].imageUrl, width: imgHeight, fit: BoxFit.cover,
-                        errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                          return Image.asset('assets/images/default_avatar.png', width: imgHeight, fit: BoxFit.cover, );},),),),),
-                Expanded(
-                  child: Padding(padding: const EdgeInsets.only(top: 10, left: 5),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        //게시글 제목
-                        Text(postList[i].title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,), overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 4),
-                        // 글쓴이 및 생성 시간
-                        Text('${writerInfoList[i].nickname}(${writerInfoList[i].gender}) ${postList[i].createdTime.hour}시 ${postList[i].createdTime.minute}분', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                        const SizedBox(height: 4),
-                        // 참여 인원 수
-                        Text("${postList[i].membersIdList.length + 1}/4", style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20,),
-                        // 댓글 수
-                        Row(mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Icon(Icons.question_answer_outlined, color: Colors.grey),
-                            Text('${writerInfoList[i].reviewList.length}'),],),],),),),],),),),);
+        child: SizedBox( height: imgHeight,
+          child: Row(children: [
+              Image.network(postList[i].imageUrl, fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {return Image.asset('assets/images/default_avatar.png', fit: BoxFit.cover);},),
+              Container(padding: const EdgeInsets.only(left: 15),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(postList[i].title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold,), overflow: TextOverflow.ellipsis),
+                  Padding(padding: topPadding, child:
+                    Row(children: [
+                      const Icon(Icons.account_circle, color: Colors.grey),
+                      Padding(padding: leftPadding,child:
+                        Text('${writerInfoList[i].nickname}(${writerInfoList[i].gender})', style: const TextStyle(color: Colors.grey)))])),
+                  Padding(padding: topPadding, child:
+                    Row(children: [
+                      const Icon(Icons.timer_sharp, color: Colors.grey),
+                      Padding(padding: leftPadding, child:
+                        Text('${postList[i].createdTime.hour}시 ${postList[i].createdTime.minute}분', style: const TextStyle(color: Colors.grey)))])),
+                  Padding(padding: topPadding, child:
+                    Row(children: [
+                      const Icon(Icons.people_sharp, color: Colors.grey),
+                      Padding(padding: leftPadding, child:
+                        Text("${postList[i].membersIdList.length + 1}/4", style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)))])),
+                  Padding(padding: topPadding, child:
+                    Row(children: [
+                      const Icon(Icons.rate_review_sharp, color: Colors.grey),
+                      Padding(padding: const EdgeInsets.only(left: 5), child:
+                        Text("${postList[i].commentList.length}"))
+                    ])
+                  )
+                ]),
+              ),
+          ],),
+        ),
+      );
       postWidgetList.add(post);
     }
 
     return Expanded(
       child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         children: postWidgetList,
       ),
     );

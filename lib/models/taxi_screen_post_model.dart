@@ -8,6 +8,7 @@ class TaxiScreenPostModel {
   final int viewCount;
   final String imageUrl;
   final List<dynamic> membersIdList;
+  final List<dynamic> commentList;
 
   TaxiScreenPostModel({
     required this.writerId,
@@ -17,6 +18,7 @@ class TaxiScreenPostModel {
     required this.viewCount,
     required this.imageUrl,
     required this.membersIdList,
+    required this.commentList
   });
 
   static Future<List<TaxiScreenPostModel>> getAllPostsByCollectionName(
@@ -24,14 +26,15 @@ class TaxiScreenPostModel {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionName).get();
     List<Map<String, dynamic>> documents = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
     List<TaxiScreenPostModel> postList = documents.map((doc) => TaxiScreenPostModel(
-            writerId: doc["writer"],
-            title: doc["title"],
-            content: doc["content"],
-            createdTime: doc["createdTime"].toDate(),
-            viewCount: doc["viewCount"],
-            imageUrl: doc["image"],
-            membersIdList: doc["members"]))
-        .toList();
+      writerId: doc["writer"],
+      title: doc["title"],
+      content: doc["content"],
+      createdTime: doc["createdTime"].toDate(),
+      viewCount: doc["viewCount"],
+      imageUrl: doc["image"],
+      membersIdList: doc["members"],
+      commentList: doc["commentList"]
+    )).toList();
 
     return postList;
   }
