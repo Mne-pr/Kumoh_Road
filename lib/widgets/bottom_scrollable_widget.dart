@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+// 사용하지 않음 - 세부적인 사항을 위해 bsw_for_bus 사용할 것임
+// 그냥 참고용임
+
 // 스크롤 시 나타나는 부가효과 삭제위함
 class NoGlowScrollBehavior extends ScrollBehavior {}
 
@@ -79,30 +82,21 @@ class _BottomScrollableWidgetState extends State<BottomScrollableWidget> {
                 ),
 
                 Positioned.fill(
-                  top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
-                  child: ListView(
-                    controller: scrollController,
-                    children: [
-                      SingleChildScrollView( // 여기 나머지 것들
-                        child: Stack(
-                          children: [
-                            widget.restContent ?? SizedBox.shrink(),
-                          ],
+                    top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        SingleChildScrollView( // 여기 나머지 것들
+                          child: Stack(
+                            children: [
+                              widget.restContent ?? SizedBox.shrink(),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  )
+                      ],
+                    )
                 ),
-                // Positioned.fill(
-                //   top: MediaQuery.of(context).size.height * (widget.bottomLength - widget.intervalTopBotom),
-                //   child: SingleChildScrollView( // 여기 나머지 것들
-                //       child: Stack(
-                //         children: [
-                //           widget.restContent ?? SizedBox.shrink(),
-                //         ],
-                //       ),
-                //   ),
-                // ),
+
               ],
             ),
           ),
