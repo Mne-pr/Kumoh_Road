@@ -153,12 +153,12 @@ class _TaxiScreenState extends State<TaxiScreen> {
                     Row(children: [
                       const Icon(Icons.people_sharp, color: Colors.grey),
                       Padding(padding: leftPadding, child:
-                        Text("${postList[i].membersIdList.length + 1}/4", style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)))])),
+                        Text("${postList[i].membersIdList.length + 1}/4명", style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)))])),
                   Padding(padding: topPadding, child:
                     Row(children: [
                       const Icon(Icons.rate_review_sharp, color: Colors.grey),
                       Padding(padding: const EdgeInsets.only(left: 5), child:
-                        Text("${postList[i].commentList.length}"))
+                        Text("${postList[i].commentList.length}개"))
                     ])
                   )
                 ]),
