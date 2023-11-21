@@ -43,7 +43,6 @@ class Bus{
 // api로 버스정류장의 버스목록 읽어오기
 class BusApiRes {
   final List<Bus> buses;
-
   BusApiRes({required this.buses});
 
   factory BusApiRes.fromJson(Map<String, dynamic> json) {
@@ -54,13 +53,9 @@ class BusApiRes {
       List<dynamic> itemList = (item is List) ? item : [item];
       busList = itemList.map((i) => Bus.fromJson(i)).toList();
       busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
-    } catch(e) {
-      busList = [];
-    }
+    } catch(e) {busList = [];}
 
-    return BusApiRes(
-      buses: busList
-    );
+    return BusApiRes(buses: busList);
   }
 }
 
@@ -86,8 +81,38 @@ class SubWidget extends StatelessWidget {
             ]
         ),
         height: 100,
-        child: Center(
-            child: Text('버스 수 : ${numOfBus}, 정류장 이름 : ${busStation.mainText}')
+        child: Column(
+          children: [
+            SizedBox(height: 15,),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(width: 10,),
+                Icon(Icons.location_on, color: Colors.blue, size: 25),
+                SizedBox(width: 5),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        busStation.mainText,
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                      ), SizedBox(height: 14),
+                      Text(
+                        busStation.subText,
+                        style: TextStyle(fontSize: 12, color: CupertinoColors.inactiveGray),
+                      ),
+                      Text(
+                        '${busStation.id}',
+                        style: TextStyle(fontSize: 12, color: CupertinoColors.inactiveGray),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 5),
+          ],
         ),
       ),
     );
@@ -107,6 +132,7 @@ class CustomAnimatedWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
@@ -118,9 +144,35 @@ class CustomAnimatedWidget extends StatelessWidget {
               itemCount: busList.length,
               itemBuilder: (context, index) {
                 Bus bus = busList[index];
-                return ListTile(
-                  title: Text("버스 : ${bus.routeno}"),
-                  subtitle: Text("남은 시간 : ${bus.arrtime}"),
+                return  Column(
+                  children: [
+                    Divider(thickness: 1.0, height: 1.0,),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(height: 8),
+                          Icon(Icons.directions_bus, color: Colors.blue, size: 25),
+                          SizedBox(width: 15),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                SizedBox(height: 2),
+                                Text('${bus.routeno} | 거칠 정류장 수 ${bus.arrprevstationcnt}',style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+                                SizedBox(height: 10),
+                                Text('뭐적냐',style: TextStyle(fontSize: 12, color: Colors.grey),),
+                                SizedBox(height: 6),
+                                // 남은 시간에 따라 색 바꾸는 것도 좋을듯?
+                                Text('${(bus.arrtime/60).toInt()}분 ${bus.arrtime%60}초 후 도착',style: TextStyle(fontSize: 14, color: Colors.red),),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 );
               }
           ),

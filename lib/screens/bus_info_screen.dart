@@ -49,7 +49,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late Animation<double> busStAni;
 
   // 버스리스트 담당 애니메이션
-  late AnimationController busListAnicon;
   late Animation<double> busListAni;
 
 
@@ -110,7 +109,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     busStAni = Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
       ..addListener(() { setState(() {}); }); // 애니메이션 값이 변할 때마다 위젯을 다시 빌드.
 
-    //busListAnicon = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
     busListAni = Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
       ..addListener(() { setState(() {}); });
 
@@ -221,7 +219,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   @override
   void dispose() {
-    busListAnicon.dispose();
     busStAnicon.dispose();
     super.dispose();
   }
