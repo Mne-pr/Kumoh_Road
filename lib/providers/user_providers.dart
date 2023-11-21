@@ -17,6 +17,7 @@ class UserProvider with ChangeNotifier {
   List<Map<String, dynamic>>? _unmannerList;
   String? _qrCodeUrl;
   bool _isStudentVerified = false;
+  bool _isSuspended = false;
   StreamSubscription<DocumentSnapshot>? _userChangesSubscription;
 
   int? get id => _id;
@@ -31,7 +32,7 @@ class UserProvider with ChangeNotifier {
   List<Map<String, dynamic>>? get unmannerList => _unmannerList;
   String? get qrCodeUrl => _qrCodeUrl;
   bool get isStudentVerified => _isStudentVerified;
-
+  bool get isSuspended => _isSuspended;
 
   Future<void> login() async {
     try {
@@ -110,6 +111,7 @@ class UserProvider with ChangeNotifier {
         ],
         'qrCodeUrl': _qrCodeUrl,
         'studentVerified' : _isStudentVerified,
+        'isSuspended': _isSuspended,
       });
     }
     notifyListeners();
@@ -143,6 +145,7 @@ class UserProvider with ChangeNotifier {
     _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
     _qrCodeUrl = data?['qrCodeUrl'];
     _isStudentVerified = data?['isStudentVerified'] ?? false;
+    _isSuspended = data?['isSuspended'] ?? false;
   }
 
   // 리소스 정리 메서드
@@ -232,6 +235,7 @@ class UserProvider with ChangeNotifier {
     _unmannerList = null;
     _qrCodeUrl = null;
     _isStudentVerified = false;
+    _isSuspended = false;
   }
 
 
