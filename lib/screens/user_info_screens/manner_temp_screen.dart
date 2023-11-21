@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/kakao_login_providers.dart';
-import '../widgets/manner_detail_widget.dart';
+import '../../providers/kakao_login_providers.dart';
+import '../../widgets/manner_detail_widget.dart';
 
 class MannerTemperatureScreen extends StatelessWidget {
   MannerTemperatureScreen({Key? key}) : super(key: key);

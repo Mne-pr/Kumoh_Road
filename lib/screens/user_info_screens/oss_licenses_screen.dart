@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../oss_licenses.dart';
+import '../../oss_licenses.dart';
 import 'misc_oss_license_screen.dart';
 
 class OssLicensesScreen extends StatelessWidget {

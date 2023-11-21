@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:kumoh_road/providers/bus_station_info.dart';
-import 'package:kumoh_road/screens/loading_screen.dart';
+import 'package:kumoh_road/screens/launch_screens/loading_screen.dart';
 import 'package:kumoh_road/widgets/outline_circle_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import '../widgets/bottom_navigation_bar.dart';
+import '../../widgets/bottom_navigation_bar.dart';
 import 'package:http/http.dart' as http;
 
 class BusInfoScreen extends StatefulWidget {

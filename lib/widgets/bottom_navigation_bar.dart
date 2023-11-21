@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:kumoh_road/screens/taxi_screen.dart';
-import '../screens/bus_info_screen.dart';
-import '../screens/main_screen.dart';
-import '../screens/user_info_screen.dart';
-import '../screens/path_map_screen.dart';
+import 'package:kumoh_road/screens/taxi_screens/taxi_screen.dart';
+import '../screens/bus_info_screens/bus_info_screen.dart';
+import '../screens/main_screens/main_screen.dart';
+import '../screens/user_info_screens/user_info_screen.dart';
+import '../screens/bike_screens/path_map_screen.dart';
 /**
  * 여러 화면에서 편하게 하단 네비게이션바를 구현하도록 한다.
  * 화면을 추가로 구현할때마다 Navigator.push 해주어야함.

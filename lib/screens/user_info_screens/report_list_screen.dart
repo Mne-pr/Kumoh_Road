@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/kakao_login_providers.dart';
-import '../utilities/report_manager.dart';
+import '../../providers/kakao_login_providers.dart';
+import '../../utilities/report_manager.dart';
 
 class ReportListScreen extends StatefulWidget {
   const ReportListScreen({Key? key}) : super(key: key);

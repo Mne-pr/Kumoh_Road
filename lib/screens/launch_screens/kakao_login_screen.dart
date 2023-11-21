@@ -3,9 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/kakao_login_providers.dart';
-import '../widgets/loding_indicator_widget.dart';
-import 'main_screen.dart';
+import '../../providers/kakao_login_providers.dart';
+import '../../widgets/loding_indicator_widget.dart';
+import '../main_screens/main_screen.dart';
 
 class KakaoLoginPage extends StatefulWidget {
   const KakaoLoginPage({super.key});

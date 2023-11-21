@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:kumoh_road/providers/kakao_login_providers.dart';
-import 'package:kumoh_road/screens/intro_screen.dart';
+import 'package:kumoh_road/screens/launch_screens/intro_screen.dart';
 import 'package:kumoh_road/utilities/material_color_utile.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';

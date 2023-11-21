@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utilities/url_launcher_util.dart'; // launchURL 함수 import
+import '../../utilities/url_launcher_util.dart'; // launchURL 함수 import
 
 class DeveloperInfoScreen extends StatelessWidget {
   const DeveloperInfoScreen({Key? key}) : super(key: key);

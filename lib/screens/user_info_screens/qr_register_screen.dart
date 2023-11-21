@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
-import '../providers/kakao_login_providers.dart';
-import '../utilities/image_picker_util.dart';
-import '../utilities/url_launcher_util.dart';
+import '../../providers/kakao_login_providers.dart';
+import '../../utilities/image_picker_util.dart';
+import '../../utilities/url_launcher_util.dart';
 
 class QRCodeRegistrationScreen extends StatefulWidget {
   @override

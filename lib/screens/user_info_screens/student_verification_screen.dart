@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:provider/provider.dart';
-import '../providers/kakao_login_providers.dart';
-import '../utilities/url_launcher_util.dart'; // launchURL 유틸리티 함수를 사용하기 위해 임포트합니다.
+import '../../providers/kakao_login_providers.dart';
+import '../../utilities/url_launcher_util.dart'; // launchURL 유틸리티 함수를 사용하기 위해 임포트합니다.
 
 class StudentVerificationScreen extends StatefulWidget {
   const StudentVerificationScreen({super.key});
