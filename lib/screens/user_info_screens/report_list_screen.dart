@@ -20,7 +20,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
     super.initState();
     final kakaoLoginProvider = Provider.of<KakaoLoginProvider>(
         context, listen: false);
-    String? currentUserId = kakaoLoginProvider.getCurrentUserId();
+    String? currentUserId = kakaoLoginProvider.id.toString();
 
     if (currentUserId != null) {
       _reportManager = ReportManager(currentUserId);

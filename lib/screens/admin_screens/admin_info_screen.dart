@@ -7,20 +7,20 @@ import 'package:kumoh_road/screens/user_info_screens/student_verification_screen
 import 'package:kumoh_road/screens/user_info_screens/terms_service_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/bottom_navigation_bar.dart';
+import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../../widgets/user_info_section.dart';
-import 'developer_info_screen.dart';
-import 'faq_screen.dart';
-import 'manner_temp_screen.dart';
-import 'oss_licenses_screen.dart';
+import '../user_info_screens/developer_info_screen.dart';
+import '../user_info_screens/faq_screen.dart';
+import '../user_info_screens/manner_temp_screen.dart';
+import '../user_info_screens/oss_licenses_screen.dart';
 
-class UserInfoScreen extends StatefulWidget {
-  const UserInfoScreen({Key? key}) : super(key: key);
+class AdminInfoScreen extends StatefulWidget {
+  const AdminInfoScreen({Key? key}) : super(key: key);
   @override
-  _UserInfoScreenState createState() => _UserInfoScreenState();
+  _AdminInfoScreenState createState() => _AdminInfoScreenState();
 }
 
-class _UserInfoScreenState extends State<UserInfoScreen> {
+class _AdminInfoScreenState extends State<AdminInfoScreen> {
   late ScrollController _scrollController;
   bool _showRightArrow = true;
 
@@ -45,7 +45,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           _buildOtherOptionsTile(context, userProvider),
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavigationBar(selectedIndex: 4),
+      bottomNavigationBar: const AdminCustomBottomNavigationBar(selectedIndex: 4),
     );
   }
 
