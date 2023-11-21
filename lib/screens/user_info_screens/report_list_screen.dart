@@ -66,7 +66,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
 
   Widget _buildReportCard(Map<String, dynamic> report) {
     String reportType = ''; // 신고 유형
-    String reportTitle = '신고 내용'; // 신고 제목
+    String reportTitle = report['category']; // 신고 상세 내용
     String reportDetail = report['reason']; // 신고 상세 내용
     String reportTime = ''; // 신고 시간
 
@@ -75,13 +75,6 @@ class _ReportListScreenState extends State<ReportListScreen> {
       Timestamp timestamp = report['timestamp'];
       DateTime reportedAt = timestamp.toDate();
       reportTime = DateFormat('yyyy-MM-dd HH:mm').format(reportedAt);
-    }
-
-    // 기타 신고 내용 파싱 및 처리
-    if (report['reason'].contains(':')) {
-      var parts = report['reason'].split(':');
-      reportTitle = parts[0].trim();
-      reportDetail = parts.sublist(1).join(':').trim();
     }
 
     switch (report['entityType']) {

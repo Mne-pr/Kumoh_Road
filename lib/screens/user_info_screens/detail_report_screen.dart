@@ -48,7 +48,8 @@ class _DetailReportScreenState extends State<DetailReportScreen> {
 
     _reportManager.reportUser(
       reportedUserId: widget.reportedUserId,
-      reason: "${widget.reportCategory}: ${_detailController.text}",
+      category : widget.reportCategory,
+      reason: _detailController.text,
     );
 
     Navigator.pop(context);

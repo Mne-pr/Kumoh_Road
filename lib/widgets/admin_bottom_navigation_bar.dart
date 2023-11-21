@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_info_screen.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_main_screen.dart';
+
+import '../screens/admin_screens/admin_user_manage_screen.dart';
 /**
  * 여러 화면에서 편하게 *관리자를 위한* 하단 네비게이션바를 구현하도록 한다.
  * 화면을 추가로 구현할때마다 Navigator.push 해주어야함.
@@ -25,6 +27,9 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
         case 0:
           nextPage = const AdminMainScreen();
           break;
+        case 3:
+          nextPage = const AdminUserMangeScreen();
+          break;
         case 4:
           nextPage = const AdminInfoScreen();
           break;
@@ -46,7 +51,7 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
       onTap: _onItemTapped,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
+          icon: Icon(Icons.announcement),
           label: '공지사항',
         ),
         BottomNavigationBarItem(
@@ -58,7 +63,7 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
           label: '댓글 관리',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.directions_bike),
+          icon: Icon(Icons.people_outline),
           label: '사용자 관리',
         ),
         BottomNavigationBarItem(
