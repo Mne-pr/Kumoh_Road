@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:kumoh_road/widgets/outline_circle_button.dart';
 
 // 버스정류장
 class BusSt{
@@ -95,7 +97,7 @@ class SubWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        busStation.mainText,
+                        '${busStation.mainText} [ ${numOfBus} ]',
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ), SizedBox(height: 14),
                       Text(
@@ -120,64 +122,111 @@ class SubWidget extends StatelessWidget {
 }
 
 
-class CustomAnimatedWidget extends StatelessWidget {
+class BusListWidget extends StatefulWidget {
   final Animation<double> animation;
   final List<Bus> busList;
+  final VoidCallback onScrollToTop;
+  final Future<void> Function() onRefresh;
 
-  CustomAnimatedWidget({
-    Key? key,
+  const BusListWidget({
     required this.animation,
     required this.busList,
-  }) : super(key: key);
+    required this.onScrollToTop,
+    required this.onRefresh,
+    super.key});
+
+  @override
+  State<BusListWidget> createState() => _BusListWidgetState();
+}
+
+class _BusListWidgetState extends State<BusListWidget> {
+  late ScrollController scrollcon = ScrollController();
+  bool isRefreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    
     return AnimatedBuilder(
-      animation: animation,
+      animation: widget.animation,
       builder: (context, child) {
-        return Container(
-          margin: EdgeInsets.only(bottom: animation.value), // 애니메이션 값에 따라 위치 조정
-          height: MediaQuery.of(context).size.height / 2,
-          color: Colors.white,
-          child: ListView.builder(
-              itemCount: busList.length,
-              itemBuilder: (context, index) {
-                Bus bus = busList[index];
-                return  Column(
-                  children: [
-                    Divider(thickness: 1.0, height: 1.0,),
-                    Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(height: 8),
-                          Icon(Icons.directions_bus, color: Colors.blue, size: 25),
-                          SizedBox(width: 15),
-                          Expanded(
-                            child: Column(
+        return Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [ BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 0, blurRadius: 10, offset: Offset(0,-5)),],
+              ),
+              margin: EdgeInsets.only(bottom: widget.animation.value), // 애니메이션 값에 따라 위치 조정
+              height: MediaQuery.of(context).size.height / 2,
+              child: RefreshIndicator(
+                color: Colors.white10,
+                displacement: 10000, // 인디케이터 보이지 마라..
+                onRefresh: () async { widget.onScrollToTop();},
+                child: ListView.builder(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    controller: scrollcon,
+                    itemCount: widget.busList.length,
+                    itemBuilder: (context, index) {
+                      Bus bus = widget.busList[index];
+                      // 남는 시간에 따른 색 분류
+                      final urgentColor = ((bus.arrtime/60).toInt() >= 5) ? Colors.blue : Colors.red;
+                      return Column(
+                        children: [
+                          Divider(thickness: 1.0, height: 1.0,),
+                          Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                SizedBox(height: 2),
-                                Text('${bus.routeno} | 거칠 정류장 수 ${bus.arrprevstationcnt}',style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
-                                SizedBox(height: 10),
-                                Text('뭐적냐',style: TextStyle(fontSize: 12, color: Colors.grey),),
-                                SizedBox(height: 6),
-                                // 남은 시간에 따라 색 바꾸는 것도 좋을듯?
-                                Text('${(bus.arrtime/60).toInt()}분 ${bus.arrtime%60}초 후 도착',style: TextStyle(fontSize: 14, color: Colors.red),),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }
-          ),
+                                SizedBox(height: 8),
+                                Icon(Icons.directions_bus, color: Colors.blue, size: 25),
+                                SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      SizedBox(height: 2),
+                                      Text('${bus.routeno} | ${bus.arrprevstationcnt} 정류장 남음',style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+                                      SizedBox(height: 10),
+                                      Text('뭐적냐',style: TextStyle(fontSize: 12, color: Colors.grey),),
+                                      SizedBox(height: 6),
+                                      Text('${(bus.arrtime/60).toInt()}분 ${bus.arrtime%60}초 후 도착',style: TextStyle(fontSize: 14, color: urgentColor),),
+                                    ],),),],),),],
+                      );
+                    }
+
+                ),
+              ),
+            ),
+
+            Positioned(
+              right: 25, bottom: MediaQuery.of(context).size.height * 0.8,
+              child: OutlineCircleButton(
+                child: Icon(Icons.refresh, color: isRefreshing ? Colors.grey : Colors.white,), radius: 50.0, borderSize: 0.5,
+                foregroundColor: isRefreshing ? Colors.transparent : Color(0xff05d686), borderColor: Colors.white,
+                onTap: isRefreshing ? null : () async {
+                  setState(() => isRefreshing = true);
+                  await widget.onRefresh();
+                  setState(() => isRefreshing = false);
+                },),
+            ),
+          ],
         );
       },
     );
+
+  }
+
+  @override
+  void dispose() {
+    scrollcon.dispose();
+    super.dispose();
   }
 }
+
+
