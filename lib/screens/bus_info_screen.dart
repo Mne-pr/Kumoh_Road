@@ -38,10 +38,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 상태 저장하기 위한 변수
   late NaverMapController con;
-  late int curBusStop = 0; late List<OutlineCircleButton> buttons; late int curButton = 2;
+  late int curBusStop = 0;  int numOfBus = 0;
+  late List<OutlineCircleButton> buttons;
+  late int curButton = 2;
   late List<Bus> busList = [];
-  int numOfBus = 0;
-  bool isLoading = true;
+
 
   // 버스정류장 담당 애니메이션
   late AnimationController busStAnicon;
@@ -51,16 +52,22 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // 버스리스트 담당 애니메이션
   late Animation<double> busListAni;
 
-
   // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
-  static const gumiPos =  NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
+  static const gumiPos  = NCameraPosition(target: NLatLng(36.12745222, 128.3310162), zoom: 14.0, bearing: 0, tilt: 0);
+  static const gumiSPos = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
   static const kumohPos = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
+  static const kumohSPos= NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
+
+  bool isInfoOpen = true;
+  bool isLocationChanged = false;
 
   @override
   void initState() {
     super.initState();
 
+    final gumiMCamera  = NCameraUpdate.scrollAndZoomTo(target: gumiPos.target,  zoom: 15.5);
     final gumiSCamera  = NCameraUpdate.scrollAndZoomTo(target: gumiPos.target,  zoom: 15.5);
+    final kumohMCamera = NCameraUpdate.scrollAndZoomTo(target: kumohPos.target, zoom: 15.5);
     final kumohSCamera = NCameraUpdate.scrollAndZoomTo(target: kumohPos.target, zoom: 15.5);
 
     // [정류장-미완, 구미역, 금오공대]
@@ -69,30 +76,33 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686),borderColor: Colors.white,
         onTap: () async {
-          gumiSCamera.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
-          await con.updateCamera(gumiSCamera);
-          setState(() { curButton = 0;});
+          setState(() { curButton = 0; isLocationChanged = true; });
+          gumiMCamera.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
+          await con.updateCamera(gumiMCamera);
           busStopMarks[0].performClick();
+          setState(() { isLocationChanged = false; });
         }
       ),
       OutlineCircleButton( // 금오공대 -> 구미역
         child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686), borderColor: Colors.white,
         onTap: () async {
-          gumiSCamera.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
-          await con.updateCamera(gumiSCamera);
-          setState(() { curButton = 2;});
+          gumiMCamera.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
+          await con.updateCamera(gumiMCamera);
+          setState(() { curButton = 2; isLocationChanged = true; });
           busStopMarks[0].performClick();
+          setState(() { isLocationChanged = false; });
         }
       ),
       OutlineCircleButton( // 구미역 -> 금오공대
         child: Icon(Icons.school_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686),borderColor: Colors.white,
         onTap: () async {
-          kumohSCamera.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
-          await con.updateCamera(kumohSCamera);
-          setState(() { curButton = 1;});
+          kumohMCamera.setAnimation(animation: NCameraAnimation.fly, duration: Duration(milliseconds: 500));
+          await con.updateCamera(kumohMCamera);
+          setState(() { curButton = 1; isLocationChanged = true; });
           busStopMarks[2].performClick();
+          setState(() { isLocationChanged = false; });
         },
       )
     ];
@@ -104,8 +114,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       NInfoWindow.onMarker(id: busStopMarks[3].info.id, text: busStopInfos[3].mainText),
     ];
 
-    busStAnicon = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
-    busStCurveAni = CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutQuart);
+    busStAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
+    busStCurveAni = CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutExpo);
     busStAni = Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
       ..addListener(() { setState(() {}); }); // 애니메이션 값이 변할 때마다 위젯을 다시 빌드.
 
@@ -124,34 +134,48 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     busListAni = Tween(begin: -MediaQuery.of(context).size.height / 2, end: 0.0).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
-    void _toggleSubWidgetPosition() {
-      if (busStAnicon.isDismissed) { busStAnicon.forward();}
-      else if (busStAnicon.isCompleted) { busStAnicon.reverse();}
-    }
-    print("수정용");
-
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
       try{
         final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
         if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
         else { throw Exception('Failed to load buses info');}
-      } catch(e) {
-        return BusApiRes.fromJson({});
+      } catch(e) {return BusApiRes.fromJson({});}
+    }
+
+    // 버스정류장 정보를 클릭할 때 이벤트 처리
+    Future<void> busStationBoxClick() async {
+      if (busStAnicon.isDismissed) {
+        BusApiRes res = await fetchBusInfo(busStopInfos[curBusStop].code);
+        setState(() { busList = res.buses; isInfoOpen = true; numOfBus = res.buses.length; });
+
+        busStAnicon.forward();
+      }
+      else if (busStAnicon.isCompleted) {
+        setState(() {isInfoOpen = false;});
+
+        busStAnicon.reverse();
       }
     }
 
-    // 위젯을 업데이트하는 함수. 이때 api 사용하여 버스정류장의 정보 알아올 것
-    void updateBusStop(int busStop) async {
-      BusApiRes res = await fetchBusInfo(busStopInfos[busStop].code);
+    // 버스정류장의 정보 알아오기
+    Future<void> updateBusStop(int busStop) async {
+      if (isInfoOpen == true || isLocationChanged == true) {
+        BusApiRes res = await fetchBusInfo(busStopInfos[busStop].code);
+        setState(() { busList = res.buses; });
+      }
 
-      for (int i = 0; i < 4; i++){ if (busStop != i) try { busStopW[i].close(); } catch(e) {} }
+      for (int i = 0; i < 4; i++){
+        if (busStop != i) {
+          try { busStopW[i].close();} catch (e) {}
+        }
+      }
+      setState(() { numOfBus = busList.length; curBusStop = busStop; });
+    }
 
-      setState(() {
-        busList = res.buses;
-        numOfBus = busList.length;
-        curBusStop = busStop;
-      });
+    Future<void> updateBusListBox() async {
+      BusApiRes res = await fetchBusInfo(busStopInfos[curBusStop].code);
+      setState(() { busList = res.buses; numOfBus = res.buses.length; });
     }
 
     return Scaffold(
@@ -169,13 +193,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 rotationGesturesEnable: false, scrollGesturesEnable: false, tiltGesturesEnable: false, stopGesturesEnable: false, scaleBarEnable: false, logoClickEnable: false,
               ),
               // 1.1.2맵과 관련된 로직 정의
-              onMapReady: (NaverMapController controller){
+              onMapReady: (NaverMapController controller) async {
                 // 1.1.2.1 맵 컨트롤러 등록
                 con = controller;
                 // 1.1.2.2 각 마커를 클릭했을 때의 이벤트 지정
                 for (int i = 0; i < 4; i++){
                   con.addOverlay(busStopMarks[i]);
-                  busStopMarks[i].setOnTapListener((overlay) { updateBusStop(i); busStopMarks[i].openInfoWindow(busStopW[i]);});
+                  busStopMarks[i].setOnTapListener((overlay) async { await updateBusStop(i); busStopMarks[i].openInfoWindow(busStopW[i]);});
                 }
                 // 1.1.2.3 구미역 버튼 클릭
                 busStopMarks[0].performClick();
@@ -189,25 +213,27 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               child: buttons[curButton],
             ),
 
-            // 아마 여기에 리스트위젯 넣을것
+            // 1.3 버스 리스트위젯
             Positioned(
-              bottom: -MediaQuery.of(context).size.height * 0.8, left: 0, right: 0,
-              child: CustomAnimatedWidget(
+              bottom: -MediaQuery.of(context).size.height * 0.78, left: 0, right: 0,
+              child: BusListWidget(
                 animation: busStAni,
                 busList: busList,
+                onRefresh: updateBusListBox,
+                onScrollToTop: busStationBoxClick,
               ),
             ),
 
-            // 1.3 선택한 버스정류장에 대한 정보 표시하는 창 배치
+            // 1.4 선택한 버스정류장에 대한 정보 표시하는 창 배치
             Positioned(
               bottom: busStAni.value,
               left: 0, right: 0,
               height: MediaQuery.of(context).size.height * 0.125,
-              child: SubWidget(onClick: _toggleSubWidgetPosition, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
+              child: SubWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
             ),
 
-            // 1.4 로딩화면
-            LoadingScreen(miliTime: 1000),
+            // 1.5 로딩화면
+            LoadingScreen(miliTime: 1000,),
           ],
         ),
       ),
