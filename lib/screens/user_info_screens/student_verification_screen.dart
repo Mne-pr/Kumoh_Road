@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:provider/provider.dart';
-import '../../providers/kakao_login_providers.dart';
+import '../../providers/user_providers.dart';
 import '../../utilities/url_launcher_util.dart'; // launchURL 유틸리티 함수를 사용하기 위해 임포트합니다.
 
 class StudentVerificationScreen extends StatefulWidget {
@@ -59,7 +59,7 @@ class _StudentVerificationScreenState extends State<StudentVerificationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("학생 인증이 완료되었습니다")),
       );
-      Provider.of<KakaoLoginProvider>(context, listen: false).updateUserInfo(isStudentVerified: true);
+      Provider.of<UserProvider>(context, listen: false).updateUserInfo(isStudentVerified: true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("잘못된 인증번호입니다")),

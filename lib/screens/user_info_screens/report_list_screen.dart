@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../providers/kakao_login_providers.dart';
+import '../../providers/user_providers.dart';
 import '../../utilities/report_manager.dart';
 
 class ReportListScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
   @override
   void initState() {
     super.initState();
-    final kakaoLoginProvider = Provider.of<KakaoLoginProvider>(
+    final kakaoLoginProvider = Provider.of<UserProvider>(
         context, listen: false);
     String? currentUserId = kakaoLoginProvider.id.toString();
 

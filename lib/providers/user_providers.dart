@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
-class KakaoLoginProvider with ChangeNotifier {
+class UserProvider with ChangeNotifier {
   User? _user;
   int? _id;
   String? _email;
@@ -43,10 +43,7 @@ class KakaoLoginProvider with ChangeNotifier {
       }
       _user = await UserApi.instance.me();
       if (_user != null) {
-        _id = _user?.id;
-        _email = _user?.kakaoAccount?.email ?? '이메일 없음';
-        _profileImageUrl = _user?.kakaoAccount?.profile?.profileImageUrl ?? '이미지 URL 없음';
-        _nickname = _user?.kakaoAccount?.profile?.nickname ?? '닉네임 없음';
+        await _initializeUser(_user!.id, _user?.kakaoAccount?.email ?? '이메일 없음',  _user?.kakaoAccount?.profile?.profileImageUrl ?? '이미지 URL 없음', _user?.kakaoAccount?.profile?.nickname ?? '닉네임 없음');
         await _saveOrUpdateUserInfo(_id!, _email!, _profileImageUrl!, _nickname!);
       }
     } on KakaoAuthException catch (e) {
@@ -59,14 +56,18 @@ class KakaoLoginProvider with ChangeNotifier {
   }
 
   Future<void> loginAsAdmin() async {
-    _id = 0;
-    _email = 'admin@kumoh.ac.kr';
-    _nickname = '관리자';
-    _profileImageUrl = 'https://t1.daumcdn.net/cfile/tistory/9955373C5B06560537';
+    await _initializeUser(0, 'admin@kumoh.ac.kr', 'https://t1.daumcdn.net/cfile/tistory/9955373C5B06560537', '관리자');
     _age = 24;
     _gender = '남성';
     await _saveOrUpdateUserInfo(_id!, _email!, _profileImageUrl!, _nickname!);
     notifyListeners();
+  }
+
+  Future<void> _initializeUser(int id, String email, String profileImageUrl, String nickname) async {
+    _id = id;
+    _email = email;
+    _profileImageUrl = profileImageUrl;
+    _nickname = nickname;
   }
 
   // 사용자 정보 저장 또는 업데이트
@@ -197,7 +198,7 @@ class KakaoLoginProvider with ChangeNotifier {
     }
   }
 
-  // 연결 끊기 메서드
+  // 연결 끊기 메서드 Todo 후에 게시글 댓글 다 삭제 해야함
   Future<void> unlink() async {
     try {
       await UserApi.instance.unlink();

@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/kakao_login_providers.dart';
+import '../../providers/user_providers.dart';
 import '../../widgets/loding_indicator_widget.dart';
 import '../main_screens/main_screen.dart';
 
@@ -32,7 +32,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
 
   void _login() async {
     setState(() => _isLoading = true);
-    final userProvider = Provider.of<KakaoLoginProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     await userProvider.login();
 
     if (userProvider.isLogged) {
@@ -112,7 +112,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
                 TextButton(
                   child: const Text('저장'),
                   onPressed: () async {
-                    await Provider.of<KakaoLoginProvider>(context, listen: false)
+                    await Provider.of<UserProvider>(context, listen: false)
                         .updateUserInfo(age: age, gender: gender);
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()),

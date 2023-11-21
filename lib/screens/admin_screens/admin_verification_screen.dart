@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/kakao_login_providers.dart';
+import '../../providers/user_providers.dart';
 import 'admin_main_screen.dart';
 
 class AdminVerificationScreen extends StatefulWidget {
@@ -65,7 +65,7 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
     bool result = await myauth.verifyOTP(otp: otpController.text);
     if (result) {
       // 관리자 인증이 성공하면, 관리자 로그인을 실행합니다.
-      await Provider.of<KakaoLoginProvider>(context, listen: false)
+      await Provider.of<UserProvider>(context, listen: false)
           .loginAsAdmin();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -154,7 +154,7 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
             ElevatedButton(
               onPressed: () async {
                 // 관리자 로그인을 실행합니다.
-                await Provider.of<KakaoLoginProvider>(context, listen: false)
+                await Provider.of<UserProvider>(context, listen: false)
                     .loginAsAdmin();
                 Navigator.push(
                   context,

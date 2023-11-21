@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kumoh_road/providers/kakao_login_providers.dart';
+import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/screens/user_info_screens/privacy_policy_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/qr_register_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/report_list_screen.dart';
@@ -26,7 +26,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<KakaoLoginProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
     userProvider.startListeningToUserChanges(); // Firestore의 변경사항을 실시간으로 감지하도록 설정
 
     return Scaffold(
@@ -49,7 +49,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, KakaoLoginProvider userProvider) {
+  AppBar _buildAppBar(BuildContext context, UserProvider userProvider) {
     return AppBar(
       title: const Text('나의 정보', style: TextStyle(color: Colors.black)),
       actions: [
@@ -65,7 +65,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
-  void _showAdditionalInfoDialog(BuildContext context, KakaoLoginProvider userProvider) {
+  void _showAdditionalInfoDialog(BuildContext context, UserProvider userProvider) {
     int age = userProvider.age ?? 25; // 사용자의 현재 나이를 가져오거나 기본값 설정
     String gender = userProvider.gender ?? '남성'; // 사용자의 현재 성별을 가져오거나 기본값 설정
     showDialog(
@@ -128,7 +128,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 TextButton(
                   child: const Text('저장'),
                   onPressed: () async {
-                    await Provider.of<KakaoLoginProvider>(context, listen: false)
+                    await Provider.of<UserProvider>(context, listen: false)
                         .updateUserInfo(age: age, gender: gender);
                     Navigator.pop(context);
                   },
@@ -167,7 +167,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       });
     }
   }
-  Widget _buildUserInteractionButtons(BuildContext context, KakaoLoginProvider userProvider) {
+  Widget _buildUserInteractionButtons(BuildContext context, UserProvider userProvider) {
     return Stack(
       children: [
         SizedBox(
@@ -375,7 +375,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
-  Widget _buildOtherOptionsTile(BuildContext context, KakaoLoginProvider userProvider) {
+  Widget _buildOtherOptionsTile(BuildContext context, UserProvider userProvider) {
     return ExpansionTile(
       leading: const Icon(Icons.more_horiz, color: Colors.black),
       title: const Text('기타'),
@@ -397,7 +397,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
-  void _showLogoutConfirmationDialog(BuildContext context, KakaoLoginProvider userProvider) {
+  void _showLogoutConfirmationDialog(BuildContext context, UserProvider userProvider) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -420,7 +420,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     );
   }
 
-  void _showUnlinkConfirmationDialog(BuildContext context, KakaoLoginProvider userProvider) {
+  void _showUnlinkConfirmationDialog(BuildContext context, UserProvider userProvider) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

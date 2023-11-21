@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/kakao_login_providers.dart';
+import '../../providers/user_providers.dart';
 import '../../widgets/manner_detail_widget.dart';
 
 class MannerTemperatureScreen extends StatelessWidget {
@@ -8,7 +8,7 @@ class MannerTemperatureScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<KakaoLoginProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
     final mannerList = _getFilteredMannerList(userProvider.mannerList);
     final unmannerlyList = _getFilteredMannerList(userProvider.unmannerList);
 
