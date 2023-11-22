@@ -3,9 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/kakao_login_providers.dart';
-import '../widgets/loding_indicator_widget.dart';
-import 'main_screen.dart';
+import '../../providers/user_providers.dart';
+import '../../widgets/loding_indicator_widget.dart';
+import '../main_screens/main_screen.dart';
 
 class KakaoLoginPage extends StatefulWidget {
   const KakaoLoginPage({super.key});
@@ -32,20 +32,39 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
 
   void _login() async {
     setState(() => _isLoading = true);
-    final userProvider = Provider.of<KakaoLoginProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     await userProvider.login();
 
     if (userProvider.isLogged) {
-      if (userProvider.age == null || userProvider.gender == null) {
+      if (userProvider.isSuspended) {
+        _showAccountSuspendedDialog(); // 계정이 정지된 경우 알림 표시
+      } else if (userProvider.age == null || userProvider.gender == null) {
         _showAdditionalInfoDialog();
       } else {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()));
       }
     } else {
-      print("로그인은 성공했지만, 사용자 정보가 없는 경우");
+      _showLoginError();
     }
     setState(() => _isLoading = false);
+  }
+
+  void _showAccountSuspendedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('계정 정지 알림'),
+          content: const Text('귀하의 계정은 정지되었습니다. 자세한 내용은 관리자에게 문의하세요.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('확인'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showAdditionalInfoDialog() {
@@ -112,7 +131,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
                 TextButton(
                   child: const Text('저장'),
                   onPressed: () async {
-                    await Provider.of<KakaoLoginProvider>(context, listen: false)
+                    await Provider.of<UserProvider>(context, listen: false)
                         .updateUserInfo(age: age, gender: gender);
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -126,6 +145,19 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
       },
     );
   }
+
+  void _showLoginError() {
+    final snackBar = SnackBar(
+      content: const Text('로그인에 실패했습니다. 다시 시도해 주세요.'),
+      action: SnackBarAction(
+        label: '닫기',
+        onPressed: () {
+        },
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

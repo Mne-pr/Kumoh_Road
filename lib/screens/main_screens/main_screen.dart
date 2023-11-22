@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/main_screen_button_model.dart';
-import '../utilities/url_launcher_util.dart';
-import '../widgets/bottom_navigation_bar.dart';
-import '../widgets/main_screen_button.dart';
-import 'other_user_info_screen.dart';
+import '../../utilities/url_launcher_util.dart';
+import '../../widgets/bottom_navigation_bar.dart';
+import '../../widgets/main_screen_button.dart';
+import '../user_info_screens/other_user_info_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/manner_detail_widget.dart';
+import '../../widgets/manner_detail_widget.dart';
 
 class OtherUserMannerScreen extends StatelessWidget {
   final List<Map<String, dynamic>> mannerList;

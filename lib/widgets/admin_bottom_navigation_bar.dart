@@ -1,18 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:kumoh_road/screens/taxi_screens/taxi_screen.dart';
-import '../screens/bus_info_screens/bus_info_screen.dart';
-import '../screens/main_screens/main_screen.dart';
-import '../screens/user_info_screens/user_info_screen.dart';
-import '../screens/bike_screens/path_map_screen.dart';
+import 'package:kumoh_road/screens/admin_screens/admin_info_screen.dart';
+import 'package:kumoh_road/screens/admin_screens/admin_main_screen.dart';
+
+import '../screens/admin_screens/admin_user_manage_screen.dart';
 /**
- * 여러 화면에서 편하게 하단 네비게이션바를 구현하도록 한다.
+ * 여러 화면에서 편하게 *관리자를 위한* 하단 네비게이션바를 구현하도록 한다.
  * 화면을 추가로 구현할때마다 Navigator.push 해주어야함.
  */
-class CustomBottomNavigationBar extends StatelessWidget {
+class AdminCustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
 
-  const CustomBottomNavigationBar({
+  const AdminCustomBottomNavigationBar({
     Key? key,
     required this.selectedIndex,
   }) : super(key: key);
@@ -26,19 +25,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
       Widget nextPage;
       switch (index) {
         case 0:
-          nextPage = const MainScreen();
-          break;
-        case 1:
-          nextPage = const TaxiScreen();
-          break;
-        case 2:
-          nextPage = const BusInfoScreen();
+          nextPage = const AdminMainScreen();
           break;
         case 3:
-          nextPage = const PathMapScreen();
+          nextPage = const AdminUserMangeScreen();
           break;
         case 4:
-          nextPage = const UserInfoScreen();
+          nextPage = const AdminInfoScreen();
           break;
         default:
           return;
@@ -58,20 +51,20 @@ class CustomBottomNavigationBar extends StatelessWidget {
       onTap: _onItemTapped,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: '홈',
+          icon: Icon(Icons.announcement),
+          label: '공지사항',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.local_taxi),
-          label: '택시',
+          label: '게시글 관리',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.directions_bus),
-          label: '버스',
+          label: '댓글 관리',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.directions_bike),
-          label: '자전거',
+          icon: Icon(Icons.people_outline),
+          label: '사용자 관리',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.account_circle),

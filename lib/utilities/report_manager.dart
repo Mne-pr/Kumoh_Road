@@ -13,12 +13,14 @@ class ReportManager {
   Future<void> reportUser({
     required String reportedUserId,
     required String reason,
+    required String category,
   }) async {
     await _reportEntity(
       entityType: 'user',
       entityId: reportedUserId,
       reporterUserId: _reporterUserId,
       reason: reason,
+      category: category,
     );
   }
 
@@ -26,12 +28,14 @@ class ReportManager {
   Future<void> reportPost({
     required String postId,
     required String reason,
+    required String category,
   }) async {
     await _reportEntity(
       entityType: 'post',
       entityId: postId,
       reporterUserId: _reporterUserId,
       reason: reason,
+      category: category,
     );
   }
 
@@ -39,21 +43,23 @@ class ReportManager {
   Future<void> reportComment({
     required String commentId,
     required String reason,
+    required String category,
   }) async {
     await _reportEntity(
       entityType: 'comment',
       entityId: commentId,
       reporterUserId: _reporterUserId,
       reason: reason,
+      category: category,
     );
   }
 
-  // 모든 엔티티에 대한 일반적인 신고 처리 메서드
   Future<void> _reportEntity({
     required String entityType,
     required String entityId,
     required String reporterUserId,
     required String reason,
+    required String category,
   }) async {
     try {
       DocumentReference reportDoc = _firestore.collection('reports').doc();
@@ -61,6 +67,7 @@ class ReportManager {
         'entityType': entityType,
         'entityId': entityId,
         'reason': reason,
+        'category': category,
         'timestamp': FieldValue.serverTimestamp(),
         'reporterUserId': reporterUserId,
         'isHandledByAdmin': false,
@@ -68,24 +75,6 @@ class ReportManager {
     } catch (e) {
       print('Error reporting $entityType: $e');
       // 예외 처리
-    }
-  }
-
-  // 특정 엔티티 유형에 대한 신고 가져오기 메서드 후에 관리자 모드 구현에서 사용
-  Future<List<Map<String, dynamic>>> fetchReportsForEntityType(String entityType) async {
-    try {
-      var reportsSnapshot = await _firestore
-          .collection('reports')
-          .where('entityType', isEqualTo: entityType)
-          .get();
-      return reportsSnapshot.docs.map((doc) => {
-        'id': doc.id, 
-        ...doc.data(),
-      }).toList();
-    } catch (e) {
-      print('Error fetching reports for $entityType: $e');
-      // 예외 처리
-      return [];
     }
   }
 

@@ -4,8 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
-class KakaoLoginProvider with ChangeNotifier {
+class UserProvider with ChangeNotifier {
   User? _user;
+  int? _id;
+  String? _email;
+  String? _profileImageUrl;
+  String? _nickname;
   int? _age;
   String? _gender;
   double? _mannerTemperature;
@@ -13,9 +17,13 @@ class KakaoLoginProvider with ChangeNotifier {
   List<Map<String, dynamic>>? _unmannerList;
   String? _qrCodeUrl;
   bool _isStudentVerified = false;
+  bool _isSuspended = false;
   StreamSubscription<DocumentSnapshot>? _userChangesSubscription;
 
-  User? get user => _user;
+  int? get id => _id;
+  String? get email => _email;
+  String? get profileImageUrl => _profileImageUrl;
+  String? get nickname => _nickname;
   bool get isLogged => _user != null;
   int? get age => _age;
   String? get gender => _gender;
@@ -24,10 +32,7 @@ class KakaoLoginProvider with ChangeNotifier {
   List<Map<String, dynamic>>? get unmannerList => _unmannerList;
   String? get qrCodeUrl => _qrCodeUrl;
   bool get isStudentVerified => _isStudentVerified;
-
-  String? getCurrentUserId() {
-    return _user?.id.toString();
-  }
+  bool get isSuspended => _isSuspended;
 
   Future<void> login() async {
     try {
@@ -39,7 +44,8 @@ class KakaoLoginProvider with ChangeNotifier {
       }
       _user = await UserApi.instance.me();
       if (_user != null) {
-        await _saveOrUpdateUserInfo(_user!);
+        await _initializeUser(_user!.id, _user?.kakaoAccount?.email ?? '이메일 없음',  _user?.kakaoAccount?.profile?.profileImageUrl ?? '이미지 URL 없음', _user?.kakaoAccount?.profile?.nickname ?? '닉네임 없음');
+        await _saveOrUpdateUserInfo(_id!, _email!, _profileImageUrl!, _nickname!);
       }
     } on KakaoAuthException catch (e) {
       // 카카오 인증 관련 에러 처리
@@ -50,16 +56,26 @@ class KakaoLoginProvider with ChangeNotifier {
     }
   }
 
-  // 사용자 정보 저장 또는 업데이트
-  Future<void> _saveOrUpdateUserInfo(User user) async {
-    // Firestore 문서 참조 생성
-    var userDocument = FirebaseFirestore.instance.collection('users').doc(user.id.toString());
-    var snapshot = await userDocument.get();
+  Future<void> loginAsAdmin() async {
+    await _initializeUser(0, 'admin@kumoh.ac.kr', 'https://t1.daumcdn.net/cfile/tistory/9955373C5B06560537', '관리자');
+    _age = 24;
+    _gender = '남성';
+    await _saveOrUpdateUserInfo(_id!, _email!, _profileImageUrl!, _nickname!);
+    notifyListeners();
+  }
 
-    // 사용자의 추가 정보
-    String email = user.kakaoAccount?.email ?? '이메일 없음';
-    String profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '이미지 URL 없음';
-    String nickname = user.kakaoAccount?.profile?.nickname ?? '닉네임 없음';
+  Future<void> _initializeUser(int id, String email, String profileImageUrl, String nickname) async {
+    _id = id;
+    _email = email;
+    _profileImageUrl = profileImageUrl;
+    _nickname = nickname;
+  }
+
+  // 사용자 정보 저장 또는 업데이트
+  Future<void> _saveOrUpdateUserInfo(int id, String email, String profileImageUrl, String nickname) async {
+    // Firestore 문서 참조 생성
+    var userDocument = FirebaseFirestore.instance.collection('users').doc(id.toString());
+    var snapshot = await userDocument.get();
 
     if (snapshot.exists) {
       var data = snapshot.data();
@@ -78,8 +94,8 @@ class KakaoLoginProvider with ChangeNotifier {
         'email': email,
         'profileImageUrl': profileImageUrl,
         'nickname': nickname,
-        'age': _age,
-        'gender': _gender,
+        'age': age,
+        'gender': gender,
         'mannerTemperature': 36.5,
         'mannerList':  [
           {'content': '목적지 변경에 유연하게 대응해줬어요.', 'votes': 0},
@@ -95,6 +111,7 @@ class KakaoLoginProvider with ChangeNotifier {
         ],
         'qrCodeUrl': _qrCodeUrl,
         'studentVerified' : _isStudentVerified,
+        'isSuspended': _isSuspended,
       });
     }
     notifyListeners();
@@ -102,10 +119,10 @@ class KakaoLoginProvider with ChangeNotifier {
 
   // Firestore 데이터 변경 감지 메서드
   void startListeningToUserChanges() {
-    if (_user != null && _userChangesSubscription == null) {
+    if (_id != null && _userChangesSubscription == null) {
       _userChangesSubscription = FirebaseFirestore.instance
           .collection('users')
-          .doc(_user!.id.toString())
+          .doc(_id.toString())
           .snapshots()
           .listen((snapshot) {
         if (snapshot.exists) {
@@ -128,6 +145,7 @@ class KakaoLoginProvider with ChangeNotifier {
     _unmannerList = List<Map<String, dynamic>>.from(data?['unmannerList'] ?? []);
     _qrCodeUrl = data?['qrCodeUrl'];
     _isStudentVerified = data?['isStudentVerified'] ?? false;
+    _isSuspended = data?['isSuspended'] ?? false;
   }
 
   // 리소스 정리 메서드
@@ -170,7 +188,6 @@ class KakaoLoginProvider with ChangeNotifier {
     }
   }
 
-
   // 로그아웃 메서드
   Future<void> logout() async {
     try {
@@ -184,7 +201,7 @@ class KakaoLoginProvider with ChangeNotifier {
     }
   }
 
-  // 연결 끊기 메서드
+  // 연결 끊기 메서드 Todo 후에 게시글 댓글 다 삭제 해야함
   Future<void> unlink() async {
     try {
       await UserApi.instance.unlink();
@@ -207,6 +224,10 @@ class KakaoLoginProvider with ChangeNotifier {
   // 로컬 사용자 데이터 초기화
   void _resetLocalUserData() {
     _user = null;
+    _id = null;
+    _email = null;
+    _profileImageUrl = null;
+    _nickname = null;
     _age = null;
     _gender = null;
     _mannerTemperature = null;
@@ -214,5 +235,8 @@ class KakaoLoginProvider with ChangeNotifier {
     _unmannerList = null;
     _qrCodeUrl = null;
     _isStudentVerified = false;
+    _isSuspended = false;
   }
+
+
 }

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
-import 'package:kumoh_road/screens/post_details_screen.dart';
-import '../widgets/bottom_navigation_bar.dart';
-import '../widgets/loding_indicator_widget.dart';
+import 'package:kumoh_road/screens/taxi_screens/post_details_screen.dart';
+import '../../widgets/bottom_navigation_bar.dart';
+import '../../widgets/loding_indicator_widget.dart';
 
 class TaxiScreen extends StatefulWidget {
   const TaxiScreen({Key? key}) : super(key: key);

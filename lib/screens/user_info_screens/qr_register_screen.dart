@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
-import '../providers/kakao_login_providers.dart';
-import '../utilities/image_picker_util.dart';
-import '../utilities/url_launcher_util.dart';
+import '../../providers/user_providers.dart';
+import '../../utilities/image_picker_util.dart';
+import '../../utilities/url_launcher_util.dart';
 
 class QRCodeRegistrationScreen extends StatefulWidget {
   @override
@@ -34,7 +34,7 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
       for (var barcode in barcodeCapture.barcodes) {
         if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
           String qrCodeUrl = barcode.rawValue!;
-          Provider.of<KakaoLoginProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
+          Provider.of<UserProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
           launchURL(qrCodeUrl);
         }
       }

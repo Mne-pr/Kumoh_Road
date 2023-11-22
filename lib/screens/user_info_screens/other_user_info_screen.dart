@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kumoh_road/screens/report_user_screen.dart';
-import '../models/user_model.dart';
-import '../widgets/manner_detail_widget.dart';
-import '../widgets/user_info_section.dart';
+import 'package:kumoh_road/screens/user_info_screens/report_user_screen.dart';
+import '../../models/user_model.dart';
+import '../../widgets/manner_detail_widget.dart';
+import '../../widgets/user_info_section.dart';
 import 'other_user_manner_screen.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {

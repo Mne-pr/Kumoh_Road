@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/kakao_login_providers.dart';
-import '../utilities/report_manager.dart';
+import '../../providers/user_providers.dart';
+import '../../utilities/report_manager.dart';
 
 class DetailReportScreen extends StatefulWidget {
   final String reportedUserId;
@@ -26,8 +26,8 @@ class _DetailReportScreenState extends State<DetailReportScreen> {
   @override
   void initState() {
     super.initState();
-    final kakaoLoginProvider = Provider.of<KakaoLoginProvider>(context, listen: false);
-    String? currentUserId = kakaoLoginProvider.getCurrentUserId();
+    final kakaoLoginProvider = Provider.of<UserProvider>(context, listen: false);
+    String? currentUserId = kakaoLoginProvider.id.toString();
     if (currentUserId != null) {
       _reportManager = ReportManager(currentUserId);
     } else {
@@ -48,7 +48,8 @@ class _DetailReportScreenState extends State<DetailReportScreen> {
 
     _reportManager.reportUser(
       reportedUserId: widget.reportedUserId,
-      reason: "${widget.reportCategory}: ${_detailController.text}",
+      category : widget.reportCategory,
+      reason: _detailController.text,
     );
 
     Navigator.pop(context);

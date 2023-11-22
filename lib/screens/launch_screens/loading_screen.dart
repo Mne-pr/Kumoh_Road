@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../widgets/loding_indicator_widget.dart';
+import '../../widgets/loding_indicator_widget.dart';
 
 class LoadingScreen extends StatefulWidget {
   final int miliTime;

@@ -4,12 +4,12 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
-import 'package:kumoh_road/screens/main_screen.dart';
+import 'package:kumoh_road/screens/main_screens/main_screen.dart';
 import 'package:kumoh_road/widgets/user_info_section.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../utilities/image_picker_util.dart';
-import '../widgets/loding_indicator_widget.dart';
+import '../../utilities/image_picker_util.dart';
+import '../../widgets/loding_indicator_widget.dart';
 
 class PostDetailsScreen extends StatefulWidget {
   final TaxiScreenUserModel writerUserInfo;
