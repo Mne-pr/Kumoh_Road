@@ -1,9 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-/**
- * 여러 화면에서 편하게 로딩 화면을 사용하도록 한다.
- * _isLoading 변수를 통해 제어한다.
+/*
+  여러 화면에서 편하게 로딩 화면을 사용하도록 한다.
+  _isLoading 변수를 통해 제어한다.
  */
 class LoadingIndicatorWidget extends StatefulWidget {
   @override
