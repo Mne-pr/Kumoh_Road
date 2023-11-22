@@ -150,11 +150,20 @@ class _BusListWidgetState extends State<BusListWidget> {
                                   ],
                                 ),
                               ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  // 버튼이 눌렸을 때의 동작
-                                },
-                                child: Text('버튼'), // 여기에 원하는 텍스트나 아이콘 추가
+                              IconButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      barrierColor: Colors.transparent,
+                                      builder: (BuildContext context) {
+                                        return Container(
+                                          height: MediaQuery.of(context).size.height * 0.78, // 모달의 높이
+                                          child: Text("여기에 BusChatWidget 들어갈 것"),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  icon: Icon(Icons.arrow_circle_up_outlined),
                               ),
                               SizedBox(width: 18,),
                             ],
