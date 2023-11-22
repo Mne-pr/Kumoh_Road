@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
@@ -27,7 +26,6 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double currHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: SafeArea(
@@ -51,14 +49,24 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
             const Divider(),
             FutureBuilder(
                 future: _buildCommentSection(context),
-                builder: (context, snapshot) {
-                  if(snapshot.hasData){
-                    return snapshot.data!;
+                builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: LoadingIndicatorWidget());
+                  } else if (snapshot.hasError){
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text('Error : ${snapshot.error}'),
+                            Text('Stack trace : ${snapshot.stackTrace}'),
+                          ],
+                        ),
+                      );
                   }
-                  return Center(child: LoadingIndicatorWidget());
+                  else if (snapshot.hasData) {return snapshot.data!;}
+                  else {return const Center(child: Text('No data available'));}
                 },
-            )
-            //_buildBottomSection(context),
+            ),
           ],
         ),
       ),
@@ -126,163 +134,164 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   }
 
   Widget _buildPostContentSection(BuildContext context) {
-    double verticalSize = 3;
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
     double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
+    double leftPadding = screenWidth * 0.03;
+    double topPadding = screenHeight * 0.005;
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(Icons.title, color: Colors.grey),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 5),
-              child: Text(
-                "제목",
-                style: TextStyle(color: Colors.black26, fontSize: defaultFontSize),
+    return Padding(
+      padding: EdgeInsets.only(left: leftPadding),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.title, color: Colors.grey),
+              Padding(
+                padding: EdgeInsets.only(left: leftPadding),
+                child: Text(
+                  "제목",
+                  style: TextStyle(color: Colors.black26, fontSize: defaultFontSize),
+                ),
               ),
-            ),
-            Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: Text(widget.postInfo.title,
-                    style: TextStyle(
-                      fontSize: defaultFontSize,
-                      fontWeight: FontWeight.bold,
+              Padding(
+                  padding: EdgeInsets.only(left: leftPadding),
+                  child: Text(widget.postInfo.title,
+                      style: TextStyle(
+                        fontSize: defaultFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                  ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: topPadding),
+            child: Row(
+              children: [
+                Icon(Icons.watch_later_outlined, color: Colors.grey),
+                Padding(
+                    padding: EdgeInsets.only(left: leftPadding),
+                    child: Text(
+                      "작성",
+                      style: TextStyle(
+                          color: Colors.black26,
+                          fontSize: defaultFontSize
+                      ),
                     ),
                 ),
+                Padding(
+                    padding: EdgeInsets.only(left: leftPadding),
+                    child: Text(
+                      "${widget.postInfo.createdTime.hour}시 ${widget.postInfo.createdTime.minute}분",
+                      style: TextStyle(
+                          fontSize: defaultFontSize, fontWeight: FontWeight.bold
+                      ),
+                    ),
+                ),
+              ],
             ),
-          ],
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: verticalSize),
-          child: Row(
-            children: [
-              const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Icon(Icons.watch_later_outlined, color: Colors.grey)),
-              Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text(
-                    "작성",
-                    style: TextStyle(
-                        color: Colors.black26, fontSize: defaultFontSize
-                    ),
-                  ),
-              ),
-              Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Text(
-                    "${widget.postInfo.createdTime.hour}시 ${widget.postInfo.createdTime.minute}분",
-                    style: TextStyle(
-                        fontSize: defaultFontSize, fontWeight: FontWeight.bold
-                    ),
-                  ),
-              ),
-            ],
           ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: verticalSize),
-          child: Row(
-            children: [
-              const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Icon(Icons.touch_app_outlined, color: Colors.grey),
-              ),
-              Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text(
-                    "조회",
-                    style: TextStyle(color: Colors.black26, fontSize: defaultFontSize),
-                  ),
-              ),
-              Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Text(
-                    "${widget.postInfo.viewCount}회",
-                    style: TextStyle(
-                        fontSize: defaultFontSize, fontWeight: FontWeight.bold),
-                  ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10,),
-        Padding(
-          padding: EdgeInsets.only(top: verticalSize),
-          child: Row(
-            children: [
-              Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Text(
-                    widget.postInfo.content,
-                    style: TextStyle(
-                      fontSize: defaultFontSize,
+          Padding(
+            padding: EdgeInsets.only(top: topPadding),
+            child: Row(
+              children: [
+                const Icon(Icons.touch_app_outlined, color: Colors.grey),
+                Padding(
+                    padding: EdgeInsets.only(left: leftPadding),
+                    child: Text(
+                      "조회",
+                      style: TextStyle(color: Colors.black26, fontSize: defaultFontSize),
                     ),
-                  )),
-            ],
+                ),
+                Padding(
+                    padding: EdgeInsets.only(left: leftPadding),
+                    child: Text(
+                      "${widget.postInfo.viewCount}회",
+                      style: TextStyle(
+                          fontSize: defaultFontSize, fontWeight: FontWeight.bold),
+                    ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: EdgeInsets.only(top: topPadding),
+            child: Row(
+              children: [
+                Padding(
+                    padding: EdgeInsets.only(left: leftPadding),
+                    child: Text(
+                      widget.postInfo.content,
+                      style: TextStyle(
+                        fontSize: defaultFontSize,
+                      ),
+                    )),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildReviewSection(BuildContext context) {
-    String name = widget.writerUserInfo.nickname;
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
     double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
+    double leftPadding = screenWidth * 0.03;
+    double topPadding = screenHeight * 0.005;
 
-    List<dynamic> reviewList = widget.writerUserInfo.reviewList;
-    List<dynamic> displayReviewList = reviewList.length > 3
-        ? reviewList.sublist(reviewList.length - 3)
-        : reviewList;
-    List<Widget> reviewWidgetList = displayReviewList
-        .map((review) => Padding(
-            padding: const EdgeInsets.only(top: 3), child: Text(review)))
-        .toList();
+    String name = widget.writerUserInfo.nickname;
 
-    return Expanded(
+    List<dynamic> mannerList = widget.writerUserInfo.mannerList;
+    List<dynamic> unmannerList = widget.writerUserInfo.unmannerList;
+    int mannerCnt = 0;
+    int unmannerCnt = 0;
+    for(int i = 0; i < mannerList.length; i++){
+      int cnt1 = mannerList[i]["votes"];
+      int cnt2 = unmannerList[i]["votes"];
+      mannerCnt += cnt1;
+      unmannerCnt += cnt2;
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: leftPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-              padding: const EdgeInsets.only(left: 15, top: 5, bottom: 5),
-              child: Text("$name님의 택시 합승 최근 리뷰",
-                  style: TextStyle(
-                      fontSize: defaultFontSize * 1.2,
-                      fontWeight: FontWeight.bold))),
-          Expanded(
-            child: ListView.builder(
-              itemCount: (widget.writerUserInfo.reviewList.length > 3)
-                  ? 3
-                  : widget.writerUserInfo.reviewList.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                    padding: const EdgeInsets.only(left: 15, top: 5),
-                    child: Text(
-                      "${widget.writerUserInfo.reviewList[index]}",
-                      style: TextStyle(fontSize: defaultFontSize),
-                    ));
-              },
-            ),
-          )
+          Text("$name님의 택시 합승 최근 리뷰",
+              style: TextStyle(fontSize: defaultFontSize * 1.1, fontWeight: FontWeight.bold),
+          ),
+          Row(children: [
+            const Text("매너 리뷰 "),
+            Text("$mannerCnt개", style: const TextStyle(fontWeight: FontWeight.bold),)
+          ],),
+          Row(children: [
+            const Text("비매너 리뷰 "),
+            Text("$unmannerCnt개", style: const TextStyle(fontWeight: FontWeight.bold),)
+          ],),
         ],
       ),
     );
   }
 
   Future<Widget> _buildCommentSection(BuildContext context) async {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
     double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
+    double leftPadding = screenWidth * 0.03;
+    double topPadding = screenHeight * 0.005;
+
     ImageProvider backgroundImage = NetworkImage(widget.writerUserInfo.profileImageUrl);
 
     int cntComment = widget.postInfo.commentList.length;
     List<dynamic> commentList = widget.postInfo.commentList; //
-    if(cntComment > 3){
+    if(cntComment > 3){ // 최근 댓글 3개만 가져오도록
       commentList = widget.postInfo.commentList.sublist(cntComment - 3);
     }
 
-    // 각각의 comment의 userId 값으로 사용자의 정보 리스트 저장하기(commentUserList)
+    // 각각의 comment의 userId 값으로 사용자의 정보 리스트 (commentUserList)
     List<TaxiScreenUserModel> commentUserList = [];
     for(var comment in commentList){
       TaxiScreenUserModel commentUser = await TaxiScreenUserModel.getUserById(comment["userId"]);
@@ -293,12 +302,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-              padding: EdgeInsets.only(left: 15),
-              child: Text("댓글",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
           Padding(
-            padding: const EdgeInsets.only(left: 15, top: 5, right: 15),
+              padding: EdgeInsets.only(left: leftPadding),
+              child: Text("댓글",
+                  style: TextStyle(fontSize: defaultFontSize * 1.1, fontWeight: FontWeight.bold)
+              )
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: leftPadding),
             child: Row(
               children: [
                 CircleAvatar(
@@ -311,10 +322,10 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     });
                   },
                 ),
-                const Expanded(
+                Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: TextField(
+                    padding: EdgeInsets.symmetric(horizontal: leftPadding),
+                    child: const TextField(
                       decoration: InputDecoration(
                         hintText: "댓글 추가하기",
                         border: UnderlineInputBorder(),
@@ -330,7 +341,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
               // commentList 와 commentUserList로 사용자 이미지, 사용자 이름, 댓글 내용 위젯 생성하기
               itemBuilder: (context, index) {
                 return Padding(
-                  padding: const EdgeInsets.only(left: 15, right: 10, top: 5),
+                  padding: EdgeInsets.only(left: leftPadding, right: leftPadding, top: topPadding),
                   child: Row(
                     children: [
                       CircleAvatar(
@@ -338,13 +349,13 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                         backgroundImage: NetworkImage(commentUserList[index].profileImageUrl),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(left: 10),
+                        padding: EdgeInsets.only(left: leftPadding),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(commentUserList[index].nickname, style: const TextStyle(fontWeight: FontWeight.bold),),
                             Padding(
-                              padding: const EdgeInsets.only(top: 5),
+                              padding: EdgeInsets.only(top: topPadding),
                               child: Text(commentList[index]["content"])
                             ),
                           ],

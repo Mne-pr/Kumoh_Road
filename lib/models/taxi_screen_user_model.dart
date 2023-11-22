@@ -11,7 +11,6 @@ class TaxiScreenUserModel {
   bool? studentVerified;
   List<dynamic> mannerList;
   List<dynamic> unmannerList;
-  List<dynamic> reviewList;
 
   TaxiScreenUserModel(
       {required this.age,
@@ -23,16 +22,15 @@ class TaxiScreenUserModel {
       required this.profileImageUrl,
       required this.qrCodeUrl,
       required this.studentVerified,
-      required this.reviewList,
       required this.unmannerList});
 
   static Future<TaxiScreenUserModel> getUserById(String writerId) async {
     DocumentSnapshot writerSnapshot = await FirebaseFirestore.instance.collection('users').doc(writerId).get();
     Map<String, dynamic> document = writerSnapshot.data() as Map<String, dynamic>;
     return TaxiScreenUserModel(
-        age: document["age"] ?? 20,
+        age: document["age"] ?? 25,
         email: document["email"],
-        gender: document["gender"] ?? "성별없음",
+        gender: document["gender"] ?? "남성",
         mannerTemperature: document["mannerTemperature"],
         nickname: document["nickname"],
         profileImageUrl: document["profileImageUrl"],
@@ -40,7 +38,6 @@ class TaxiScreenUserModel {
         studentVerified: document["studentVerified"] ?? false,
         mannerList: document["mannerList"],
         unmannerList: document["unmannerList"],
-        reviewList: document["reviewList"],
     );
   }
 }
