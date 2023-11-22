@@ -58,8 +58,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                   return Center(child: LoadingIndicatorWidget());
                 },
             )
-            // _buildCommentSection(context),
-            // _buildBottomSection(context),
+            //_buildBottomSection(context),
           ],
         ),
       ),
@@ -362,21 +361,22 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     );
   }
 
-  _buildBottomSection(BuildContext context) {
-    return Container(
-      child: Row(
-        children: [
-          Column(
-            children: [
-              Text("참여인원 ${widget.postInfo.membersIdList.length + 1}/4"),
-              Text("남성만 참여 가능"),
-            ],
-          ),
-          FilledButton(onPressed: () {}, child: Text("합승하기"))
-        ],
-      ),
-    );
-  }
+  // _buildBottomSection(BuildContext context) {
+  //   return Padding(
+  //     padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+  //     child: Row(
+  //       children: [
+  //         Column(
+  //           children: [
+  //             Text(),
+  //             Text(data)
+  //           ],
+  //         ),
+  //         ElevatedButton(onPressed: onPressed, child: child)
+  //       ],
+  //     ),
+  //   );
+  // }
 
 // Widget _buildBottom(BuildContext context) {}
 }

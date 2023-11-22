@@ -30,9 +30,9 @@ class TaxiScreenUserModel {
     DocumentSnapshot writerSnapshot = await FirebaseFirestore.instance.collection('users').doc(writerId).get();
     Map<String, dynamic> document = writerSnapshot.data() as Map<String, dynamic>;
     return TaxiScreenUserModel(
-        age: document["age"],
+        age: document["age"] ?? 20,
         email: document["email"],
-        gender: document["gender"],
+        gender: document["gender"] ?? "성별없음",
         mannerTemperature: document["mannerTemperature"],
         nickname: document["nickname"],
         profileImageUrl: document["profileImageUrl"],

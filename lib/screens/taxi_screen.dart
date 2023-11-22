@@ -34,7 +34,15 @@ class _TaxiScreenState extends State<TaxiScreen> {
                 future: _fetchAndBuildPosts(context),
                 builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) return Center(child: LoadingIndicatorWidget());
-                  else if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+                  else if (snapshot.hasError) return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text('Error : ${snapshot.error}'),
+                        Text('Stack trace : ${snapshot.stackTrace}'),
+                      ],
+                    ),
+                  );
                   else if (snapshot.hasData) return snapshot.data!;
                   else return const Center(child: Text('No data available'));})],),),
       bottomNavigationBar: const CustomBottomNavigationBar(selectedIndex: 1),
