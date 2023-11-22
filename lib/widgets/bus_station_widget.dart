@@ -6,17 +6,17 @@ import 'outline_circle_button.dart';
 
 
 // 버스정류장 위젯
-class SubWidget extends StatelessWidget {
+class BusStationWidget extends StatelessWidget {
   final VoidCallback onClick; // 클릭 이벤트를 위한 콜백
   final BusSt busStation;
   final int numOfBus;
 
-  const SubWidget({Key? key, required this.onClick, required this.busStation, required this.numOfBus}) : super(key: key);
+  const BusStationWidget({Key? key, required this.onClick, required this.busStation, required this.numOfBus}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onClick,
+      onVerticalDragUpdate: (details) { if(details.delta.dy < 0) onClick();},
       child: Container(
         decoration: BoxDecoration(
             color: Colors.white,
@@ -175,7 +175,7 @@ class _BusListWidgetState extends State<BusListWidget> {
               ),
             ),
             Positioned(
-              right: 25, bottom: MediaQuery.of(context).size.height * 0.8,
+              right: MediaQuery.of(context).size.width * 0.05, bottom: MediaQuery.of(context).size.height * 0.8,
               child: OutlineCircleButton(
                 child: Icon(Icons.refresh, color: isRefreshing ? Colors.grey : Colors.white,), radius: 50.0, borderSize: 0.5,
                 foregroundColor: isRefreshing ? Colors.transparent : Color(0xff05d686), borderColor: Colors.white,
