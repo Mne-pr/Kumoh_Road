@@ -57,19 +57,17 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late List<OutlineCircleButton> buttons;
   late int curButton = 0;
 
-  // 버스정류장 담당 애니메이션
+  // 애니메이션 컨트롤러
   late AnimationController busStAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
   late CurvedAnimation busStCurveAni =   CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutExpo);
-  late Animation<double> busStAni =      Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
-    ..addListener(() { setState(() {}); });
-
-  // 버스리스트 담당 애니메이션
-  late Animation<double> busListAni =    Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
-    ..addListener(() { setState(() {}); });
+  
+  // 버스정류장, 위치교체버튼 애니메이션
+  late Animation<double> busStAni;
+  late Animation<double> chBtnAni;
 
   // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
   static const gumiPos  = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
-  static const gumiSPos = NCameraPosition(target: NLatLng(36.12727222, 128.3310162), zoom: 15.2, bearing: 0, tilt: 0);
+  static const gumiSPos = NCameraPosition(target: NLatLng(36.12727222, 128.3315162), zoom: 15.2, bearing: 0, tilt: 0);
   static const kumohPos = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
   static const kumohSPos= NCameraPosition(target: NLatLng(36.13762749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
   static const terminalPos = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
@@ -161,10 +159,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
 
     // 기기의 화면 크기를 이용해 애니메이션 재설정
-    double screenHeight = MediaQuery.of(context).size.height * 0.78;
-    busStAni = Tween(begin: 0.0, end: screenHeight).animate(busStCurveAni)
+    double screenHeight = MediaQuery.of(context).size.height;
+    busStAni = Tween(begin: 0.0, end: screenHeight * 0.78).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
-    busListAni = Tween(begin: -MediaQuery.of(context).size.height / 2, end: 0.0).animate(busStCurveAni)
+    chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.52).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
     // 정류장의 정보 가져오는 함수
@@ -199,18 +197,18 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     // 버스정류장 정보를 클릭할 때 이벤트 처리
     Future<void> busStationBoxClick() async {
       if (busStAnicon.isDismissed) {
+        busStAnicon.forward();
+
         final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
         await con.updateCamera(cameras[index]);
-
-        busStAnicon.forward();
       }
       else if (busStAnicon.isCompleted) {
+        busStAnicon.reverse();
+
         final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
         await con.updateCamera(cameras[index]);
-
-        busStAnicon.reverse();
       }
     }
 
@@ -242,14 +240,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               },
             ),
 
-            // 1.2 위치 변경 버튼 위젯
-            Positioned(
-              top: MediaQuery.of(context).size.width * 0.05 + busStAni.value / 6,
-              left: MediaQuery.of(context).size.width * 0.05,
-              child: buttons[curButton],
-            ),
-
-            // 1.3 버스 리스트 위젯
+            // 1.2 버스 리스트 위젯
             Positioned(
               bottom: -MediaQuery.of(context).size.height * 0.78, left: 0, right: 0,
               child: BusListWidget(
@@ -260,12 +251,19 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               ),
             ),
 
-            // 1.4 선택한 버스정류장에 대한 정보 표시 위젯
+            // 1.3 선택한 버스정류장에 대한 정보 표시 위젯
             Positioned(
               bottom: busStAni.value,
               left: 0, right: 0,
               height: MediaQuery.of(context).size.height * 0.125,
-              child: SubWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
+              child: BusStationWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
+            ),
+
+            // 1.4 위치 변경 버튼 위젯
+            Positioned(
+              bottom: chBtnAni.value,
+              right: MediaQuery.of(context).size.width * 0.05,
+              child: buttons[curButton],
             ),
 
             // 1.5 로딩 위젯
