@@ -1,12 +1,11 @@
-
-
-// 버스정류장 위젯
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../models/bus_station_model.dart';
 import 'outline_circle_button.dart';
 
+
+// 버스정류장 위젯
 class SubWidget extends StatelessWidget {
   final VoidCallback onClick; // 클릭 이벤트를 위한 콜백
   final BusSt busStation;
@@ -82,7 +81,6 @@ class BusListWidget extends StatefulWidget {
   @override
   State<BusListWidget> createState() => _BusListWidgetState();
 }
-
 class _BusListWidgetState extends State<BusListWidget> {
   late ScrollController scrollcon = ScrollController();
   bool isRefreshing = false;
@@ -113,33 +111,64 @@ class _BusListWidgetState extends State<BusListWidget> {
                     itemCount: (numOfBus == 0) ? 1 : numOfBus + 1,
                     itemBuilder: (context, index) {
                       if (numOfBus == 0) return Center(child: Text("버스가 없습니다",style: TextStyle(fontSize: 30)),); // 수정해야
-                      if (index >= numOfBus) return Divider();
+                      if (index >= numOfBus) {return Column(children: [ Divider(), SizedBox(height: 80,)]);}
                       Bus bus = widget.busList[index];
                       // 남는 시간에 따른 색 분류
                       final urgentColor = ((bus.arrtime/60).toInt() >= 5) ? Colors.blue : Colors.red;
                       return Column(
                         children: [
                           Divider(thickness: 1.0, height: 1.0,),
-                          Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                SizedBox(height: 8),
-                                Icon(Icons.directions_bus, color: Colors.blue, size: 25),
-                                SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      SizedBox(height: 2),
-                                      Text('${bus.routeno} | 방향적어야함',style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
-                                      SizedBox(height: 10),
-                                      Text('남은 정류장 : ${bus.arrprevstationcnt}',style: TextStyle(fontSize: 12, color: Colors.grey),),
-                                      SizedBox(height: 6),
-                                      Text('${(bus.arrtime/60).toInt()}분 ${bus.arrtime%60}초 후 도착',style: TextStyle(fontSize: 14, color: urgentColor),),
-                                    ],),
-                                ),],),),],
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          SizedBox(height: 8),
+                                          Icon(Icons.directions_bus, color: Colors.blue, size: 25),
+                                          SizedBox(width: 15),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                SizedBox(height: 2),
+                                                Text('${bus.routeno} | 방향적어야함', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+                                                SizedBox(height: 10),
+                                                Text('남은 정류장 : ${bus.arrprevstationcnt}', style: TextStyle(fontSize: 12, color: Colors.grey),),
+                                                SizedBox(height: 6),
+                                                Text('${(bus.arrtime/60).toInt()}분 ${bus.arrtime%60}초 후 도착', style: TextStyle(fontSize: 14, color: urgentColor),),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      barrierColor: Colors.transparent,
+                                      builder: (BuildContext context) {
+                                        return Container(
+                                          height: MediaQuery.of(context).size.height * 0.78, // 모달의 높이
+                                          child: Text("여기에 BusChatWidget 들어갈 것"),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  icon: Icon(Icons.arrow_circle_up_outlined),
+                              ),
+                              SizedBox(width: 18,),
+                            ],
+                          ),
+                        ],
                       );
                     }
                 ),
