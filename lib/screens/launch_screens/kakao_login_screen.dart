@@ -55,7 +55,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('계정 정지 알림'),
-          content: const Text('귀하의 계정은 정지되었습니다. 자세한 내용은 관리자에게 문의하세요.'),
+          content: const Text('귀하의 계정은 정지되었습니다.\n자세한 내용은 관리자에게 문의하세요.'),
           actions: <Widget>[
             TextButton(
               child: const Text('확인'),
