@@ -37,11 +37,11 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
 
     if (userProvider.isLogged) {
       if (userProvider.isSuspended) {
-        _showAccountSuspendedDialog(); // 계정이 정지된 경우 알림 표시
+        await _showAccountSuspendedDialog();
       } else if (userProvider.age == null || userProvider.gender == null) {
-        _showAdditionalInfoDialog();
+        await _showAdditionalInfoDialog();
       } else {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()));
+        await Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()));
       }
     } else {
       _showLoginError();
@@ -49,7 +49,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
     setState(() => _isLoading = false);
   }
 
-  void _showAccountSuspendedDialog() {
+  Future<void> _showAccountSuspendedDialog() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -67,7 +67,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
     );
   }
 
-  void _showAdditionalInfoDialog() {
+  Future<void> _showAdditionalInfoDialog() async {
     int age = 25; // 초기 나이 설정
     String gender = '남성'; // 기본값 설정
 
