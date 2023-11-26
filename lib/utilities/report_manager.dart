@@ -68,7 +68,7 @@ class ReportManager {
         'entityId': entityId,
         'reason': reason,
         'category': category,
-        'timestamp': FieldValue.serverTimestamp(),
+        'createdTime': FieldValue.serverTimestamp(),
         'reporterUserId': reporterUserId,
         'isHandledByAdmin': false,
       });

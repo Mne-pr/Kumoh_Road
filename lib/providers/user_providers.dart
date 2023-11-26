@@ -112,6 +112,7 @@ class UserProvider with ChangeNotifier {
         'qrCodeUrl': _qrCodeUrl,
         'studentVerified' : _isStudentVerified,
         'isSuspended': _isSuspended,
+        'createdTime': FieldValue.serverTimestamp(),
       });
     }
     notifyListeners();

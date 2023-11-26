@@ -25,7 +25,7 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
       Widget nextPage;
       switch (index) {
         case 0:
-          nextPage = const AdminMainScreen();
+          nextPage = AdminMainScreen();
           break;
         case 3:
           nextPage = const AdminUserManageScreen();

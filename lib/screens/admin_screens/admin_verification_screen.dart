@@ -74,7 +74,7 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
       Navigator.pop(context);
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const AdminMainScreen()),
+        MaterialPageRoute(builder: (context) => AdminMainScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,7 +158,7 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
                     .loginAsAdmin();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AdminMainScreen()),
+                  MaterialPageRoute(builder: (context) =>  AdminMainScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(

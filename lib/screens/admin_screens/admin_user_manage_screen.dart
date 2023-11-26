@@ -36,7 +36,7 @@ class _AdminUserManageScreenState extends State<AdminUserManageScreen> {
     for (var report in reportsSnapshot.docs) {
       String userId = report['entityId'];
       String category = report['category'];
-      Timestamp timestamp = report['timestamp'];
+      Timestamp timestamp = report['createdTime'];
       DateTime reportedAt = timestamp.toDate();
       String content = "${report['reason']}\n${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}";
 
