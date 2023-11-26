@@ -6,14 +6,14 @@ import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../../widgets/report_count_widget.dart';
 import 'admin_user_manage_detail_screen.dart';
 
-class AdminUserMangeScreen extends StatefulWidget {
-  const AdminUserMangeScreen({Key? key}) : super(key: key);
+class AdminUserManageScreen extends StatefulWidget {
+  const AdminUserManageScreen({Key? key}) : super(key: key);
 
   @override
-  _AdminUserMangeScreenState createState() => _AdminUserMangeScreenState();
+  _AdminUserManageScreenState createState() => _AdminUserManageScreenState();
 }
 
-class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
+class _AdminUserManageScreenState extends State<AdminUserManageScreen> {
   List<UserModel> users = [];
   Map<String, int> userReportCounts = {};
   Map<String, Map<String, List<String>>> reportDetails = {};
@@ -35,10 +35,10 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
 
     for (var report in reportsSnapshot.docs) {
       String userId = report['entityId'];
-      String category = report['category']; // 카테고리 정보
+      String category = report['category'];
       Timestamp timestamp = report['timestamp'];
       DateTime reportedAt = timestamp.toDate();
-      String content = "${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}\n신고내용: ${report['reason']}";
+      String content = "${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}\n${report['reason']}";
 
       reportCounts[userId] = (reportCounts[userId] ?? 0) + 1;
 
@@ -142,7 +142,10 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
               reportDetails: reportDetails[user.userId] ?? {},
             ),
           ),
-        );
+        ).then((_) {
+          // 다시 이 화면으로 돌아왔을 때 사용자 목록과 신고 상태를 새로고침
+          _fetchAllUsersAndReports();
+        });
       },
     );
   }
