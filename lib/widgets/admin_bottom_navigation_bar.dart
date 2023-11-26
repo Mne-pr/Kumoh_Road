@@ -51,8 +51,8 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
       onTap: _onItemTapped,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.announcement),
-          label: '공지사항',
+          icon: Icon(Icons.home),
+          label: '홈',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.local_taxi),

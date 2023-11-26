@@ -70,7 +70,7 @@ class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScree
         title: const Text('사용자 신고 내용', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: ListView(

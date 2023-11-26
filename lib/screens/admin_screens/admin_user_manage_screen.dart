@@ -74,7 +74,7 @@ class _AdminUserManageScreenState extends State<AdminUserManageScreen> {
           title: const Text('사용자 신고 관리', style: TextStyle(color: Colors.black)),
           centerTitle: false,
           backgroundColor: Colors.white,
-          elevation: 0,
+          elevation: 1,
           automaticallyImplyLeading: false,
         ),
         body: Padding(
