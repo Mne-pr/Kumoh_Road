@@ -38,7 +38,7 @@ class _AdminUserManageScreenState extends State<AdminUserManageScreen> {
       String category = report['category'];
       Timestamp timestamp = report['timestamp'];
       DateTime reportedAt = timestamp.toDate();
-      String content = "${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}\n${report['reason']}";
+      String content = "${report['reason']}\n${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}";
 
       reportCounts[userId] = (reportCounts[userId] ?? 0) + 1;
 

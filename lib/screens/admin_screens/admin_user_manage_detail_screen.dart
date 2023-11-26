@@ -95,7 +95,30 @@ class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScree
                   ReportCountWidget(reports.length),
                 ],
               ),
-              children: reports.map((report) => ListTile(title: Text(report))).toList(),
+              children: reports.map((report) {
+                var parts = report.split('\n');
+                String reason = '신고내용: ${parts[0]}';
+                String date = '신고시간: ${parts[1]}';
+                return ListTile(
+                  title: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: reason,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '\n$date',
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             );
           }).toList(),
           if (!actionTaken) // 아직 조치가 취해지지 않았다면 두 개의 버튼을 보여줌
