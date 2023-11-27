@@ -78,7 +78,7 @@ class _AdminUserManageScreenState extends State<AdminUserManageScreen> {
           automaticallyImplyLeading: false,
         ),
         body: Padding(
-        padding: const EdgeInsets.all(0.0),
+        padding: const EdgeInsets.all(8.0),
         child: ListView.builder(
           itemCount: users.length,
           itemBuilder: (context, index) {
