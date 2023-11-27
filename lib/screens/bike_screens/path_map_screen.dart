@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -15,11 +15,16 @@ class PathMapScreen extends StatefulWidget {
 }
 
 class _PathMapScreenState extends State<PathMapScreen> {
+  //design 변수
+  double marginSize = 15;
+  FocusNode originTextFocus = FocusNode();
+  FocusNode destinationTextFocus = FocusNode();
+
   //text 변수
   final originAddress = TextEditingController();
   final destinationAddress = TextEditingController();
   late NaverMapController mapController;
-  Map<String, String> headerss = {"X-NCP-APIGW-API-KEY-ID": "t2v0aiyv0u", "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"};
+  Map<String, String> nmapID = {"X-NCP-APIGW-API-KEY-ID": "t2v0aiyv0u", "X-NCP-APIGW-API-KEY": "R0ydnLxNcjSpxEf6jPt2YQQGE3TCE3UrV84AcSNx"};
   List<String> inputString = List.filled(2, "");
   List<dynamic> coordinateList = List.generate(2, (index) => 5, growable: false); //구조[응답상태, 응답 데이터 수, 이름, 위도, 경도]
   List<dynamic> markerList = List.generate(2, (index) => null, growable: false);
@@ -37,7 +42,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
 
   Future<List> getCoordinate(String pointAddress) async {
     http.Response response =
-        await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$pointAddress"), headers: headerss);
+        await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$pointAddress"), headers: nmapID);
     if (response.statusCode == 200) {
       String jsonData = utf8.decode(response.bodyBytes);
       int checkResponse = jsonDecode(jsonData)["meta"]["totalCount"];
@@ -61,12 +66,11 @@ class _PathMapScreenState extends State<PathMapScreen> {
     http.Response response = await http.get(
         Uri.parse(
             "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start=${coordinateList[0][4]},${coordinateList[0][3]}&goal=${coordinateList[1][4]},${coordinateList[1][3]}&option={탐색옵션}"),
-        headers: headerss);
+        headers: nmapID);
     String jsonData = utf8.decode(response.bodyBytes);
     List<dynamic> tempList = jsonDecode(jsonData)["route"]["traoptimal"][0]["path"];
-    List<dynamic> tcoordList =
-        List.generate(tempList.length, (index) => null, growable: false);
-    for(int i = 0; i < tempList.length; i++){
+    List<dynamic> tcoordList = List.generate(tempList.length, (index) => null, growable: false);
+    for (int i = 0; i < tempList.length; i++) {
       tcoordList[i] = NLatLng(tempList[i][1], tempList[i][0]);
     }
     return tcoordList;
@@ -74,17 +78,17 @@ class _PathMapScreenState extends State<PathMapScreen> {
 
   void moveMap() async {
     final movePoint = NCameraUpdate.scrollAndZoomTo(
-      target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2, (coordinateList[0][4] + coordinateList[1][4]) / 2),
+      target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2 - 0.01, (coordinateList[0][4] + coordinateList[1][4]) / 2),
       zoom: 11.5,
     );
     markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]));
     markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]));
     List<dynamic> tempList = await getPath();
-    List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => NLatLng(0.0, 0.0));
-    for(int i = 0; i < tempList.length; i++){
+    List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => const NLatLng(0.0, 0.0));
+    for (int i = 0; i < tempList.length; i++) {
       pathCoordinate[i] = tempList[i];
     }
-    final tempLine = NPolylineOverlay(id: "test", coords: pathCoordinate, color: Colors.red, width: 5);
+    final tempLine = NPolylineOverlay(id: "path", coords: pathCoordinate, color: const Color(0xffff0000), width: 5);
     await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
     await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
@@ -126,82 +130,125 @@ class _PathMapScreenState extends State<PathMapScreen> {
     const basePosition = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Stack(
           children: <Widget>[
-            Container(
-              margin: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-              height: 35,
-              child: TextField(
-                controller: originAddress,
-                textAlignVertical: TextAlignVertical.bottom,
-                textAlign: TextAlign.left,
-                decoration: const InputDecoration(
-                  hintText: "출발지를 입력하세요",
-                  filled: true,
-                  fillColor: Colors.black12,
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Colors.black54,
-                      width: 1.5,
-                    ),
-                  ),
-                ),
+            NaverMap(
+              options: const NaverMapViewOptions(
+                minZoom: 10,
+                maxZoom: 18,
+                pickTolerance: 8,
+                locale: Locale('kr'),
+                mapType: NMapType.basic,
+                liteModeEnable: true,
+                initialCameraPosition: basePosition,
+                activeLayerGroups: [
+                  NLayerGroup.building,
+                  NLayerGroup.mountain,
+                  NLayerGroup.bicycle,
+                ],
+                rotationGesturesEnable: false,
+                scrollGesturesEnable: true,
+                tiltGesturesEnable: false,
+                stopGesturesEnable: false,
+                scaleBarEnable: false,
+                logoClickEnable: false,
               ),
+              onMapReady: (NaverMapController controller) {
+                mapController = controller;
+              },
             ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-              height: 35,
-              child: TextField(
-                controller: destinationAddress,
-                textAlignVertical: TextAlignVertical.bottom,
-                textAlign: TextAlign.left,
-                decoration: const InputDecoration(
-                  hintText: "도착지를 입력하세요",
-                  filled: true,
-                  fillColor: Colors.black12,
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Colors.black54,
-                      width: 1.5,
+            Positioned(
+              bottom: 0,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: 150,
+                color: const Color(0xd0ffffff),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.fromLTRB(marginSize, marginSize, marginSize, 5),
+                      height: 35,
+                      child: SizedBox(
+                        width: (MediaQuery.of(context).size.width - marginSize * 2),
+                        height: 35,
+                        child: TextField(
+                          controller: originAddress,
+                          focusNode: originTextFocus,
+                          textAlignVertical: TextAlignVertical.bottom,
+                          textAlign: TextAlign.left,
+                          onSubmitted: (text) {},
+                          decoration: const InputDecoration(
+                            hintText: "출발지를 입력하세요",
+                            filled: true,
+                            fillColor: Color(0xffdddddd),
+                            enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black54,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => mapSet(),
-              child: const Text('경로 탐색'),
-            ),
-            Expanded(
-              child: NaverMap(
-                options: const NaverMapViewOptions(
-                  minZoom: 10,
-                  maxZoom: 18,
-                  pickTolerance: 8,
-                  locale: Locale('kr'),
-                  mapType: NMapType.basic,
-                  liteModeEnable: true,
-                  initialCameraPosition: basePosition,
-                  activeLayerGroups: [
-                    NLayerGroup.building,
-                    NLayerGroup.mountain,
-                    NLayerGroup.bicycle,
+                    Container(
+                      margin: EdgeInsets.fromLTRB(marginSize, 5, marginSize, 5),
+                      height: 35,
+                      child: SizedBox(
+                        width: (MediaQuery.of(context).size.width - marginSize * 2),
+                        height: 35,
+                        child: TextField(
+                          controller: destinationAddress,
+                          focusNode: destinationTextFocus,
+                          textAlignVertical: TextAlignVertical.bottom,
+                          textAlign: TextAlign.left,
+                          onSubmitted: (text) {},
+                          decoration: const InputDecoration(
+                            hintText: "도착지를 입력하세요",
+                            filled: true,
+                            fillColor: Color(0xffdddddd),
+                            enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black54,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.fromLTRB(MediaQuery.of(context).size.width * 0.3, 5, MediaQuery.of(context).size.width * 0.3, 0),
+                      child: SizedBox(
+                        width: (MediaQuery.of(context).size.width - marginSize * 2),
+                        height: 30,
+                        child: TextButton(
+                          onPressed: () => {
+                            originTextFocus.unfocus(),
+                            destinationTextFocus.unfocus(),
+                            mapSet(),
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.all(5),
+                            backgroundColor: const Color(0xff05d686),
+                            foregroundColor: Colors.white,
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          child: const Text('경로 탐색'),
+                        ),
+                      ),
+                    ),
                   ],
-                  rotationGesturesEnable: false,
-                  scrollGesturesEnable: true,
-                  tiltGesturesEnable: false,
-                  stopGesturesEnable: false,
-                  scaleBarEnable: false,
-                  logoClickEnable: false,
                 ),
-                onMapReady: (NaverMapController controller) {
-                  mapController = controller;
-                },
               ),
             ),
           ],
