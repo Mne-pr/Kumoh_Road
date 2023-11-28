@@ -142,18 +142,18 @@ class _BarChartSample7State extends State<AdminMainScreen> {
           "icon": Icons.sentiment_very_dissatisfied
         },
       ];
-      // 데이터 로딩 후 최대값 계산
       int calculatedMaxY = dataList.fold(0, (previousValue, element) {
         int todayMax = element['today'] ?? 0; // null 체크
         int yesterdayMax = element['yesterday'] ?? 0; // null 체크
         return max(previousValue, max(todayMax, yesterdayMax));
       });
 
-      // 최대값이 0보다 크면 업데이트, 그렇지 않으면 기본값 유지
-      if (calculatedMaxY > 0) {
-        maxY = calculatedMaxY + 1; // 여유 공간을 위해 1 추가
+      if (calculatedMaxY <= 0) {
+        maxY = 1;
+      } else {
+        maxY = calculatedMaxY + 1;
       }
-      isLoading = false; // 데이터 로딩 완료
+      isLoading = false;
     });
   }
 
@@ -192,205 +192,250 @@ class _BarChartSample7State extends State<AdminMainScreen> {
         elevation: 1,
         automaticallyImplyLeading: false,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  '금오로드 앱 하루 동향',
-                  style: TextStyle(fontSize: 15),
-                ),
-              ],
-            ),
-          ),
-          buildBarChart(dataList),
-          buildChartLegend(),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Icon(Icons.announcement, size: 24),
-                SizedBox(width: 8),
-                Text(
-                  '공지사항',
-                  style: TextStyle(fontSize: 15),
-                ),
-              ],
-            ),
-          ),
-          buildAnnouncements()
+          buildAppTrendsSection(),
+          buildAnnouncementsSection(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => AddAnnouncementScreen()),
-          );
-        }, // Adjust icon size as needed
-        mini: true,
-        child: const Icon(Icons.add, size: 20), // Set to true to reduce the size of the FAB
+      bottomNavigationBar: const AdminCustomBottomNavigationBar(selectedIndex: 0),
+    );
+  }
+
+// 앱 동향 섹션
+  Widget buildAppTrendsSection() {
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0, bottom: 3.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
       ),
-      bottomNavigationBar:
-      const AdminCustomBottomNavigationBar(selectedIndex: 0), // 예시 인덱스
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+              const SizedBox(width: 8),
+              const Text(
+                '금오로드 앱 하루 동향',
+                style: TextStyle(fontSize: 15),
+              ),
+            ],
+          ),
+          const Divider(),
+          buildBarChart(dataList),
+          buildChartLegend(),
+        ],
+      ),
+    );
+  }
+
+// 공지사항 섹션
+  Widget buildAnnouncementsSection() {
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.announcement, size: 25),
+                  SizedBox(width: 8),
+                  Text(
+                    '공지사항',
+                    style: TextStyle(fontSize: 15),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  // 새 공지사항 추가 버튼
+                  IconButton(
+                    icon: const Icon(Icons.add, size: 24),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => AddAnnouncementScreen()),
+                      );
+                    },
+                  ),
+                  // 전체 공지사항 페이지로 이동하는 버튼
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onPressed: () {
+                      // TODO: 전체 공지사항 페이지로 이동하는 로직 구현
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          buildAnnouncements(),
+        ],
+      ),
     );
   }
 
   Widget buildBarChart(List<Map<String, dynamic>> dataList) {
     if (isLoading) {
-      return const Expanded(
-        child: Center(
-          child: SizedBox(
-            child: Center(child: CircularProgressIndicator()),
-          ),
+      return const Center(
+        child: SizedBox(
+          height: 400,
+          child: Center(child: CircularProgressIndicator()),
         ),
       );
     }
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceBetween,
-            borderData: FlBorderData(
-              show: true,
-              border: Border.symmetric(
-                horizontal: BorderSide(
-                  color: Colors.white54.withOpacity(0.2),
-                ),
+    return SizedBox(
+      height: 400, // 고정된 높이를 제공
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceBetween,
+          borderData: FlBorderData(
+            show: true,
+            border: Border.symmetric(
+              horizontal: BorderSide(
+                color: Colors.white54.withOpacity(0.2),
               ),
             ),
-            titlesData: FlTitlesData(
-              show: true,
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 30,
-                  getTitlesWidget: (value, meta) {
-                    return Padding(
-                      padding:
-                      const EdgeInsets.only(right: 4.0), // 오른쪽 패딩 추가
-                      child: Text(
-                        value.toInt().toString(),
-                        style: const TextStyle(fontSize: 10), // 글씨 크기 조정
-                      ),
-                    );
-                  },
-                ),
-              ),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 36,
-                  getTitlesWidget: (value, meta) {
-                    final index = value.toInt();
-                    final icon = dataList[index]['icon'] as IconData;
-                    final isSelected = index == touchedGroupIndex;
-                    bool isReportIcon = [
-                      Icons.taxi_alert,
-                      Icons.bus_alert,
-                      Icons.sentiment_very_dissatisfied
-                    ].contains(icon);
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          touchedGroupIndex = index;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding:
-                        const EdgeInsets.symmetric(vertical: 4.0),
-                        child: Icon(
-                          icon,
-                          color: isSelected && isReportIcon
-                              ? Colors.red
-                              : (isSelected ? Colors.blue : Colors.grey),
-                          size: isSelected ? 30 : 24,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              rightTitles: const AxisTitles(),
-              topTitles: const AxisTitles(),
-            ),
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              getDrawingHorizontalLine: (value) => const FlLine(
-                color: Color(0x11FFFFFF),
-                strokeWidth: 1,
-              ),
-            ),
-            barGroups: dataList.asMap().entries.map((e) {
-              final index = e.key;
-              final data = e.value;
-              return generateBarGroup(
-                index,
-                data['color'],
-                data['today'],
-                data['yesterday'],
-              );
-            }).toList(),
-            maxY: maxY.toDouble(), // 계산된 maxY 값 사용
-            barTouchData: BarTouchData(
-              enabled: true, // 터치 활성화
-              handleBuiltInTouches: true, // 기본 터치 처리 활성화
-              touchTooltipData: BarTouchTooltipData(
-                tooltipBgColor: Colors.transparent,
-                tooltipMargin: 0,
-                getTooltipItem: (
-                    BarChartGroupData group,
-                    int groupIndex,
-                    BarChartRodData rod,
-                    int rodIndex,
-                    ) {
-                  return BarTooltipItem(
-                    '${rod.toY.toInt()}',
-                    TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: rod.color,
-                      fontSize: 18,
-                      shadows: const [
-                        Shadow(
-                          color: Colors.black26,
-                          blurRadius: 12,
-                        ),
-                      ],
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                getTitlesWidget: (value, meta) {
+                  return Padding(
+                    padding:
+                    const EdgeInsets.only(right: 4.0), // 오른쪽 패딩 추가
+                    child: Text(
+                      value.toInt().toString(),
+                      style: const TextStyle(fontSize: 10), // 글씨 크기 조정
                     ),
                   );
                 },
               ),
-              touchCallback: (event, response) {
-                if (event.isInterestedForInteractions &&
-                    response != null &&
-                    response.spot != null) {
-                  setState(() {
-                    touchedGroupIndex =
-                        response.spot!.touchedBarGroupIndex;
-                  });
-                } else {
-                  setState(() {
-                    touchedGroupIndex = -1;
-                  });
-                }
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 36,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  final icon = dataList[index]['icon'] as IconData;
+                  final isSelected = index == touchedGroupIndex;
+                  bool isReportIcon = [
+                    Icons.taxi_alert,
+                    Icons.bus_alert,
+                    Icons.sentiment_very_dissatisfied
+                  ].contains(icon);
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        touchedGroupIndex = index;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Icon(
+                        icon,
+                        color: isSelected && isReportIcon
+                            ? Colors.red
+                            : (isSelected ? Colors.blue : Colors.grey),
+                        size: isSelected ? 30 : 24,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            rightTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) =>
+            const FlLine(
+              color: Color(0x11FFFFFF),
+              strokeWidth: 1,
+            ),
+          ),
+          barGroups: dataList
+              .asMap()
+              .entries
+              .map((e) {
+            final index = e.key;
+            final data = e.value;
+            return generateBarGroup(
+              index,
+              data['color'],
+              data['today'],
+              data['yesterday'],
+            );
+          }).toList(),
+          maxY: maxY.toDouble(),
+          // 계산된 maxY 값 사용
+          barTouchData: BarTouchData(
+            enabled: true, // 터치 활성화
+            handleBuiltInTouches: true, // 기본 터치 처리 활성화
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.transparent,
+              tooltipMargin: 0,
+              getTooltipItem: (BarChartGroupData group,
+                  int groupIndex,
+                  BarChartRodData rod,
+                  int rodIndex,) {
+                return BarTooltipItem(
+                  '${rod.toY.toInt()}',
+                  TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: rod.color,
+                    fontSize: 18,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black26,
+                        blurRadius: 12,
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
+            touchCallback: (event, response) {
+              if (event.isInterestedForInteractions &&
+                  response != null &&
+                  response.spot != null) {
+                setState(() {
+                  touchedGroupIndex =
+                      response.spot!.touchedBarGroupIndex;
+                });
+              } else {
+                setState(() {
+                  touchedGroupIndex = -1;
+                });
+              }
+            },
           ),
         ),
       ),
     );
   }
+
+
   Widget buildChartLegend() {
     return const Padding(
-      padding: EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(2.0),
       child: Row(
         children: [
           Icon(Icons.square, color: Colors.blue),
@@ -410,26 +455,26 @@ class _BarChartSample7State extends State<AdminMainScreen> {
   }
 
   Widget buildAnnouncements() {
-    return Expanded(
-      child: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('announcements').orderBy('date', descending: true).snapshots(),
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return const Text('오류');
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final data = snapshot.requireData;
-          return ListView.builder(
-            itemCount: data.size,
-            itemBuilder: (context, index) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('announcements').orderBy('date', descending: true).limit(3).snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return const Text('오류');
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final data = snapshot.requireData;
+
+        return SingleChildScrollView(
+          child: Column(
+            children: List.generate(data.size, (index) {
               var announcement = data.docs[index];
               return Card(
                 elevation: 4,
-                margin: const EdgeInsets.all(3),
+                margin: const EdgeInsets.only(bottom: 6.0),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15), // 더 동그란 모서리
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: ListTile(
                   leading: Container(
@@ -446,10 +491,10 @@ class _BarChartSample7State extends State<AdminMainScreen> {
                   title: Text(announcement['title']),
                 ),
               );
-            },
-          );
-        },
-      ),
+            }),
+          ),
+        );
+      },
     );
   }
 }
