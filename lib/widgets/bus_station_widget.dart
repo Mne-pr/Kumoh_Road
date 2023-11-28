@@ -9,9 +9,8 @@ import 'outline_circle_button.dart';
 class BusStationWidget extends StatelessWidget {
   final VoidCallback onClick; // 클릭 이벤트를 위한 콜백
   final BusSt busStation;
-  final int numOfBus;
 
-  const BusStationWidget({Key? key, required this.onClick, required this.busStation, required this.numOfBus}) : super(key: key);
+  const BusStationWidget({Key? key, required this.onClick, required this.busStation}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +39,7 @@ class BusStationWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        '${busStation.mainText} [ ${numOfBus} ]',
+                        '${busStation.mainText}',
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ), SizedBox(height: 14),
                       Text(

@@ -40,6 +40,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널"),
   ];
   late final busStopW;
+
+  // final tempMark = NMarker(id: 'text', iconTintColor: Color(0xff05d686));
   
   // 버스정류장 정보와 그 상태들
   final busStopInfos = [
@@ -50,7 +52,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     BusSt(code: "GMB91",id:10091,subText: "경상북도 구미시 원평동 1103",  mainText: '종합버스터미널'),
   ];
   late int curBusStop = 0;
-  late int numOfBus = 0;
   late List<Bus> busList = [];
   
   // 위치 이동 버튼과 상태
@@ -98,6 +99,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         child: Icon(Icons.school_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686),borderColor: Colors.white,
         onTap: () async {
+          await busStopMarks[2].performClick();
           final nextBusSt = 1;
           if (busStAnicon.isDismissed){
             cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration); // 사실 cameraMap[0] 대신에 0 넣으면 되는데 보기 편하라고
@@ -107,13 +109,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
           setState(() { curButton = 1; });
-          await busStopMarks[2].performClick();
         },
       ),
       OutlineCircleButton( // 금오공대 -> 종합터미널
         child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686), borderColor: Colors.white,
         onTap: () async {
+          await busStopMarks[4].performClick();
           final nextBusSt = 2;
           if (busStAnicon.isDismissed){
             cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
@@ -123,13 +125,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
           setState(() { curButton = 2; });
-          await busStopMarks[4].performClick();
         }
       ),
       OutlineCircleButton( // 종합터미널 -> 구미역
           child: Icon(Icons.tram_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
           foregroundColor: Color(0xff05d686),borderColor: Colors.white,
           onTap: () async {
+            await busStopMarks[0].performClick();
             final nextBusSt = 0;
             if (busStAnicon.isDismissed){
               cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
@@ -139,7 +141,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
             }
             setState(() { curButton = 0; });
-            await busStopMarks[0].performClick();
           }
       ),
 
@@ -177,21 +178,23 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     // 정류장 정보 얻어와 리스트 저장하는 함수
     Future<void> updateBusListBox() async {
       BusApiRes res = await fetchBusInfo(busStopInfos[curBusStop].code);
-      setState(() { busList = res.buses; numOfBus = res.buses.length; });
+      setState(() { busList = res.buses;});
     }
 
     // 버스정류장의 정보 알아오기
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; isLoading = true; });
       await updateBusListBox();
+      busStopMarks[busStop].setIconTintColor(Color.fromARGB(0, 1, 1, 255));
 
       for (int i = 0; i < 5; i++){
         if (busStop != i) {
           try { await busStopW[i].close();} catch (e) { }
+          try { busStopMarks[i].setIconTintColor(Colors.transparent); } catch (e) {}
         }
       }
       await Future.delayed(Duration(milliseconds: 250));
-      setState(() {isLoading = false; loadingOpacity = 0.4;});
+      setState(() {isLoading = false; loadingOpacity = 0.8;});
     }
 
     // 버스정류장 정보를 클릭할 때 이벤트 처리
@@ -256,7 +259,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               bottom: busStAni.value,
               left: 0, right: 0,
               height: MediaQuery.of(context).size.height * 0.125,
-              child: BusStationWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
+              child: BusStationWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop]),
             ),
 
             // 1.4 위치 변경 버튼 위젯
