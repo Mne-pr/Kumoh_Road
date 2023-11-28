@@ -11,6 +11,7 @@ class PathMapScreen extends StatefulWidget {
   const PathMapScreen({Key? key}) : super(key: key);
 
   @override
+
   _PathMapScreenState createState() => _PathMapScreenState();
 }
 
@@ -111,10 +112,13 @@ class _PathMapScreenState extends State<PathMapScreen> {
       if (coordinateList[0][0] == 200 && coordinateList[1][0] == 200) {
         if (coordinateList[0][1] == 0 && coordinateList[1][1] == 0) {
           errorView("잘못된 주소입니다");
+          originTextFocus.requestFocus();
         } else if (coordinateList[0][1] == 0) {
           errorView("잘못된 출발지 주소입니다");
+          originTextFocus.requestFocus();
         } else if (coordinateList[1][1] == 0) {
           errorView("잘못된 도착지 주소입니다");
+          destinationTextFocus.requestFocus();
         } else {
           print(coordinateList);
           moveMap();
@@ -123,6 +127,15 @@ class _PathMapScreenState extends State<PathMapScreen> {
         errorView("Error:response is Not 200");
       }
     }
+  }
+
+  @override
+  void dispose(){
+    originAddress.dispose();
+    originTextFocus.dispose();
+    destinationAddress.dispose();
+    destinationTextFocus.dispose();
+    super.dispose();
   }
 
   @override
