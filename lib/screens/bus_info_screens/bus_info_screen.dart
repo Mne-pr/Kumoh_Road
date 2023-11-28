@@ -40,8 +40,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널"),
   ];
   late final busStopW;
-
-  // final tempMark = NMarker(id: 'text', iconTintColor: Color(0xff05d686));
   
   // 버스정류장 정보와 그 상태들
   final busStopInfos = [
@@ -183,7 +181,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 버스정류장의 정보 알아오기
     Future<void> updateBusStop(int busStop) async {
-      setState(() { curBusStop = busStop; isLoading = true; });
+      setState(() { curBusStop = busStop; });//isLoading = true; });
       await updateBusListBox();
       busStopMarks[busStop].setIconTintColor(Color.fromARGB(0, 1, 1, 255));
 
