@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/announcement_model.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
+import '../main_screens/announcement_detail_screen.dart';
 import 'admin_add_announcement_screan.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -157,8 +159,8 @@ class _BarChartSample7State extends State<AdminMainScreen> {
     });
   }
 
-  BarChartGroupData generateBarGroup(
-      int x, Color color, int value, int shadowValue) {
+  BarChartGroupData generateBarGroup(int x, Color color, int value,
+      int shadowValue) {
     return BarChartGroupData(
       x: x,
       barRods: [
@@ -198,7 +200,8 @@ class _BarChartSample7State extends State<AdminMainScreen> {
           buildAnnouncementsSection(),
         ],
       ),
-      bottomNavigationBar: const AdminCustomBottomNavigationBar(selectedIndex: 0),
+      bottomNavigationBar: const AdminCustomBottomNavigationBar(
+          selectedIndex: 0),
     );
   }
 
@@ -206,7 +209,8 @@ class _BarChartSample7State extends State<AdminMainScreen> {
   Widget buildAppTrendsSection() {
     return Container(
       margin: const EdgeInsets.all(8.0),
-      padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0, bottom: 3.0),
+      padding: const EdgeInsets.only(
+          top: 16.0, left: 16.0, right: 16.0, bottom: 3.0),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
         borderRadius: BorderRadius.circular(15.0),
@@ -235,7 +239,8 @@ class _BarChartSample7State extends State<AdminMainScreen> {
   Widget buildAnnouncementsSection() {
     return Container(
       margin: const EdgeInsets.all(8.0),
-      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      padding: const EdgeInsets.only(
+          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
         borderRadius: BorderRadius.circular(12.0),
@@ -262,7 +267,8 @@ class _BarChartSample7State extends State<AdminMainScreen> {
                     icon: const Icon(Icons.add, size: 24),
                     onPressed: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => AddAnnouncementScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => AddAnnouncementScreen()),
                       );
                     },
                   ),
@@ -456,7 +462,7 @@ class _BarChartSample7State extends State<AdminMainScreen> {
 
   Widget buildAnnouncements() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('announcements').orderBy('date', descending: true).limit(3).snapshots(),
+      stream: FirebaseFirestore.instance.collection('announcements').orderBy('date', descending: true).limit(4).snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.hasError) {
           return const Text('오류');
@@ -469,26 +475,43 @@ class _BarChartSample7State extends State<AdminMainScreen> {
         return SingleChildScrollView(
           child: Column(
             children: List.generate(data.size, (index) {
-              var announcement = data.docs[index];
-              return Card(
-                elevation: 4,
-                margin: const EdgeInsets.only(bottom: 6.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.grey[400],
+              var announcementData = data.docs[index];
+              var announcement = Announcement.fromMap(announcementData.id, announcementData.data() as Map<String, dynamic>);
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AnnouncementDetailScreen(
+                              announcement: announcement),
                     ),
-                    child: Text(
-                      announcement['type'],
-                      style: const TextStyle(color: Colors.white),
+                  );
+                },
+                child: Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.only(bottom: 6.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.grey[400],
+                      ),
+                      child: Text(
+                        announcement.type,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    title: Text(
+                      announcement.title,
+                      maxLines: 1, // 텍스트를 한 줄로 제한
+                      overflow: TextOverflow.ellipsis, // 넘치는 텍스트를 말줄임표로 처리
                     ),
                   ),
-                  title: Text(announcement['title']),
                 ),
               );
             }),

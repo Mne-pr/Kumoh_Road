@@ -21,9 +21,10 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
       _formKey.currentState!.save();
       final announcement = Announcement(
         type: _type,
-        title: _title, // 제목 추가
+        title: _title,
         content: _content,
         date: _date,
+        views: 0,
       );
       FirebaseFirestore.instance.collection('announcements').add(announcement.toMap());
       Navigator.pop(context);
