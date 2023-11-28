@@ -42,7 +42,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
         title: const Text('프로필', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: otherUser == null

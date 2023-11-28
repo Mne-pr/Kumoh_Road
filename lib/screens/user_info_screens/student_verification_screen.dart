@@ -74,7 +74,7 @@ class _StudentVerificationScreenState extends State<StudentVerificationScreen> {
         title: const Text('학생 인증', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: Padding(
