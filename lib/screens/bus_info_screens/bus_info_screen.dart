@@ -170,66 +170,74 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.52).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
-    // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
+    // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수 - 채팅 추가, 삭제 해야함
     Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
-      var check; List<String> busNamesFromFire;
+      final DocumentSnapshot check;
+      List<String> busCodesFromFire;
+      final curDoc = fire.collection('bus_station_info').doc(nodeId);
+      var tmpBusList;
 
       // 파베의 bus_list에서 업데이트 할 버스정류장의 문서 이름 리스트를 가져옴
       try {
-        check = await fire.collection('bus_list').where('nodeid',isEqualTo: nodeId).get();
-        busNamesFromFire = check.docs.map<String>((doc) => doc.id as String).toList();
-      } catch(error) {print("get bus_list error : ${error.toString()}"); busNamesFromFire = [];}
+        check = await curDoc.get();
+        tmpBusList = check.get('bus_list');
+        busCodesFromFire = tmpBusList.map((bus) => bus['code'] as String).toList();
+      } catch(error) {print("get bus_list error : ${error.toString()}"); busCodesFromFire = [];}
 
-      // api 리스트로부터 암호화 이름을 가져옴 - 각자 bus 객체에 저장하고(댓글읽기용이), 파베의 문서 이름으로도 사용(받아오기용이)
-      List<String> encryptedNames = busListFromApi.map((bus) {
-        var data = '${bus.nodeid}-${bus.routeid}-${bus.routeno}';
-        bus.setEncryptedName(md5.convert(utf8.encode(data)).toString());
-        return bus.encyptedname;
+      // api 리스트로부터 이름을 가져옴 - 고유문자 생성
+      List<String> busCodesFromApi = busListFromApi.map((bus) {
+        var code = '${bus.nodeid}-${bus.routeid}-${bus.routeno}';
+        bus.setCode(code);
+        return bus.code;
       }).toList();
-      print('firebase_bus_list : ${busNamesFromFire.toString()}, api_list : ${encryptedNames.toString()}');
+      print('fire_code_list : ${busCodesFromFire.toString()}, api_list : ${busCodesFromApi.toString()}');
 
-      // 두 리스트에서 공통된 버스 찾음
-      Set<String> commonNames = busNamesFromFire.toSet().intersection(encryptedNames.toSet());
+      // 두 코드 리스트에서 공통된 버스 찾음
+      Set<String> commonCodes = busCodesFromFire.toSet().intersection(busCodesFromApi.toSet());
 
-      // 두 리스트에서 공통된 버스 제거
-      busNamesFromFire.removeWhere((name) => commonNames.contains(name)); // 파베에서 제거해야 할 버스들만 남음
-      encryptedNames.removeWhere((name) => commonNames.contains(name));   // 파베에 추가해야 할 버스들만 남음
+      // 두 코드 리스트에서 공통된 버스 제거
+      busCodesFromFire.removeWhere((name) => commonCodes.contains(name)); // 파베에서 제거해야 할 버스들만 남음
+      busCodesFromApi.removeWhere((name) => commonCodes.contains(name));  // 파베에 추가해야 할 버스들만 남음
 
-      // 파베에서 제거해야 할 버스들 (이미 지나간 버스) 제거
-      for (String name in busNamesFromFire) {
-        await fire.collection('bus_list').doc(name).delete()
-            .catchError((error) {print("Error deleting doc $name: ${error.toString()}");});
+      // 버스 목록에서 지나간 버스 제거
+      for (String code in busCodesFromFire) {
+        tmpBusList.removeWhere((bus) => bus['code'] == code);
+        //////// 파베에 버스 채팅리스트도 지워야 함!!!!!
+        try{
+          await fire.collection('bus_chat').doc(code).delete();
+        } catch(e) {}
       }
 
       // 새 버스를 추가, 기존 버스 업데이트
       for (Bus bus in busListFromApi) {
-        var encName = md5.convert(utf8.encode('${bus.nodeid}-${bus.routeid}-${bus.routeno}')).toString();
         // 새로운 버스인 경우 - 추가
-        if (encryptedNames.contains(encName)) {
-          await fire.collection('bus_list').doc(encName).set({
-            'arrprevstationcnt' : bus.arrprevstationcnt, // 남은 정류장 수
-            'arrtime' : bus.arrtime,                     // 도착예상시간(초)
-            'nodeid' : bus.nodeid,                       // 정류소 ID
-            'nodenm' : bus.nodenm,                       // 정류소명
-            'routeid' : bus.routeid,                     // 노선 ID
-            'routeno' : bus.routeno,                     // 노선번호 - 버스번호
-            'routetp' : bus.routetp,                     // 노선유형
-            'vehicletp' : bus.vehicletp,                 // 자량유형
-            'encyptedname' : bus.encyptedname,           // 암호화 된 이름
-            'comments' : [],
-          }).catchError((error) {print("Error adding doc $encName: ${error.toString()}");});
+        if (busCodesFromApi.contains(bus.code)) {
+          tmpBusList.add({
+            'arrprevstationcnt': bus.arrprevstationcnt, // 남은 정류장 수
+            'arrtime':   bus.arrtime, // 도착예상시간(초)
+            'nodeid':    bus.nodeid, // 정류소 ID
+            'nodenm':    bus.nodenm, // 정류소명
+            'routeid':   bus.routeid, // 노선 ID
+            'routeno':   bus.routeno, // 노선번호 - 버스번호
+            'routetp':   bus.routetp, // 노선유형
+            'vehicletp': bus.vehicletp, // 자량유형
+            'code':      bus.code, // 암호화 된 이름
+          });
+          //////// 파베에 버스 채팅리스트도 만들어야 함!!!!!
+          await fire.collection('bus_chat').doc(bus.code).set({});
         }
+
         // 기존 버스인 경우 - 업데이트
         else {
-          await fire.collection('bus_list').doc(encName).update({
-            'arrprevstationcnt' : bus.arrprevstationcnt, // 남은 정류장 수
-            'arrtime' : bus.arrtime,                     // 도착예상시간(초)
-          });
+          var busToUpdate = tmpBusList.firstWhere((b) => b['code'] == bus.code);
+          busToUpdate['arrprevstationcnt'] = bus.arrprevstationcnt;
+          busToUpdate['arrtime'] = bus.arrtime;
         }
       }
-      print('제거해야 할 버스 : ${busNamesFromFire.toString()}, 추가해야 할 버스 : ${encryptedNames.toString()}');
+      print('제거해야 할 버스 : ${busCodesFromFire.toString()}, 추가해야 할 버스 : ${busCodesFromApi.toString()}');
 
-      // encrypedName 부여받은 busListFromApi는 반환할 필요가 없지
+      // 수정한 목록을 파베에 업데이트
+      await curDoc.update({'bus_list': tmpBusList});
       return;
     }
 
@@ -251,25 +259,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       } catch(e) { throw Exception(e); }
     }
 
-    // 버스리스트를 파베에서 가져오는 함수
-    Future<BusApiRes> getBusListFromFire(final nodeId) async {
-      try{
-        // 쩔수 없이 댓글 데이터도 가져와야 하는..
-        var busSnapshot = await fire.collection('bus_list').where('nodeid',isEqualTo: nodeId).get();
-        busSnapshot.docs.remove('comments'); // 그래서 댓글은 가져와서 지움
-        final List<Map<String, dynamic>> busList = busSnapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>).toList();
-
-        final fromFire = BusApiRes.fromFirestore(busList);
-        return fromFire;
-      } catch(e) { throw Exception(e);}
-
-    }
-
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
+      final curDoc = fire.collection('bus_station_info').doc(nodeId);
       // 해당 버스정류장의 정보 가져오기
-      var station = await fire.collection('bus_station_info').doc(nodeId).get();
+      var station = await curDoc.get();
       final busList;
 
       if (station.exists) {
@@ -282,7 +276,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         if (difference.inMinutes >= 10) {
           try{
             // 마지막 업데이트를 현재 시간으로 수정
-            // await fire.collection('bus_station_info').doc(nodeId).update({'last_update': Timestamp.fromDate(now)});
+            await curDoc.update({'last_update': Timestamp.fromDate(now)});
 
             busList = await getBusListFromApi(nodeId);
             return busList;
@@ -292,7 +286,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
         else {
           try {
-            busList = await getBusListFromFire(nodeId);
+            final List<Map<String, dynamic>> fire = station.get('bus_list').map((bus) => bus as Map<String, dynamic>);
+            busList = BusApiRes.fromFirestore(fire);
             return busList;
           } catch(e) {print(e); return BusApiRes.fromJson({});}
         }

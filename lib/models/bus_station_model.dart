@@ -18,14 +18,14 @@ class Bus{
   final String routeno;        // 노선번호 - 버스번호
   final String routetp;        // 노선유형
   final String vehicletp;      // 자량유형
-  String encyptedname;   // 암호화된 이름
+  String code;
 
   Bus({required this.arrprevstationcnt, required this.arrtime, required this.nodeid,
     required this.nodenm, required this.routeid, required this.routeno,
-    required this.routetp,required this.vehicletp, this.encyptedname=''});
+    required this.routetp,required this.vehicletp, this.code=''});
 
-  setEncryptedName(String newName) {
-    encyptedname = newName;
+  setCode(String newName) {
+    code = newName;
   }
 
   factory Bus.fromJson(Map<String, dynamic> json) {
