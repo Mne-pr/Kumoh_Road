@@ -59,4 +59,15 @@ class BusApiRes {
 
     return BusApiRes(buses: busList);
   }
+
+  factory BusApiRes.fromFirestore(List<Map<String, dynamic>> fire) {
+    List<Bus> busList;
+
+    try {
+      busList = fire.map((data) => Bus.fromJson(data)).toList();
+      busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
+    } catch(e) {busList=[];};
+
+    return BusApiRes(buses: busList);
+  }
 }
