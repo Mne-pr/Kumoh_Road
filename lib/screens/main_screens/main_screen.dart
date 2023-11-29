@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kumoh_road/models/main_screen_button_model.dart';
+import 'package:kumoh_road/screens/main_screens/weather_screen.dart';
 import '../../models/announcement_model.dart';
 import '../../models/taxi_screen_post_model.dart';
 import '../../models/taxi_screen_user_model.dart';
 import '../../utilities/url_launcher_util.dart';
 import '../../widgets/bottom_navigation_bar.dart';
-import '../../widgets/main_screen_button.dart';
 import '../taxi_screens/post_details_screen.dart';
 import '../user_info_screens/other_user_info_screen.dart';
 import 'announcement_detail_screen.dart';
@@ -23,55 +23,7 @@ class _MainScreenState extends State<MainScreen> {
   bool trainPostsIsExpanded = false;
   bool busPostsIsExpanded = false;
   bool schoolPostsIsExpanded = false;
-
-  List<MainScreenButtonModel> items = [
-    MainScreenButtonModel(
-      icon: Icons.school,
-      title: '홈페이지',
-      color: Colors.green,
-      url: 'https://www.kumoh.ac.kr/ko/index.do',
-      onTap: () => launchURL('https://www.kumoh.ac.kr/ko/index.do'),
-    ),
-    MainScreenButtonModel(
-      icon: Icons.email,
-      title: '웹메일',
-      color: Colors.blue,
-      url: 'https://mail.kumoh.ac.kr/account/login.do',
-      onTap: () => launchURL('https://mail.kumoh.ac.kr/account/login.do'),
-    ),
-    MainScreenButtonModel(
-      icon: Icons.computer,
-      title: '강의지원시스템',
-      color: Colors.yellow,
-      url: 'https://elearning.kumoh.ac.kr/',
-      onTap: () => launchURL('https://elearning.kumoh.ac.kr/'),
-    ),
-    MainScreenButtonModel(
-      icon: Icons.code,
-      title: '깃허브',
-      color: Colors.brown,
-      url: 'https://github.com/joon6093/Kumoh_Road',
-      onTap: () => launchURL('https://github.com/joon6093/Kumoh_Road'),
-    ),
-    MainScreenButtonModel(
-      icon: Icons.wb_sunny,
-      title: '날씨 정보',
-      color: Colors.red,
-      url: '',
-      onTap: () {
-        // 날씨 정보 화면으로 이동
-      },
-    ),
-    MainScreenButtonModel(
-      icon: Icons.chat,
-      title: '인공지능 채팅',
-      color: Colors.blueGrey,
-      url: '',
-      onTap: () {
-        // AI Chat 화면으로 이동
-      },
-    ),
-  ];
+  List<MainScreenButtonModel> items = [];
 
 // 사용자 상호작용 버튼을 만드는 메서드
   Widget _buildUserInteractionButton(MainScreenButtonModel model) {
@@ -88,6 +40,62 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+  @override
+  void initState() {
+    super.initState();
+    items = [
+      MainScreenButtonModel(
+        icon: Icons.school,
+        title: '학교 홈페이지',
+        color: Colors.green,
+        url: 'https://www.kumoh.ac.kr/ko/index.do',
+        onTap: () => launchURL('https://www.kumoh.ac.kr/ko/index.do'),
+      ),
+      MainScreenButtonModel(
+        icon: Icons.email,
+        title: '웹 메일',
+        color: Colors.blue,
+        url: 'https://mail.kumoh.ac.kr/account/login.do',
+        onTap: () => launchURL('https://mail.kumoh.ac.kr/account/login.do'),
+      ),
+      MainScreenButtonModel(
+        icon: Icons.computer,
+        title: '강의지원시스템',
+        color: Colors.yellow,
+        url: 'https://elearning.kumoh.ac.kr/',
+        onTap: () => launchURL('https://elearning.kumoh.ac.kr/'),
+      ),
+      MainScreenButtonModel(
+        icon: Icons.code,
+        title: '깃허브',
+        color: Colors.brown,
+        url: 'https://github.com/joon6093/Kumoh_Road',
+        onTap: () => launchURL('https://github.com/joon6093/Kumoh_Road'),
+      ),
+      MainScreenButtonModel(
+        icon: Icons.wb_sunny,
+        title: '날씨 정보',
+        color: Colors.red,
+        url: '',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WeatherScreen()),
+          );
+        },
+      ),
+      MainScreenButtonModel(
+        icon: Icons.chat,
+        title: '인공지능 채팅',
+        color: Colors.blueGrey,
+        url: '',
+        onTap: () {
+          // AI Chat 화면으로 이동
+        },
+      ),
+    ];
+  }
+
 
 
   @override
