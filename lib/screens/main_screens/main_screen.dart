@@ -23,51 +23,79 @@ class _MainScreenState extends State<MainScreen> {
   bool trainPostsIsExpanded = false;
   bool busPostsIsExpanded = false;
   bool schoolPostsIsExpanded = false;
-  final List<MainScreenButtonModel> items = [
+
+  List<MainScreenButtonModel> items = [
     MainScreenButtonModel(
-      icon: 'assets/images/school_logo(24x24).png',
-      title: '학교 홈페이지',
+      icon: Icons.school,
+      title: '홈페이지',
       color: Colors.green,
       url: 'https://www.kumoh.ac.kr/ko/index.do',
+      onTap: () => launchURL('https://www.kumoh.ac.kr/ko/index.do'),
     ),
     MainScreenButtonModel(
-      icon: 'assets/images/webmail_logo(24x24).png',
-      title: '웹 메일',
+      icon: Icons.email,
+      title: '웹메일',
       color: Colors.blue,
       url: 'https://mail.kumoh.ac.kr/account/login.do',
+      onTap: () => launchURL('https://mail.kumoh.ac.kr/account/login.do'),
     ),
     MainScreenButtonModel(
-      icon: 'assets/images/e-class_logo(24x24).png',
+      icon: Icons.computer,
       title: '강의지원시스템',
       color: Colors.yellow,
       url: 'https://elearning.kumoh.ac.kr/',
+      onTap: () => launchURL('https://elearning.kumoh.ac.kr/'),
     ),
     MainScreenButtonModel(
-      icon: 'assets/images/github_logo(24x24).png',
-      title: '깃 허브',
+      icon: Icons.code,
+      title: '깃허브',
       color: Colors.brown,
       url: 'https://github.com/joon6093/Kumoh_Road',
+      onTap: () => launchURL('https://github.com/joon6093/Kumoh_Road'),
     ),
     MainScreenButtonModel(
-      icon: 'assets/images/weather_logo(24x24).png',
+      icon: Icons.wb_sunny,
       title: '날씨 정보',
       color: Colors.red,
-      url: 'https://www.weather.com/',
+      url: '',
+      onTap: () {
+        // 날씨 정보 화면으로 이동
+      },
     ),
     MainScreenButtonModel(
-      icon: 'assets/images/gpt_logo(24x24).png',
-      title: 'AI Chat',
+      icon: Icons.chat,
+      title: '인공지능 채팅',
       color: Colors.blueGrey,
-      url: 'https://www.openai.com/',
+      url: '',
+      onTap: () {
+        // AI Chat 화면으로 이동
+      },
     ),
   ];
+
+// 사용자 상호작용 버튼을 만드는 메서드
+  Widget _buildUserInteractionButton(MainScreenButtonModel model) {
+    return ElevatedButton.icon(
+      icon: Icon(model.icon, size: 24, color: model.color),
+      label: Text(model.title, style: const TextStyle(color: Colors.black)),
+      onPressed: () => model.onTap(),
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.black, backgroundColor: Colors.white, // 텍스트 및 아이콘 색상
+        elevation: 3, // 그림자 깊이
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        textStyle: const TextStyle(fontSize: 12), // 텍스트 크기 조정
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
         children: [
-          buildButtonGrid(),
+          _buildUserInteractionButtons(context),
           buildAnnouncementsSection(),
           buildRideSharingSection(
               'train_posts',
@@ -111,38 +139,26 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // 버튼 그리드를 만드는 메소드
-  Widget buildButtonGrid() {
-    return Container(
-      height: 170, // 적절한 높이 지정
-      child: GridView.builder(
-        shrinkWrap: true, // GridView를 ListView 안에 넣기 위해 필요
-        physics: const NeverScrollableScrollPhysics(), // 스크롤 중첩 방지
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 3.5 / 1,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return MainScreenButton(
-            icon: item.icon,
-            title: item.title,
-            color: item.color,
-            onTap: () {
-              if (item.title == '날씨 정보') {
-                Navigator.pushNamed(context, '/weather_info_screen');
-              } else if (item.title == 'AI Chat') {
-                Navigator.pushNamed(context, '/gpt_screen');
-              } else {
-                launchURL(item.url);
-              }
+  Widget _buildUserInteractionButtons(BuildContext context) {
+    return Stack(
+      children: [
+        SizedBox(
+          height: 60.0,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(top:10, bottom: 3,left: index == 0 ? 10 : 0, right: 10),
+                child: _buildUserInteractionButton(items[index]),
+              );
             },
-          );
-        },
-      ),
+          ),
+        ),
+      ],
     );
   }
+
 
   Widget buildAnnouncementsSection() {
     return Container(
@@ -334,7 +350,7 @@ class _MainScreenState extends State<MainScreen> {
               if (!snapshot.hasData) return const CircularProgressIndicator();
               return ListView(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
+                physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
                 children: snapshot.data!.docs.map((doc) {
                   TaxiScreenPostModel postInfo = TaxiScreenPostModel(
                       writerId: doc['writer'],
