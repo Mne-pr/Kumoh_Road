@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:kumoh_road/screens/bus_info_screens/loading_screen.dart';
@@ -164,13 +166,40 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.52).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
+    // Future<void> compareSources(List<Bus> fromApi, List<Bus> fromFire) {
+    //
+    // }
+
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
-      try{
-        final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
-        if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
-        else { throw Exception('Failed to load buses info');}
-      } catch(e) {return BusApiRes.fromJson({});}
+      // 여기서 해당 정류장의 마지막 업데이트 시간을 알아와야
+      var station = await FirebaseFirestore.instance.collection('bus_station_info').doc(nodeId).get();
+      if (station.exists) {
+        var lastUpdate = (station['last_update'] as Timestamp).toDate();
+        var now = DateTime.now();
+        var difference = now.difference(lastUpdate);
+
+        // 업데이트한 지 10분이 넘었다 - api 호출해서 받아옴
+        if (difference.inMinutes >= 10) {
+          try{
+            await FirebaseFirestore.instance.collection('bus_station_info').doc(nodeId).update({'last_update': Timestamp.fromDate(now)});
+            final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
+            if (res.statusCode == 200){
+              // 여기서 비교타임 가져야할듯 - api로 받아온 데이터, 파베에 있는 데이터
+              // source가 api 면 비교타임, firebase면 그냥 ㄱㄱ
+              final fromApi = BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
+              return fromApi;
+              //compareSources 로 비교해야함!!!!!!
+            }
+            else { throw Exception('Failed to load buses info');}
+          } catch(e) {return BusApiRes.fromJson({});}
+        }
+        // 업데이트 한 지 얼마 안 된 경우 - 파베에서 받아옴
+        else {
+          return BusApiRes.fromJson({});
+        }
+      }
+      else { print('Failed to load that bus station'); return BusApiRes.fromJson({});}
     }
 
     // 정류장 정보 얻어와 리스트 저장하는 함수
