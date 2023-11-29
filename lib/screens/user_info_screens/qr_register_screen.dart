@@ -48,7 +48,7 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
         title: const Text('QR 코드 등록', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: Column(

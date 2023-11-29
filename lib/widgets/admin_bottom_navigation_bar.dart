@@ -63,7 +63,7 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
           label: '댓글 관리',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.people_outline),
+          icon: Icon(Icons.people_alt),
           label: '사용자 관리',
         ),
         BottomNavigationBarItem(
