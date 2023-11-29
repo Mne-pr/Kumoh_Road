@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import '../../models/announcement_model.dart';
 
 class AddAnnouncementScreen extends StatefulWidget {
+  final Announcement? initialAnnouncement;
+
+  const AddAnnouncementScreen({Key? key, this.initialAnnouncement}) : super(key: key);
+
   @override
   _AddAnnouncementScreenState createState() => _AddAnnouncementScreenState();
 }
@@ -14,20 +18,39 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
   String _type = '공지';
   String _title = '';
   String _content = '';
-  final DateTime _date = DateTime.now();
+  DateTime _date = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialAnnouncement != null) {
+      // 수정 모드인 경우, 초기값 설정
+      _type = widget.initialAnnouncement!.type;
+      _title = widget.initialAnnouncement!.title;
+      _content = widget.initialAnnouncement!.content;
+      _date = widget.initialAnnouncement!.date;
+    }
+  }
 
   Future<void> _saveAnnouncement() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final announcement = Announcement(
+        id: widget.initialAnnouncement?.id ?? '', // ID 추가
         type: _type,
         title: _title,
         content: _content,
         date: _date,
-        views: 0,
+        views: widget.initialAnnouncement?.views ?? 0,
       );
-      FirebaseFirestore.instance.collection('announcements').add(announcement.toMap());
-      Navigator.pop(context);
+      if (widget.initialAnnouncement != null) {
+        // 수정 모드
+        await FirebaseFirestore.instance.collection('announcements').doc(widget.initialAnnouncement!.id).update(announcement.toMap());
+      } else {
+        // 새로운 공지사항 작성 모드
+        await FirebaseFirestore.instance.collection('announcements').add(announcement.toMap());
+      }
+      Navigator.pop(context, announcement); // 수정된 공지사항 객체를 반환
     }
   }
 
@@ -35,7 +58,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('공지사항 작성', style: TextStyle(color: Colors.black)),
+        title: Text(widget.initialAnnouncement == null ? '공지사항 작성' : '공지사항 수정', style: const TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 1,
@@ -69,6 +92,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
             ),
             const SizedBox(height: 16),
             TextFormField(
+              initialValue: _title, // 초기 제목 값 설정
               decoration: const InputDecoration(
                 labelText: '제목',
                 border: OutlineInputBorder(),
@@ -85,6 +109,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
             ),
             const SizedBox(height: 16),
             TextFormField(
+              initialValue: _content, // 초기 내용 값 설정
               minLines: 15,
               maxLines: 15,
               keyboardType: TextInputType.multiline,
@@ -109,7 +134,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _saveAnnouncement,
-              child: const Text('공지사항 작성'),
+              child: Text(widget.initialAnnouncement == null ? '공지사항 작성' : '공지사항 수정'),
             ),
           ],
         ),

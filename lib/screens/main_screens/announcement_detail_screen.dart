@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-import '../../models/announcement_model.dart'; // 날짜 형식화를 위한 패키지
+import '../../models/announcement_model.dart';
+import '../../providers/user_providers.dart';
+import '../admin_screens/admin_add_announcement_screan.dart'; // 날짜 형식화를 위한 패키지
 
 class AnnouncementDetailScreen extends StatefulWidget {
   final Announcement announcement;
@@ -14,10 +17,12 @@ class AnnouncementDetailScreen extends StatefulWidget {
 
 class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   final ScrollController _scrollController = ScrollController();
+  late Announcement currentAnnouncement;
 
   @override
   void initState() {
     super.initState();
+    currentAnnouncement = widget.announcement; // 초기값 설정
     _incrementViews(); // 조회수 증가 함수 호출
   }
 
@@ -28,9 +33,24 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         .update({'views': FieldValue.increment(1)});
   }
 
+  void _editAnnouncement() async {
+    final updatedAnnouncement = await Navigator.push(context,
+      MaterialPageRoute(
+        builder: (context) => AddAnnouncementScreen(initialAnnouncement: currentAnnouncement),
+      ),
+    );
+
+    if (updatedAnnouncement != null) {
+      setState(() {
+        currentAnnouncement = updatedAnnouncement as Announcement; // 상태 업데이트
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String formattedDate = DateFormat('yyyy-MM-dd').format(widget.announcement.date);
+    final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -39,6 +59,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 1,
         centerTitle: true,
+        actions: userProvider.id == 0 ? <Widget>[ // 관리자일 경우 수정 버튼 표시
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: _editAnnouncement,
+          ),
+        ] : null,
       ),
       body: Scrollbar(
         controller: _scrollController,
@@ -48,8 +74,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           padding: const EdgeInsets.all(16.0),
           children: <Widget>[
             Text(
-              '${widget.announcement.type} | ${widget.announcement.title}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              '${currentAnnouncement.type} | ${currentAnnouncement.title}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
@@ -71,7 +97,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     Icon(Icons.visibility, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      '${widget.announcement.views+1}',
+                      '${currentAnnouncement.views+1}',
                       style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                   ],
@@ -81,7 +107,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             const SizedBox(height: 5),
             const Divider(),
             Text(
-              widget.announcement.content,
+              currentAnnouncement.content,
               style: const TextStyle(fontSize: 15),
             ),
           ],
