@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -29,7 +30,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // api 호출주소
   final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
   final serKey = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
-  
+
+  // 파이어베이스
+  final fire = FirebaseFirestore.instance;
+
   // 지도 컨트롤러
   late NaverMapController con;
   
@@ -166,35 +170,100 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.52).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
-    // Future<void> compareSources(List<Bus> fromApi, List<Bus> fromFire) {
-    //
-    // }
+    // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
+    Future<void> compareSources(List<Bus> busListFromApi) async {
+      var check; List<String> busNamesFromFire;
+
+      // 파베의 bus_list에서 문서 이름의 리스트를 가져옴
+      try {
+        check = await fire.collection('bus_list').get();
+        busNamesFromFire = check.docs.map((doc) => doc.id).toList();
+      } catch(error) {print("get bus_list error : ${error.toString()}"); busNamesFromFire = [];}
+
+      // api 리스트로부터 암호화 이름을 가져옴 - 각자 bus 객체에 저장하고(댓글읽기용이), 파베의 문서 이름으로도 사용(받아오기용이)
+      List<String> encryptedNames = busListFromApi.map((bus) {
+        var data = '${bus.nodeid}-${bus.routeid}-${bus.routeno}';
+        bus.setEncryptedName(md5.convert(utf8.encode(data)).toString());
+        return bus.encyptedname;
+      }).toList();
+      print('버스list : ${busNamesFromFire.toString()}, apilist : ${encryptedNames.toString()}');
+
+      // 두 리스트에서 공통된 버스 찾음
+      Set<String> commonNames = busNamesFromFire.toSet().intersection(encryptedNames.toSet());
+
+      // 두 리스트에서 공통된 버스 제거
+      busNamesFromFire.removeWhere((name) => commonNames.contains(name)); // 파베에서 제거해야 할 버스들만 남음
+      encryptedNames.removeWhere((name) => commonNames.contains(name));   // 파베에 추가해야 할 버스들만 남음
+
+      // 파베에서 제거해야 할 버스들 (이미 지나간 버스) 제거
+      for (String name in busNamesFromFire) {
+        await fire.collection('bus_list').doc(name).delete()
+            .catchError((error) {print("Error deleting doc $name: ${error.toString()}");});
+      }
+
+      // 새 버스를 추가, 기존 버스 업데이트
+      for (Bus bus in busListFromApi) {
+        var encName = md5.convert(utf8.encode('${bus.nodeid}-${bus.routeid}-${bus.routeno}')).toString();
+        // 새로운 버스인 경우 - 추가
+        if (!encryptedNames.contains(encName)) {
+          await fire.collection('bus_list').doc(encName).set({
+            'arrprevstationcnt' : bus.arrprevstationcnt, // 남은 정류장 수
+            'arrtime' : bus.arrtime,                     // 도착예상시간(초)
+            'nodeid' : bus.nodeid,                       // 정류소 ID
+            'nodenm' : bus.nodenm,                       // 정류소명
+            'routeid' : bus.routeid,                     // 노선 ID
+            'routeno' : bus.routeno,                     // 노선번호 - 버스번호
+            'routetp' : bus.routetp,                     // 노선유형
+            'vehicletp' : bus.vehicletp,                 // 자량유형
+            'encyptedname' : bus.encyptedname,           // 암호화 된 이름
+            'comments' : [],
+          }).catchError((error) {print("Error adding doc $encName: ${error.toString()}");});
+        }
+        // 기존 버스인 경우 - 업데이트
+        else {
+          await fire.collection('bus_list').doc(encName).update({
+            'arrprevstationcnt' : bus.arrprevstationcnt, // 남은 정류장 수
+            'arrtime' : bus.arrtime,                     // 도착예상시간(초)
+          });
+        }
+      }
+
+      // encrypedName 부여받은 busListFromApi는 반환할 필요가 없지
+      return;
+    }
+
+    // 버스리스트를 파베에서 가져오는 함수
 
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
-      // 여기서 해당 정류장의 마지막 업데이트 시간을 알아와야
-      var station = await FirebaseFirestore.instance.collection('bus_station_info').doc(nodeId).get();
+      // 해당 버스정류장의 정보 가져오기
+      var station = await fire.collection('bus_station_info').doc(nodeId).get();
+
       if (station.exists) {
+        // 정보 중 마지막 업데이트 시간 확인
         var lastUpdate = (station['last_update'] as Timestamp).toDate();
         var now = DateTime.now();
         var difference = now.difference(lastUpdate);
 
-        // 업데이트한 지 10분이 넘었다 - api 호출해서 받아옴
+        // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
         if (difference.inMinutes >= 10) {
           try{
-            await FirebaseFirestore.instance.collection('bus_station_info').doc(nodeId).update({'last_update': Timestamp.fromDate(now)});
+            // 마지막 업데이트를 현재 시간으로 수정
+            // await fire.collection('bus_station_info').doc(nodeId).update({'last_update': Timestamp.fromDate(now)});
+
+            // api 사용해 새 버스리스트 받아옴
             final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
             if (res.statusCode == 200){
-              // 여기서 비교타임 가져야할듯 - api로 받아온 데이터, 파베에 있는 데이터
-              // source가 api 면 비교타임, firebase면 그냥 ㄱㄱ
+              // 기존 파베에 새 버스리스트로 업데이트시킴
               final fromApi = BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
-              return fromApi;
-              //compareSources 로 비교해야함!!!!!!
+              await compareSources(fromApi.buses);
+              return(fromApi);
             }
             else { throw Exception('Failed to load buses info');}
           } catch(e) {return BusApiRes.fromJson({});}
         }
-        // 업데이트 한 지 얼마 안 된 경우 - 파베에서 받아옴
+
+        // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
         else {
           return BusApiRes.fromJson({});
         }
