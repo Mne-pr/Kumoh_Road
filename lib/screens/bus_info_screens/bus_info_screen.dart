@@ -185,7 +185,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
       // api 리스트로부터 이름을 가져옴 - 고유문자 생성
       List<String> busCodesFromApi = busListFromApi.map((bus) {
-        var code = '${bus.nodeid}-${bus.routeno}-${bus.routetp}';
+        var code = '${bus.nodeid}-${bus.routeno}-${bus.routeid}';
         bus.setCode(code);
         return bus.code;
       }).toList();
@@ -201,7 +201,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       // 버스 목록에서 지나간 버스 제거
       for (String code in busCodesFromFire) {
         tmpBusList.removeWhere((bus) => bus['code'] == code);
-        //////// 파베에 버스 채팅리스트도 지워야 함!!!!!
+        // 파베의 버스 채팅 리스트 삭제
         try{
           await fire.collection('bus_chat').doc(code).delete();
         } catch(e) {}
@@ -222,7 +222,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             'vehicletp': bus.vehicletp, // 자량유형
             'code':      bus.code,      // 고유문자
           });
-          //////// 파베에 버스 채팅리스트도 만들어야 함!!!!!
+          // 파베에 버스 채팅리스트 생성
           await fire.collection('bus_chat').doc(bus.code).set({});
         }
 
