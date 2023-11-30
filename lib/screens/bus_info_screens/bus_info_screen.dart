@@ -180,7 +180,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       try {
         check = await curDoc.get();
         tmpBusList = check.get('bus_list');
-        busCodesFromFire = tmpBusList.map((bus) => bus['code'] as String).toList();
+        busCodesFromFire = tmpBusList.map<String>((bus) => bus['code'] as String).toList();
       } catch(error) {print("get bus_list error : ${error.toString()}"); busCodesFromFire = [];}
 
       // api 리스트로부터 이름을 가져옴 - 고유문자 생성
@@ -258,7 +258,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       } catch(e) { throw Exception(e); }
     }
 
-    // 정류장의 정보 가져오는 함수
+    // 정류장의 정보 가져오는 함수 - 아래 두 함수에서 호출함
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
       final curDoc = fire.collection('bus_station_info').doc(nodeId);
       // 해당 버스정류장의 정보 가져오기
@@ -311,7 +311,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       setState(() { busList = res.buses;});
     }
 
-    // 버스정류장의 정보 알아오기
+    // 버스 업데이트 버튼 리스너
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; });//isLoading = true; });
       await updateBusListBox();
