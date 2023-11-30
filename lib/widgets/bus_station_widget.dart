@@ -102,7 +102,7 @@ class _BusListWidgetState extends State<BusListWidget> {
               height: MediaQuery.of(context).size.height / 2,
               child: RefreshIndicator(
                 color: Colors.white10,
-                displacement: 10000, // 인디케이터 보이지 마라..
+                displacement: 100000, // 인디케이터 보이지 마라..
                 onRefresh: () async { widget.onScrollToTop();},
                 child: ListView.builder(
                     physics: AlwaysScrollableScrollPhysics(),
@@ -114,6 +114,7 @@ class _BusListWidgetState extends State<BusListWidget> {
                       Bus bus = widget.busList[index];
                       // 남는 시간에 따른 색 분류
                       final urgentColor = ((bus.arrtime/60).toInt() >= 5) ? Colors.blue : Colors.red;
+                      final busColor = (bus.routetp == '일반버스') ? Color(0xff05d686) : Colors.purple;
                       return Column(
                         children: [
                           Divider(thickness: 1.0, height: 1.0,),
@@ -128,7 +129,7 @@ class _BusListWidgetState extends State<BusListWidget> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
                                           SizedBox(height: 8),
-                                          Icon(Icons.directions_bus, color: Colors.blue, size: 25),
+                                          Icon(Icons.directions_bus, color: busColor, size: 25),
                                           SizedBox(width: 15),
                                           Expanded(
                                             child: Column(
