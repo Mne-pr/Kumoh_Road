@@ -5,6 +5,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/screens/launch_screens/intro_screen.dart';
+import 'package:kumoh_road/screens/main_screens/main_screen.dart';
 import 'package:kumoh_road/utilities/material_color_utile.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -22,10 +23,11 @@ void main() async {
       }
   );
 
-  runApp(
-    ChangeNotifierProvider(create: (context) => UserProvider(), child: const KumohRoad(),
-    ),
-  );
+  UserProvider userProvider = UserProvider();
+  await userProvider.checkLoginStatus();
+
+  runApp(ChangeNotifierProvider(create: (context) => userProvider, child: const KumohRoad(),
+  ));
 }
 
 
@@ -33,12 +35,26 @@ class KumohRoad extends StatelessWidget {
   const KumohRoad({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KumohRoad',
-      theme: ThemeData(
-        primarySwatch: createMaterialColor(const Color(0xFF3F51B5))
-      ),
-      home: const IntroScreen(),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        if (userProvider.isLogged) {
+          return MaterialApp(
+            title: 'KumohRoad',
+            theme: ThemeData(
+                primarySwatch: createMaterialColor(const Color(0xFF3F51B5))
+            ),
+            home: MainScreen(),
+          );
+        } else {
+          return MaterialApp(
+            title: 'KumohRoad',
+            theme: ThemeData(
+                primarySwatch: createMaterialColor(const Color(0xFF3F51B5))
+            ),
+            home: IntroScreen(),
+          );
+        }
+      },
     );
   }
 }

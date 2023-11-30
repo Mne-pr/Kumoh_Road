@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProvider with ChangeNotifier {
   User? _user;
@@ -24,7 +26,7 @@ class UserProvider with ChangeNotifier {
   String? get email => _email;
   String? get profileImageUrl => _profileImageUrl;
   String? get nickname => _nickname;
-  bool get isLogged => _user != null;
+  bool get isLogged => _id != null;
   int? get age => _age;
   String? get gender => _gender;
   double? get mannerTemperature => _mannerTemperature;
@@ -46,6 +48,9 @@ class UserProvider with ChangeNotifier {
       if (_user != null) {
         await _initializeUser(_user!.id, _user?.kakaoAccount?.email ?? '이메일 없음',  _user?.kakaoAccount?.profile?.profileImageUrl ?? '이미지 URL 없음', _user?.kakaoAccount?.profile?.nickname ?? '닉네임 없음');
         await _saveOrUpdateUserInfo(_id!, _email!, _profileImageUrl!, _nickname!);
+        if (_id != 0) {  //관리자 모드일때는 휴대폰에 저장 x
+          await _saveLoginStateToPreferences(true);
+        }
       }
     } on KakaoAuthException catch (e) {
       // 카카오 인증 관련 에러 처리
@@ -116,6 +121,43 @@ class UserProvider with ChangeNotifier {
       });
     }
     notifyListeners();
+  }
+
+  // 관리자 모드 제외하고 휴대폰에 데이터 저장
+  Future<void> _saveLoginStateToPreferences(bool isLoggedIn) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', isLoggedIn);
+    await prefs.setInt('userId', _id!);
+    await prefs.setString('email', _email!);
+    await prefs.setString('profileImageUrl', _profileImageUrl!);
+    await prefs.setString('nickname', _nickname!);
+    // 기타 필요한 정보 저장
+  }
+
+  // 휴대폰에서 정보 불러오기
+  Future<void> checkLoginStatus() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    if (isLoggedIn) {
+      _id = prefs.getInt('userId');
+      _email = prefs.getString('email');
+      _profileImageUrl = prefs.getString('profileImageUrl');
+      _nickname = prefs.getString('nickname');
+      // Firestore에서 추가 정보 불러오기
+      await _fetchUserDetailsFromFirestore();
+    }
+    notifyListeners();
+  }
+
+  Future<void> _fetchUserDetailsFromFirestore() async {
+    if (_id != null) {
+      var userDocument = FirebaseFirestore.instance.collection('users').doc(_id.toString());
+      var snapshot = await userDocument.get();
+      if (snapshot.exists) {
+        var data = snapshot.data();
+        _updateLocalUserData(data); // 상세 정보 업데이트
+      }
+    }
   }
 
   // Firestore 데이터 변경 감지 메서드
@@ -198,6 +240,7 @@ class UserProvider with ChangeNotifier {
       // 로그아웃 실패, SDK에서 토큰 삭제 실패 처리
     } finally {
       _resetLocalUserData();
+      await _clearLocalUserData();
       notifyListeners();
     }
   }
@@ -218,6 +261,7 @@ class UserProvider with ChangeNotifier {
       // 연결 끊기 실패 처리
     } finally {
       _resetLocalUserData();
+      await _clearLocalUserData();
       notifyListeners();
     }
   }
@@ -239,5 +283,10 @@ class UserProvider with ChangeNotifier {
     _isSuspended = false;
   }
 
-
+  // 휴대폰에 저장된 사용자 데이터 초기화
+  Future<void> _clearLocalUserData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    _resetLocalUserData(); // 클래스 내 변수 초기화
+  }
 }
