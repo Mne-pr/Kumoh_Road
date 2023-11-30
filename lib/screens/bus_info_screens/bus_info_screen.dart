@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -170,7 +169,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.52).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
 
-    // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수 - 채팅 추가, 삭제 해야함
+    // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
     Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
       final DocumentSnapshot check;
       List<String> busCodesFromFire;
@@ -186,7 +185,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
       // api 리스트로부터 이름을 가져옴 - 고유문자 생성
       List<String> busCodesFromApi = busListFromApi.map((bus) {
-        var code = '${bus.nodeid}-${bus.routeid}-${bus.routeno}';
+        var code = '${bus.nodeid}-${bus.routeno}-${bus.routetp}';
         bus.setCode(code);
         return bus.code;
       }).toList();
@@ -214,14 +213,14 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         if (busCodesFromApi.contains(bus.code)) {
           tmpBusList.add({
             'arrprevstationcnt': bus.arrprevstationcnt, // 남은 정류장 수
-            'arrtime':   bus.arrtime, // 도착예상시간(초)
-            'nodeid':    bus.nodeid, // 정류소 ID
-            'nodenm':    bus.nodenm, // 정류소명
-            'routeid':   bus.routeid, // 노선 ID
-            'routeno':   bus.routeno, // 노선번호 - 버스번호
-            'routetp':   bus.routetp, // 노선유형
+            'arrtime':   bus.arrtime,   // 도착예상시간(초)
+            'nodeid':    bus.nodeid,    // 정류소 ID
+            'nodenm':    bus.nodenm,    // 정류소명
+            'routeid':   bus.routeid,   // 노선 ID
+            'routeno':   bus.routeno,   // 노선번호 - 버스번호
+            'routetp':   bus.routetp,   // 노선유형
             'vehicletp': bus.vehicletp, // 자량유형
-            'code':      bus.code, // 암호화 된 이름
+            'code':      bus.code,      // 고유문자
           });
           //////// 파베에 버스 채팅리스트도 만들어야 함!!!!!
           await fire.collection('bus_chat').doc(bus.code).set({});
@@ -268,27 +267,38 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
       if (station.exists) {
         // 정보 중 마지막 업데이트 시간 확인
-        var lastUpdate = (station['last_update'] as Timestamp).toDate();
-        var now = DateTime.now();
+        DateTime lastUpdate = station.get('last_update').toDate();
+        DateTime now = DateTime.now();
         var difference = now.difference(lastUpdate);
+        print('파베시간 : ${lastUpdate.toString()}');
+        print('현재시간 : ${now.toString()}');
 
         // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
-        if (difference.inMinutes >= 10) {
+        if (difference.inMinutes >= 10) { print("업데이트 - api!! ${nodeId}");
+          // 이렇게 api 새로 호출할 때만 로딩화면
+          setState(() { isLoading = true;});
           try{
             // 마지막 업데이트를 현재 시간으로 수정
             await curDoc.update({'last_update': Timestamp.fromDate(now)});
-
             busList = await getBusListFromApi(nodeId);
+            setState(() { isLoading = false;});
             return busList;
           } catch(e) {print(e); return BusApiRes.fromJson({});}
         }
 
         // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
-        else {
+        else { print("업데이트 - 파베!! ${nodeId}");
           try {
-            final List<Map<String, dynamic>> fire = station.get('bus_list').map((bus) => bus as Map<String, dynamic>);
-            busList = BusApiRes.fromFirestore(fire);
-            return busList;
+            final fire = await curDoc.get();
+            List<Map<String,dynamic>> newBusList = [];
+            if (fire.exists) {
+              busList = await fire.get('bus_list');
+              for (var b in busList) { newBusList.add(b);}
+              final res = BusApiRes.fromFirestore(newBusList);
+              return res;
+            }
+            else { throw Exception();}
+            // 위의 코드 수정할 필요 있어보임
           } catch(e) {print(e); return BusApiRes.fromJson({});}
         }
       }

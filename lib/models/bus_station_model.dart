@@ -14,7 +14,7 @@ class Bus{
   final int arrtime;           // 도착예상시간(초)
   final String nodeid;         // 정류소 ID
   final String nodenm;         // 정류소명
-  final String routeid;        // 노선 ID
+  final String routeid;        // 노선 ID - 현재 버스의 위치
   final String routeno;        // 노선번호 - 버스번호
   final String routetp;        // 노선유형
   final String vehicletp;      // 자량유형
