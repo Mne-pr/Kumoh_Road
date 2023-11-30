@@ -40,7 +40,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
         title: const Text('신고 내역', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -71,8 +71,8 @@ class _ReportListScreenState extends State<ReportListScreen> {
     String reportTime = ''; // 신고 시간
 
     // 신고 시간 파싱 및 포맷팅
-    if (report.containsKey('timestamp')) {
-      Timestamp timestamp = report['timestamp'];
+    if (report.containsKey('createdTime')) {
+      Timestamp timestamp = report['createdTime'];
       DateTime reportedAt = timestamp.toDate();
       reportTime = DateFormat('yyyy-MM-dd HH:mm').format(reportedAt);
     }

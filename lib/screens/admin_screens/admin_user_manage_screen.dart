@@ -6,14 +6,14 @@ import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../../widgets/report_count_widget.dart';
 import 'admin_user_manage_detail_screen.dart';
 
-class AdminUserMangeScreen extends StatefulWidget {
-  const AdminUserMangeScreen({Key? key}) : super(key: key);
+class AdminUserManageScreen extends StatefulWidget {
+  const AdminUserManageScreen({Key? key}) : super(key: key);
 
   @override
-  _AdminUserMangeScreenState createState() => _AdminUserMangeScreenState();
+  _AdminUserManageScreenState createState() => _AdminUserManageScreenState();
 }
 
-class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
+class _AdminUserManageScreenState extends State<AdminUserManageScreen> {
   List<UserModel> users = [];
   Map<String, int> userReportCounts = {};
   Map<String, Map<String, List<String>>> reportDetails = {};
@@ -25,7 +25,8 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
   }
 
   Future<void> _fetchAllUsersAndReports() async {
-    var reportsSnapshot = await FirebaseFirestore.instance.collection('reports')
+    var reportsSnapshot = await FirebaseFirestore.instance
+        .collection('reports')
         .where('entityType', isEqualTo: 'user')
         .where('isHandledByAdmin', isEqualTo: false)
         .get();
@@ -35,10 +36,11 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
 
     for (var report in reportsSnapshot.docs) {
       String userId = report['entityId'];
-      String category = report['category']; // 카테고리 정보
-      Timestamp timestamp = report['timestamp'];
+      String category = report['category'];
+      Timestamp timestamp = report['createdTime'];
       DateTime reportedAt = timestamp.toDate();
-      String content = "${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}\n신고내용: ${report['reason']}";
+      String content =
+          "${report['reason']}\n${DateFormat('yyyy-MM-dd HH:mm').format(reportedAt)}";
 
       reportCounts[userId] = (reportCounts[userId] ?? 0) + 1;
 
@@ -52,7 +54,8 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
     }
 
     List<UserModel> fetchedUsers = [];
-    for (var userDoc in (await FirebaseFirestore.instance.collection('users').get()).docs) {
+    for (var userDoc
+        in (await FirebaseFirestore.instance.collection('users').get()).docs) {
       UserModel user = UserModel.fromDocument(userDoc);
       if (user.userId != '0' && reportCounts.containsKey(user.userId)) {
         fetchedUsers.add(user);
@@ -66,19 +69,18 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('사용자 신고 관리', style: TextStyle(color: Colors.black)),
-          centerTitle: false,
-          backgroundColor: Colors.white,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        body: Padding(
-        padding: const EdgeInsets.all(0.0),
+      appBar: AppBar(
+        title: const Text('사용자 신고 관리', style: TextStyle(color: Colors.black)),
+        centerTitle: false,
+        backgroundColor: Colors.white,
+        elevation: 1,
+        automaticallyImplyLeading: false,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: ListView.builder(
           itemCount: users.length,
           itemBuilder: (context, index) {
@@ -95,55 +97,75 @@ class _AdminUserMangeScreenState extends State<AdminUserMangeScreen> {
 
   Widget _buildUserTile(UserModel user) {
     int reportsCount = userReportCounts[user.userId] ?? 0;
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage(user.profileImageUrl),
-        radius: 28, // 아바타 크기 증가
-      ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Text(
-                  user.nickname,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 8),
-                ReportCountWidget(reportsCount), // 신고 횟수를 이름 바로 옆으로 이동
-              ],
-            ),
+    return Container(
+      margin:  const EdgeInsets.only(bottom: 3.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: const Offset(0, 3), // Changes position of shadow
           ),
-          Text(
-            '${user.mannerTemperature}°C',
-            style: TextStyle(
-              fontSize: 16,
-              color: _getTemperatureColor(user.mannerTemperature),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(width: 4),
-          _getTemperatureEmoji(user.mannerTemperature),
         ],
       ),
-      subtitle: Row(
-        children: [
-          Text('${user.age}세 (${user.gender})'),
-          const Spacer(),
-          _buildMannerBar(user.mannerTemperature),
-        ],
-      ),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminUserManageDetailScreen(
-              user: user,
-              reportDetails: reportDetails[user.userId] ?? {},
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: NetworkImage(user.profileImageUrl),
+          radius: 28, // 아바타 크기 증가
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    user.nickname,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  ReportCountWidget(reportsCount), // 신고 횟수를 이름 바로 옆으로 이동
+                ],
+              ),
             ),
-          ),
-        );
-      },
+            Text(
+              '${user.mannerTemperature}°C',
+              style: TextStyle(
+                fontSize: 16,
+                color: _getTemperatureColor(user.mannerTemperature),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 4),
+            _getTemperatureEmoji(user.mannerTemperature),
+          ],
+        ),
+        subtitle: Row(
+          children: [
+            Text('${user.age}세 (${user.gender})'),
+            const Spacer(),
+            _buildMannerBar(user.mannerTemperature),
+          ],
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminUserManageDetailScreen(
+                user: user,
+                reportDetails: reportDetails[user.userId] ?? {},
+              ),
+            ),
+          ).then((_) {
+            // 다시 이 화면으로 돌아왔을 때 사용자 목록과 신고 상태를 새로고침
+            _fetchAllUsersAndReports();
+          });
+        },
+      ),
     );
   }
 

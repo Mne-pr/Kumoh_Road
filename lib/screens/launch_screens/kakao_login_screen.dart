@@ -37,11 +37,11 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
 
     if (userProvider.isLogged) {
       if (userProvider.isSuspended) {
-        _showAccountSuspendedDialog(); // 계정이 정지된 경우 알림 표시
+        await _showAccountSuspendedDialog();
       } else if (userProvider.age == null || userProvider.gender == null) {
-        _showAdditionalInfoDialog();
+        await _showAdditionalInfoDialog();
       } else {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()));
+        await Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()));
       }
     } else {
       _showLoginError();
@@ -49,13 +49,13 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
     setState(() => _isLoading = false);
   }
 
-  void _showAccountSuspendedDialog() {
+  Future<void> _showAccountSuspendedDialog() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('계정 정지 알림'),
-          content: const Text('귀하의 계정은 정지되었습니다. 자세한 내용은 관리자에게 문의하세요.'),
+          content: const Text('귀하의 계정은 정지되었습니다.\n자세한 내용은 관리자에게 문의하세요.'),
           actions: <Widget>[
             TextButton(
               child: const Text('확인'),
@@ -67,7 +67,7 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
     );
   }
 
-  void _showAdditionalInfoDialog() {
+  Future<void> _showAdditionalInfoDialog() async {
     int age = 25; // 초기 나이 설정
     String gender = '남성'; // 기본값 설정
 

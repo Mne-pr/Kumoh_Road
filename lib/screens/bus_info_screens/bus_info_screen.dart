@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:kumoh_road/screens/bus_info_screens/loading_screen.dart';
@@ -27,7 +30,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // api 호출주소
   final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
   final serKey = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
-  
+
+  // 파이어베이스
+  final fire = FirebaseFirestore.instance;
+
   // 지도 컨트롤러
   late NaverMapController con;
   
@@ -50,26 +56,23 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     BusSt(code: "GMB91",id:10091,subText: "경상북도 구미시 원평동 1103",  mainText: '종합버스터미널'),
   ];
   late int curBusStop = 0;
-  late int numOfBus = 0;
   late List<Bus> busList = [];
   
   // 위치 이동 버튼과 상태
   late List<OutlineCircleButton> buttons;
   late int curButton = 0;
 
-  // 버스정류장 담당 애니메이션
+  // 애니메이션 컨트롤러
   late AnimationController busStAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
   late CurvedAnimation busStCurveAni =   CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutExpo);
-  late Animation<double> busStAni =      Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
-    ..addListener(() { setState(() {}); });
-
-  // 버스리스트 담당 애니메이션
-  late Animation<double> busListAni =    Tween(begin: 0.0, end: 0.0).animate(busStCurveAni)
-    ..addListener(() { setState(() {}); });
+  
+  // 버스정류장, 위치교체버튼 애니메이션
+  late Animation<double> busStAni;
+  late Animation<double> chBtnAni;
 
   // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
   static const gumiPos  = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
-  static const gumiSPos = NCameraPosition(target: NLatLng(36.12727222, 128.3310162), zoom: 15.2, bearing: 0, tilt: 0);
+  static const gumiSPos = NCameraPosition(target: NLatLng(36.12727222, 128.3315162), zoom: 15.2, bearing: 0, tilt: 0);
   static const kumohPos = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
   static const kumohSPos= NCameraPosition(target: NLatLng(36.13762749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
   static const terminalPos = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
@@ -100,6 +103,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         child: Icon(Icons.school_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686),borderColor: Colors.white,
         onTap: () async {
+          await busStopMarks[2].performClick();
           final nextBusSt = 1;
           if (busStAnicon.isDismissed){
             cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration); // 사실 cameraMap[0] 대신에 0 넣으면 되는데 보기 편하라고
@@ -109,13 +113,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
           setState(() { curButton = 1; });
-          await busStopMarks[2].performClick();
         },
       ),
       OutlineCircleButton( // 금오공대 -> 종합터미널
         child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
         foregroundColor: Color(0xff05d686), borderColor: Colors.white,
         onTap: () async {
+          await busStopMarks[4].performClick();
           final nextBusSt = 2;
           if (busStAnicon.isDismissed){
             cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
@@ -125,13 +129,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
           setState(() { curButton = 2; });
-          await busStopMarks[4].performClick();
         }
       ),
       OutlineCircleButton( // 종합터미널 -> 구미역
           child: Icon(Icons.tram_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
           foregroundColor: Color(0xff05d686),borderColor: Colors.white,
           onTap: () async {
+            await busStopMarks[0].performClick();
             final nextBusSt = 0;
             if (busStAnicon.isDismissed){
               cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
@@ -141,7 +145,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
             }
             setState(() { curButton = 0; });
-            await busStopMarks[0].performClick();
           }
       ),
 
@@ -161,56 +164,179 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
 
     // 기기의 화면 크기를 이용해 애니메이션 재설정
-    double screenHeight = MediaQuery.of(context).size.height * 0.78;
-    busStAni = Tween(begin: 0.0, end: screenHeight).animate(busStCurveAni)
+    double screenHeight = MediaQuery.of(context).size.height;
+    busStAni = Tween(begin: 0.0, end: screenHeight * 0.78).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
-    busListAni = Tween(begin: -MediaQuery.of(context).size.height / 2, end: 0.0).animate(busStCurveAni)
+    chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.52).animate(busStCurveAni)
       ..addListener(() {setState(() {});});
+
+    // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
+    Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
+      var check; List<String> busNamesFromFire;
+
+      // 파베의 bus_list에서 업데이트 할 버스정류장의 문서 이름 리스트를 가져옴
+      try {
+        check = await fire.collection('bus_list').where('nodeid',isEqualTo: nodeId).get();
+        busNamesFromFire = check.docs.map<String>((doc) => doc.id as String).toList();
+      } catch(error) {print("get bus_list error : ${error.toString()}"); busNamesFromFire = [];}
+
+      // api 리스트로부터 암호화 이름을 가져옴 - 각자 bus 객체에 저장하고(댓글읽기용이), 파베의 문서 이름으로도 사용(받아오기용이)
+      List<String> encryptedNames = busListFromApi.map((bus) {
+        var data = '${bus.nodeid}-${bus.routeid}-${bus.routeno}';
+        bus.setEncryptedName(md5.convert(utf8.encode(data)).toString());
+        return bus.encyptedname;
+      }).toList();
+      print('firebase_bus_list : ${busNamesFromFire.toString()}, api_list : ${encryptedNames.toString()}');
+
+      // 두 리스트에서 공통된 버스 찾음
+      Set<String> commonNames = busNamesFromFire.toSet().intersection(encryptedNames.toSet());
+
+      // 두 리스트에서 공통된 버스 제거
+      busNamesFromFire.removeWhere((name) => commonNames.contains(name)); // 파베에서 제거해야 할 버스들만 남음
+      encryptedNames.removeWhere((name) => commonNames.contains(name));   // 파베에 추가해야 할 버스들만 남음
+
+      // 파베에서 제거해야 할 버스들 (이미 지나간 버스) 제거
+      for (String name in busNamesFromFire) {
+        await fire.collection('bus_list').doc(name).delete()
+            .catchError((error) {print("Error deleting doc $name: ${error.toString()}");});
+      }
+
+      // 새 버스를 추가, 기존 버스 업데이트
+      for (Bus bus in busListFromApi) {
+        var encName = md5.convert(utf8.encode('${bus.nodeid}-${bus.routeid}-${bus.routeno}')).toString();
+        // 새로운 버스인 경우 - 추가
+        if (encryptedNames.contains(encName)) {
+          await fire.collection('bus_list').doc(encName).set({
+            'arrprevstationcnt' : bus.arrprevstationcnt, // 남은 정류장 수
+            'arrtime' : bus.arrtime,                     // 도착예상시간(초)
+            'nodeid' : bus.nodeid,                       // 정류소 ID
+            'nodenm' : bus.nodenm,                       // 정류소명
+            'routeid' : bus.routeid,                     // 노선 ID
+            'routeno' : bus.routeno,                     // 노선번호 - 버스번호
+            'routetp' : bus.routetp,                     // 노선유형
+            'vehicletp' : bus.vehicletp,                 // 자량유형
+            'encyptedname' : bus.encyptedname,           // 암호화 된 이름
+            'comments' : [],
+          }).catchError((error) {print("Error adding doc $encName: ${error.toString()}");});
+        }
+        // 기존 버스인 경우 - 업데이트
+        else {
+          await fire.collection('bus_list').doc(encName).update({
+            'arrprevstationcnt' : bus.arrprevstationcnt, // 남은 정류장 수
+            'arrtime' : bus.arrtime,                     // 도착예상시간(초)
+          });
+        }
+      }
+      print('제거해야 할 버스 : ${busNamesFromFire.toString()}, 추가해야 할 버스 : ${encryptedNames.toString()}');
+
+      // encrypedName 부여받은 busListFromApi는 반환할 필요가 없지
+      return;
+    }
+
+    // 버스리스트를 api에서 가져오는 함수
+    Future<BusApiRes> getBusListFromApi(final nodeId) async {
+      try {
+        final res = await http.get(Uri.parse(
+            '${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
+        if (res.statusCode == 200) {
+          // 파베에 새 버스리스트로 업데이트시킴
+          final fromApi = BusApiRes.fromJson(
+              jsonDecode(utf8.decode(res.bodyBytes)));
+          await compareSources(fromApi.buses, nodeId);
+          return (fromApi);
+        }
+        else {
+          throw Exception('Failed to load buses info');
+        }
+      } catch(e) { throw Exception(e); }
+    }
+
+    // 버스리스트를 파베에서 가져오는 함수
+    Future<BusApiRes> getBusListFromFire(final nodeId) async {
+      try{
+        // 쩔수 없이 댓글 데이터도 가져와야 하는..
+        var busSnapshot = await fire.collection('bus_list').where('nodeid',isEqualTo: nodeId).get();
+        busSnapshot.docs.remove('comments'); // 그래서 댓글은 가져와서 지움
+        final List<Map<String, dynamic>> busList = busSnapshot.docs
+            .map((doc) => doc.data() as Map<String, dynamic>).toList();
+
+        final fromFire = BusApiRes.fromFirestore(busList);
+        return fromFire;
+      } catch(e) { throw Exception(e);}
+
+    }
 
     // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
-      try{
-        final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
-        if (res.statusCode == 200){ return BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));}
-        else { throw Exception('Failed to load buses info');}
-      } catch(e) {return BusApiRes.fromJson({});}
+      // 해당 버스정류장의 정보 가져오기
+      var station = await fire.collection('bus_station_info').doc(nodeId).get();
+      final busList;
+
+      if (station.exists) {
+        // 정보 중 마지막 업데이트 시간 확인
+        var lastUpdate = (station['last_update'] as Timestamp).toDate();
+        var now = DateTime.now();
+        var difference = now.difference(lastUpdate);
+
+        // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
+        if (difference.inMinutes >= 10) {
+          try{
+            // 마지막 업데이트를 현재 시간으로 수정
+            // await fire.collection('bus_station_info').doc(nodeId).update({'last_update': Timestamp.fromDate(now)});
+
+            busList = await getBusListFromApi(nodeId);
+            return busList;
+          } catch(e) {print(e); return BusApiRes.fromJson({});}
+        }
+
+        // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
+        else {
+          try {
+            busList = await getBusListFromFire(nodeId);
+            return busList;
+          } catch(e) {print(e); return BusApiRes.fromJson({});}
+        }
+      }
+      else { print('Failed to load that bus station'); return BusApiRes.fromJson({});}
     }
 
     // 정류장 정보 얻어와 리스트 저장하는 함수
     Future<void> updateBusListBox() async {
       BusApiRes res = await fetchBusInfo(busStopInfos[curBusStop].code);
-      setState(() { busList = res.buses; numOfBus = res.buses.length; });
+      setState(() { busList = res.buses;});
     }
 
     // 버스정류장의 정보 알아오기
     Future<void> updateBusStop(int busStop) async {
-      setState(() { curBusStop = busStop; isLoading = true; });
+      setState(() { curBusStop = busStop; });//isLoading = true; });
       await updateBusListBox();
+      busStopMarks[busStop].setIconTintColor(Color.fromARGB(0, 1, 1, 255));
 
       for (int i = 0; i < 5; i++){
         if (busStop != i) {
           try { await busStopW[i].close();} catch (e) { }
+          try { busStopMarks[i].setIconTintColor(Colors.transparent); } catch (e) {}
         }
       }
       await Future.delayed(Duration(milliseconds: 250));
-      setState(() {isLoading = false; loadingOpacity = 0.4;});
+      setState(() {isLoading = false; loadingOpacity = 0.8;});
     }
 
     // 버스정류장 정보를 클릭할 때 이벤트 처리
     Future<void> busStationBoxClick() async {
       if (busStAnicon.isDismissed) {
+        busStAnicon.forward();
+
         final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
         await con.updateCamera(cameras[index]);
-
-        busStAnicon.forward();
       }
       else if (busStAnicon.isCompleted) {
+        busStAnicon.reverse();
+
         final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
         await con.updateCamera(cameras[index]);
-
-        busStAnicon.reverse();
       }
     }
 
@@ -242,14 +368,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               },
             ),
 
-            // 1.2 위치 변경 버튼 위젯
-            Positioned(
-              top: MediaQuery.of(context).size.width * 0.05 + busStAni.value / 6,
-              left: MediaQuery.of(context).size.width * 0.05,
-              child: buttons[curButton],
-            ),
-
-            // 1.3 버스 리스트 위젯
+            // 1.2 버스 리스트 위젯
             Positioned(
               bottom: -MediaQuery.of(context).size.height * 0.78, left: 0, right: 0,
               child: BusListWidget(
@@ -260,12 +379,19 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               ),
             ),
 
-            // 1.4 선택한 버스정류장에 대한 정보 표시 위젯
+            // 1.3 선택한 버스정류장에 대한 정보 표시 위젯
             Positioned(
               bottom: busStAni.value,
               left: 0, right: 0,
               height: MediaQuery.of(context).size.height * 0.125,
-              child: SubWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop], numOfBus: numOfBus,),
+              child: BusStationWidget(onClick: busStationBoxClick, busStation: busStopInfos[curBusStop]),
+            ),
+
+            // 1.4 위치 변경 버튼 위젯
+            Positioned(
+              bottom: chBtnAni.value,
+              right: MediaQuery.of(context).size.width * 0.05,
+              child: buttons[curButton],
             ),
 
             // 1.5 로딩 위젯

@@ -11,7 +11,7 @@ class DeveloperInfoScreen extends StatelessWidget {
         title: const Text('개발자 정보', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: ListView(

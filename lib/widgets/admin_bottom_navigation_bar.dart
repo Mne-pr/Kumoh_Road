@@ -25,10 +25,10 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
       Widget nextPage;
       switch (index) {
         case 0:
-          nextPage = const AdminMainScreen();
+          nextPage = AdminMainScreen();
           break;
         case 3:
-          nextPage = const AdminUserMangeScreen();
+          nextPage = const AdminUserManageScreen();
           break;
         case 4:
           nextPage = const AdminInfoScreen();
@@ -51,8 +51,8 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
       onTap: _onItemTapped,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.announcement),
-          label: '공지사항',
+          icon: Icon(Icons.home),
+          label: '홈',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.local_taxi),
@@ -63,7 +63,7 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
           label: '댓글 관리',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.people_outline),
+          icon: Icon(Icons.people_alt),
           label: '사용자 관리',
         ),
         BottomNavigationBarItem(

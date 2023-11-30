@@ -60,7 +60,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       ],
       centerTitle: false,
       backgroundColor: Colors.white,
-      elevation: 0,
+      elevation: 1,
       automaticallyImplyLeading: false,
     );
   }

@@ -6,24 +6,41 @@ class MiscOssLicenseScreen extends StatelessWidget {
 
   const MiscOssLicenseScreen({super.key, required this.package});
 
+  String _bodyText() {
+    return package.license!.split('\n').map((line) {
+      if (line.startsWith('//')) line = line.substring(2);
+      return line.trim();
+    }).join('\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(package.name, style: const TextStyle(color: Colors.black)), // 패키지 이름
+        title: Text(package.name, style: const TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
-      body: SingleChildScrollView( // 긴 텍스트를 위해 SingleChildScrollView 사용
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        color: Theme.of(context).canvasColor,
+        child: ListView(
           children: <Widget>[
-            Text('Version: ${package.version}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text('License:\n${package.license}', style: const TextStyle(fontSize: 14)),
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
+              child: Text(
+                package.description,
+              ),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
+              child: Text(
+                _bodyText(),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
           ],
         ),
       ),

@@ -10,18 +10,23 @@ class BusSt{
 
 // 버스
 class Bus{
-  final int arrprevstationcnt;
-  final int arrtime;
-  final String nodeid;
-  final String nodenm;
-  final String routeid;
-  final String routeno;
-  final String routetp;
-  final String vehicletp;
+  final int arrprevstationcnt; // 남은 정류장 수
+  final int arrtime;           // 도착예상시간(초)
+  final String nodeid;         // 정류소 ID
+  final String nodenm;         // 정류소명
+  final String routeid;        // 노선 ID
+  final String routeno;        // 노선번호 - 버스번호
+  final String routetp;        // 노선유형
+  final String vehicletp;      // 자량유형
+  String encyptedname;   // 암호화된 이름
 
   Bus({required this.arrprevstationcnt, required this.arrtime, required this.nodeid,
     required this.nodenm, required this.routeid, required this.routeno,
-    required this.routetp,required this.vehicletp});
+    required this.routetp,required this.vehicletp, this.encyptedname=''});
+
+  setEncryptedName(String newName) {
+    encyptedname = newName;
+  }
 
   factory Bus.fromJson(Map<String, dynamic> json) {
     return Bus(
@@ -51,6 +56,17 @@ class BusApiRes {
       busList = itemList.map((i) => Bus.fromJson(i)).toList();
       busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
     } catch(e) {busList = [];}
+
+    return BusApiRes(buses: busList);
+  }
+
+  factory BusApiRes.fromFirestore(List<Map<String, dynamic>> fire) {
+    List<Bus> busList;
+
+    try {
+      busList = fire.map((data) => Bus.fromJson(data)).toList();
+      busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
+    } catch(e) {busList=[];};
 
     return BusApiRes(buses: busList);
   }

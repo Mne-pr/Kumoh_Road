@@ -17,7 +17,7 @@ class MannerTemperatureScreen extends StatelessWidget {
         title: const Text('매너 상세', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: MannerDetailsWidget(

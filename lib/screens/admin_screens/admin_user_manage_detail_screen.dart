@@ -20,14 +20,47 @@ class AdminUserManageDetailScreen extends StatefulWidget {
 
 class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScreen> {
   bool isSuspended = false;
+  bool allReportsHandled = false;
+  bool actionTaken = false; // 어떤 조치가 취해졌는지 확인하는 플래그
 
   Future<void> suspendUser(String userId) async {
-    await FirebaseFirestore.instance.collection('users').doc(userId).update({
-      'isSuspended': true,
-    });
-    setState(() {
-      isSuspended = true;
-    });
+    if (!actionTaken) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'isSuspended': true,
+      });
+
+      var reportsSnapshot = await FirebaseFirestore.instance.collection('reports')
+          .where('entityType', isEqualTo: 'user')
+          .where('entityId', isEqualTo: userId)
+          .get();
+
+      for (var report in reportsSnapshot.docs) {
+        await report.reference.update({'isHandledByAdmin': true});
+      }
+
+      setState(() {
+        isSuspended = true;
+        actionTaken = true; // 조치가 취해졌음을 표시
+      });
+    }
+  }
+
+  Future<void> handleAllReports() async {
+    if (!actionTaken) {
+      var reportsSnapshot = await FirebaseFirestore.instance.collection('reports')
+          .where('entityType', isEqualTo: 'user')
+          .where('entityId', isEqualTo: widget.user.userId)
+          .get();
+
+      for (var report in reportsSnapshot.docs) {
+        await report.reference.update({'isHandledByAdmin': true});
+      }
+
+      setState(() {
+        allReportsHandled = true;
+        actionTaken = true; // 조치가 취해졌음을 표시
+      });
+    }
   }
 
   @override
@@ -37,7 +70,7 @@ class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScree
         title: const Text('사용자 신고 내용', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: ListView(
@@ -62,18 +95,67 @@ class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScree
                   ReportCountWidget(reports.length),
                 ],
               ),
-              children: reports.map((report) => ListTile(title: Text(report))).toList(),
+              children: reports.map((report) {
+                var parts = report.split('\n');
+                String reason = '신고내용: ${parts[0]}';
+                String date = '신고시간: ${parts[1]}';
+                return ListTile(
+                  title: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: reason,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '\n$date',
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             );
           }).toList(),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              onPressed: isSuspended ? null : () => suspendUser(widget.user.userId),
-              icon: const Icon(Icons.block, color: Colors.white),
-              label: Text(isSuspended ? '사용자 계정 정지됨' : '사용자 계정 정지'),
-              style: ElevatedButton.styleFrom(backgroundColor: isSuspended ? Colors.grey : Colors.red),
+          if (!actionTaken) // 아직 조치가 취해지지 않았다면 두 개의 버튼을 보여줌
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      handleAllReports();
+                    },
+                    icon: const Icon(Icons.done_all, color: Colors.white),
+                    label: const Text('사용자 신고 처리'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      suspendUser(widget.user.userId);
+                    },
+                    icon: const Icon(Icons.block, color: Colors.white),
+                    label: const Text('사용자 계정 정지'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  ),
+                ],
+              ),
+            )
+          else // 조치가 취해졌다면 '조치 완료됨' 버튼을 보여줌
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: ElevatedButton.icon(
+                onPressed: null,
+                icon: const Icon(Icons.check, color: Colors.white),
+                label: const Text('조치 완료됨'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+              ),
             ),
-          ),
         ],
       ),
     );
