@@ -107,21 +107,21 @@ class _MainScreenState extends State<MainScreen> {
           buildAnnouncementsSection(),
           buildRideSharingSection(
               'train_posts',
-              '구미역 - 참여를 기다리는 합승',
+              '구미역에서 모집중인 합승',
               Icons.train,
               trainPostsIsExpanded,
                   () => setState(() => trainPostsIsExpanded = !trainPostsIsExpanded)
           ),
           buildRideSharingSection(
               'express_bus_posts',
-              '구미종합버스터미널 - 참여를 기다리는 합승',
+              '터미널에서 모집중인 합승',
               Icons.directions_bus,
               busPostsIsExpanded,
                   () => setState(() => busPostsIsExpanded = !busPostsIsExpanded)
           ),
           buildRideSharingSection(
               'school_posts',
-              '국립금오공과대학교 - 참여를 기다리는 합승',
+              '금오공과대학교에서 모집중인 합승',
               Icons.school,
               schoolPostsIsExpanded,
                   () => setState(() => schoolPostsIsExpanded = !schoolPostsIsExpanded)
