@@ -35,7 +35,6 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
         if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
           String qrCodeUrl = barcode.rawValue!;
           Provider.of<UserProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
-          launchURL(qrCodeUrl);
         }
       }
     });

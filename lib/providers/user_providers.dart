@@ -200,8 +200,8 @@ class UserProvider with ChangeNotifier {
 
   // 사용자 정보 업데이트 메서드
   Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url, bool? isStudentVerified}) async {
-    if (_user != null) {
-      var userDocument = FirebaseFirestore.instance.collection('users').doc(_user!.id.toString());
+    if (_id != null) {
+      var userDocument = FirebaseFirestore.instance.collection('users').doc(_id.toString());
       var updateData = <String, dynamic>{};
       if (age != null) {
         updateData['age'] = age;
@@ -250,11 +250,11 @@ class UserProvider with ChangeNotifier {
     try {
       await UserApi.instance.unlink();
       // 연결 끊기 성공, SDK에서 토큰 삭제
-      if (_user != null) {
+      if (_id != null) {
         // Firestore에서 사용자 정보 삭제
         await FirebaseFirestore.instance
             .collection('users')
-            .doc(_user!.id.toString())
+            .doc(_id.toString())
             .delete();
       }
     } catch (error) {
