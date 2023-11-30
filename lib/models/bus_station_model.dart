@@ -14,18 +14,19 @@ class Bus{
   final int arrtime;           // 도착예상시간(초)
   final String nodeid;         // 정류소 ID
   final String nodenm;         // 정류소명
-  final String routeid;        // 노선 ID
+  final String routeid;        // 노선 ID - 노선위치
   final String routeno;        // 노선번호 - 버스번호
   final String routetp;        // 노선유형
   final String vehicletp;      // 자량유형
-  String encyptedname;   // 암호화된 이름
+  //final String direction;      // 가는 방향 - 구미역, 금오공대
+  String code;
 
   Bus({required this.arrprevstationcnt, required this.arrtime, required this.nodeid,
     required this.nodenm, required this.routeid, required this.routeno,
-    required this.routetp,required this.vehicletp, this.encyptedname=''});
+    required this.routetp,required this.vehicletp, this.code=''});
 
-  setEncryptedName(String newName) {
-    encyptedname = newName;
+  setCode(String newName) {
+    code = newName;
   }
 
   factory Bus.fromJson(Map<String, dynamic> json) {
