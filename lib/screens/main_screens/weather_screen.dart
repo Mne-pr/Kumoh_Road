@@ -23,7 +23,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   void loadWeatherData() async {
     try {
-      final response = await http.get(Uri.parse('https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query=%EA%B5%AC%EB%AF%B8+%EB%82%A0%EC%94%A8'));
+      final response = await http.get(Uri.parse('https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query=%EA%B5%AC%EB%AF%B8+%EA%B1%B0%EC%9D%98%EB%8F%99+%EB%82%A0%EC%94%A8'));
       dom.Document document = parser.parse(response.body);
 
       // 주소
@@ -50,7 +50,25 @@ class _WeatherScreenState extends State<WeatherScreen> {
         address = '데이터를 불러오는 중 오류가 발생했습니다.';
       });
     }
+    printWeatherData();
   }
+  void printWeatherData() {
+    // 주소, 현재 온도, 날씨 상태를 로그에 출력
+    print('주소: $address');
+    print('현재 온도: $currentTemperature');
+    print('날씨 상태: $weatherStatus');
+
+    // 공기 질 데이터 중 오늘 데이터만 로그에 출력
+    for (int i = 0; i < airQuality.length && i < 4; i++) {
+      print('공기 질 정보($i): ${airQuality[i]}');
+    }
+
+    // 시간대별 날씨 데이터 중 첫 5개만 로그에 출력
+    for (int i = 0; i < hourlyWeather.length && i < 5; i++) {
+      print('시간대별 날씨($i): ${hourlyWeather[i]}');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -66,13 +84,50 @@ class _WeatherScreenState extends State<WeatherScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('주소: $address', style: TextStyle(fontSize: 24)),
-            Text('현재 온도: $currentTemperature', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text('날씨 상태: $weatherStatus', style: TextStyle(fontSize: 20)),
-            ...airQuality.map((quality) => Text(quality)).toList(),
-            ...hourlyWeather.map((weather) => Text(weather)).toList(),
+            _buildWeatherCard(),
+            // ... 기타 UI 요소 ...
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherCard() {
+    return Container(
+      width: 350,
+      padding: EdgeInsets.all(16),
+      margin: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFBCE7FF), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 5,
+            blurRadius: 7,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SelectableText('주소: $address', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 8),
+          SelectableText('현재 온도: $currentTemperature', style: TextStyle(fontSize: 16)),
+          SizedBox(height: 8),
+          SelectableText('날씨 상태: $weatherStatus', style: TextStyle(fontSize: 16)),
+          SizedBox(height: 16),
+          SelectableText('공기 질:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ...airQuality.map((quality) => SelectableText(quality, style: TextStyle(fontSize: 14))).toList(),
+          SizedBox(height: 16),
+          SelectableText('시간대별 날씨:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ...hourlyWeather.map((weather) => SelectableText(weather, style: TextStyle(fontSize: 14))).toList(),
+        ],
       ),
     );
   }
