@@ -375,13 +375,15 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     }
 
     Future<void> commentsBoxSlide() async {
-      if (commentAnicon.isDismissed) {
-        await commentAnicon.forward();
-        setState(() {isCommentWidgetOpen = true;});
-      }
-      else if (commentAnicon.isCompleted) {
-        await commentAnicon.reverse();
-        setState(() {isCommentWidgetOpen = false;});
+      if (MediaQuery.of(context).viewInsets.bottom == 0) { // 키보드 창 활성화되어 있으면 금지
+        if (commentAnicon.isDismissed) {
+          await commentAnicon.forward();
+          setState(() {isCommentWidgetOpen = true;});
+        }
+        else if (commentAnicon.isCompleted) {
+          await commentAnicon.reverse();
+          setState(() {isCommentWidgetOpen = false;});
+        }
       }
     }
 
