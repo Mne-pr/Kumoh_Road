@@ -57,6 +57,7 @@ dependencies:
   fl_chart: ^0.64.0
   html: ^0.15.4
   shared_preferences: ^2.2.2
+  firebase_storage: ^11.5.3
 
 dev_dependencies:
   flutter_test:

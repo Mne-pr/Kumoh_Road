@@ -21,8 +21,7 @@ class TaxiScreenPostModel {
     required this.commentList
   });
 
-  static Future<List<TaxiScreenPostModel>> getAllPostsByCollectionName(
-      String collectionName) async {
+  static Future<List<TaxiScreenPostModel>> getAllPostsByCollectionName(String collectionName) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionName).get();
     List<Map<String, dynamic>> documents = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
     List<TaxiScreenPostModel> postList = documents.map((doc) => TaxiScreenPostModel(
