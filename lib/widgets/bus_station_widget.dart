@@ -98,7 +98,6 @@ class _BusListWidgetState extends State<BusListWidget> {
     setState(() { isRefreshing = widget.isLoading;});
     final numOfBus = widget.busList.length;
 
-
     if (isRefreshing) {
       return Container(
         padding: EdgeInsets.all(0),
@@ -114,7 +113,8 @@ class _BusListWidgetState extends State<BusListWidget> {
 
     return Stack(
       children: [
-        Container(
+        (numOfBus > 0)
+        ? Container(
           decoration: BoxDecoration(
             color: Colors.white,
           ),
@@ -128,15 +128,14 @@ class _BusListWidgetState extends State<BusListWidget> {
                 controller: scrollcon,
                 itemCount: (numOfBus == 0) ? 1 : numOfBus + 1,
                 itemBuilder: (context, index) {
-                  if (numOfBus == 0) return Center(child: Text("버스가 없습니다",style: TextStyle(fontSize: 30)),); // 수정해야
-                  if (index >= numOfBus) {return Column(children: [ Divider(), SizedBox(height: 80,)]);}
+                  if (index >= numOfBus) {return Column(children: [ Divider(), SizedBox(height: 85,)]);}
                   Bus bus = widget.busList[index];
                   // 남는 시간에 따른 색 분류
                   final urgentColor = ((bus.arrtime/60).toInt() >= 5) ? Colors.blue : Colors.red;
                   final busColor = (bus.routetp == '일반버스') ? Color(0xff05d686) : Colors.purple;
                   return Column(
                     children: [
-                      (index != 0) ? Divider(thickness: 1.0, height: 1.0,) : SizedBox(width: 0,),
+                      Divider(thickness: 1.0, height: 1.0,),
                       Row(
                         children: [
                           Expanded(
@@ -181,7 +180,15 @@ class _BusListWidgetState extends State<BusListWidget> {
                 }
             ),
           ),
+        )
+        : Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+          ),
+          height: MediaQuery.of(context).size.height / 2,
+          child: Center(child: Text("버스가 없습니다",style: TextStyle(fontSize: 30))),
         ),
+
         Positioned(
           right: MediaQuery.of(context).size.width * 0.05, bottom: MediaQuery.of(context).size.height * 0.03,
           child: OutlineCircleButton(
