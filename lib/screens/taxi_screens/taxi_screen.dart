@@ -23,7 +23,7 @@ class TaxiScreen extends StatefulWidget {
 
 class _TaxiScreenState extends State<TaxiScreen> {
   String _selectedStartInfo = "금오공과대학교";
-  late String _selectedTime;
+  String? _selectedTime;
 
   @override
   Widget build(BuildContext context) {
@@ -93,11 +93,16 @@ class _TaxiScreenState extends State<TaxiScreen> {
     return FloatingActionButton.extended(
         onPressed: studentVerified ? () {
           Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-            return PostCreateScreen(converter[_selectedStartInfo]!, _selectedTime);
+            return PostCreateScreen(converter[_selectedStartInfo]!, _selectedTime!);
           }));}
             : null,
         icon: const Icon(Icons.add),
-        label: const Text("글쓰기"),
+        label: Text(
+          "글쓰기",
+          style: TextStyle(
+            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2
+          ),
+        ),
         backgroundColor: studentVerified ? Theme.of(context).primaryColor : Colors.grey
     );
   }
@@ -147,7 +152,8 @@ class _TaxiScreenState extends State<TaxiScreen> {
     List<String> showTimeList = timeList.map((e) => e < 10 ? "0$e:00" : "$e:00")
         .toList();
 
-    _selectedTime = showTimeList[0];
+    if(_selectedTime == null)
+      _selectedTime = showTimeList[0];
 
     return Padding(
       padding: EdgeInsets.only(left: screenWidth * 0.02),
@@ -268,7 +274,8 @@ class _TaxiScreenState extends State<TaxiScreen> {
           return "$hour:$minute";
         }).toList();
 
-    _selectedTime = showArriveTimeList[0];
+    if(_selectedTime == null)
+      _selectedTime = showArriveTimeList[0];
 
     return Padding(
       padding: EdgeInsets.only(left: screenWidth * 0.02),
@@ -310,7 +317,7 @@ Future<Widget> _fetchAndBuildPosts(BuildContext context) async {
   return _buildPosts(context, postList);
 }
 
-Future<Widget> _buildPosts(BuildContext context,List<TaxiScreenPostModel> postList) async {
+Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList) async {
   double screenHeight = MediaQuery.of(context).size.height;
   double screenWidth = MediaQuery.of(context).size.width;
   double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
@@ -389,7 +396,7 @@ Future<Widget> _buildPosts(BuildContext context,List<TaxiScreenPostModel> postLi
                     Padding(
                       padding: leftPadding,
                       child: Text(
-                          "${postList[i].membersIdList.length + 1}/4명",
+                          "${postList[i].memberList.length + 1}/4명",
                           style: TextStyle(
                               fontSize: contentFontSize,
                               fontWeight: FontWeight.bold
