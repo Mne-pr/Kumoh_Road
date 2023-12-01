@@ -101,6 +101,7 @@ class _BusListWidgetState extends State<BusListWidget> {
       return Container(
         padding: EdgeInsets.all(0),
         decoration: BoxDecoration(
+          color: Colors.white,
           border: Border( top: BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),),
         ),
         child: Center(
