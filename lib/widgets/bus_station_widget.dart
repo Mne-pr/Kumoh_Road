@@ -16,10 +16,16 @@ class BusStationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onVerticalDragUpdate: (details) { if(details.delta.dy < 0) onClick();},
+      onVerticalDragUpdate: (details) {
+        if(isTop == false && details.delta.dy < 0) {
+          onClick();
+        }
+        if (isTop == true && details.delta.dy > 0) {
+          onClick();
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
-
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
           boxShadow: [ // 위아래 그림자

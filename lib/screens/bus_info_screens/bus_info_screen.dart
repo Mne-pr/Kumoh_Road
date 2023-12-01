@@ -68,10 +68,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late AnimationController commentAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
   late CurvedAnimation commentCurveAni =   CurvedAnimation(parent: commentAnicon, curve: Curves.easeInOutExpo);
 
-  bool isTop = false;
-
-
-
   // 버스정류장, 위치교체버튼, 버스목록(댓글) 애니메이션
   late Animation<double> busStAni;
   late Animation<double> chBtnAni;
@@ -103,6 +99,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // 자주 쓸 거 같은
   NCameraAnimation myFly = NCameraAnimation.fly;
   Duration myDuration = Duration(milliseconds: 200);
+
+  // 버스정류장 위젯 애니메이션 감지
+  bool isBusWidgetTop = false;
 
   @override
   void initState() {
@@ -201,7 +200,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         busCodesFromFire = tmpBusList.map<String>((bus) => bus['code'] as String).toList();
       } catch(error) {print("get bus_list error : ${error.toString()}"); busCodesFromFire = [];}
 
-      //
+      // 각 버스의 도착지 결정해야
 
 
 
@@ -355,7 +354,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     Future<void> busStationBoxSlide() async {
       if (busStAnicon.isDismissed) {
         busStAnicon.forward();
-        setState(() { isTop = true;});
+        setState(() { isBusWidgetTop = true;});
 
         final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
@@ -363,7 +362,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
       else if (busStAnicon.isCompleted) {
         busStAnicon.reverse();
-        setState(() { isTop = false;});
+        setState(() { isBusWidgetTop = false;});
 
         final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
@@ -430,7 +429,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               bottom: busStAni.value,
               left: 0, right: 0,
               height: (orientation == Orientation.portrait) ? MediaQuery.of(context).size.height * 0.125  : MediaQuery.of(context).size.height * 0.25,
-              child: BusStationWidget(onClick: busStationBoxSlide, busStation: busStopInfos[curBusStop], isTop: isTop,),
+              child: BusStationWidget(onClick: busStationBoxSlide, busStation: busStopInfos[curBusStop], isTop: isBusWidgetTop,),
             ),
 
             // 1.4 위치 변경 버튼 위젯
