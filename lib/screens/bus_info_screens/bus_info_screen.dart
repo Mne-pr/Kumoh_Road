@@ -14,6 +14,16 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
+// 댓글 열려 있을 때 마크 클릭하면 사라져야 하겠음
+
+
+class ButtonData {
+  final IconData icon;
+  final int nextBusSt;
+  final int clickMark;
+  ButtonData(this.icon, this.nextBusSt, this.clickMark);
+}
+
 class BusInfoScreen extends StatefulWidget {
   const BusInfoScreen({super.key});
 
@@ -39,11 +49,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   
   // 지도의 마크와 마크 위에 띄울 위젯
   final busStopMarks = [
-    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역"),
-    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협"),
-    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점"),
-    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)"),
-    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널"),
+    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역", ),
+    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협", ),
+    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점", ),
+    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)", ),
+    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널", ),
   ];
   late final busStopW;
   
@@ -67,10 +77,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late CurvedAnimation busStCurveAni =   CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutExpo);
   late AnimationController commentAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
   late CurvedAnimation commentCurveAni =   CurvedAnimation(parent: commentAnicon, curve: Curves.easeInOutExpo);
-
-  bool isTop = false;
-
-
 
   // 버스정류장, 위치교체버튼, 버스목록(댓글) 애니메이션
   late Animation<double> busStAni;
@@ -104,34 +110,29 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   NCameraAnimation myFly = NCameraAnimation.fly;
   Duration myDuration = Duration(milliseconds: 200);
 
+  // 버스정류장 위젯 애니메이션 감지
+  bool isBusWidgetTop = false;
+  bool isCommentWidgetOpen = false;
+
+  String curBusCode = "";
+
+  List<ButtonData> buttonData = [
+    ButtonData(Icons.school_outlined, 1, 2),
+    ButtonData(Icons.directions_bus_filled_outlined, 2, 4),
+    ButtonData(Icons.tram_outlined, 0, 0),
+  ];
+
   @override
   void initState() {
     super.initState();
 
-    // 반복문으로 줄일 수 있을 것 같음!! - 나중에
-    buttons = [
-      OutlineCircleButton( // 구미역 -> 금오공대
-        child: Icon(Icons.school_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-        foregroundColor: Color(0xff05d686),borderColor: Colors.white,
+    buttons = buttonData.map((data) =>
+      OutlineCircleButton(
+        child: Icon(data.icon, color: Colors.white), radius: 50.0, borderSize: 0.5,
+        foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
         onTap: () async {
-          await busStopMarks[2].performClick();
-          final nextBusSt = 1;
-          if (busStAnicon.isDismissed){
-            cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration); // 사실 cameraMap[0] 대신에 0 넣으면 되는데 보기 편하라고
-            await con.updateCamera(cameras[cameraMap[nextBusSt]]);
-          } else {
-            cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
-            await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
-          }
-          setState(() { curButton = 1; });
-        },
-      ),
-      OutlineCircleButton( // 금오공대 -> 종합터미널
-        child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-        foregroundColor: Color(0xff05d686), borderColor: Colors.white,
-        onTap: () async {
-          await busStopMarks[4].performClick();
-          final nextBusSt = 2;
+          await busStopMarks[data.clickMark].performClick();
+          final nextBusSt = data.nextBusSt;
           if (busStAnicon.isDismissed){
             cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
             await con.updateCamera(cameras[cameraMap[nextBusSt]]);
@@ -139,27 +140,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
-          setState(() { curButton = 2; });
-        }
-      ),
-      OutlineCircleButton( // 종합터미널 -> 구미역
-          child: Icon(Icons.tram_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-          foregroundColor: Color(0xff05d686),borderColor: Colors.white,
-          onTap: () async {
-            await busStopMarks[0].performClick();
-            final nextBusSt = 0;
-            if (busStAnicon.isDismissed){
-              cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
-              await con.updateCamera(cameras[cameraMap[nextBusSt]]);
-            } else {
-              cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
-              await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
-            }
-            setState(() { curButton = 0; });
-          }
-      ),
-
-    ];
+          setState(() { curButton = data.nextBusSt; });
+        },
+      )
+    ).toList();
 
     busStopW = [
       NInfoWindow.onMarker(id: busStopMarks[0].info.id, text: busStopInfos[0].mainText),
@@ -201,7 +185,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         busCodesFromFire = tmpBusList.map<String>((bus) => bus['code'] as String).toList();
       } catch(error) {print("get bus_list error : ${error.toString()}"); busCodesFromFire = [];}
 
-      //
+      // 각 버스의 도착지 결정해야
 
 
 
@@ -245,7 +229,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             'code':      bus.code,      // 고유문자
           });
           // 파베에 버스 채팅리스트 생성
-          await fire.collection('bus_chat').doc(bus.code).set({});
+          await fire.collection('bus_chat').doc(bus.code).set({'comments': []});
         }
 
         // 기존 버스인 경우 - 업데이트
@@ -317,6 +301,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               busList = await fire.get('bus_list');
               for (var b in busList) { newBusList.add(b);}
               final res = BusApiRes.fromFirestore(newBusList);
+              //final res = BusApiRes.fromJson({}); // 빈 버스 확인용
               return res;
             }
             else { throw Exception();}
@@ -338,12 +323,12 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; });
 
-      busStopMarks[busStop].setIconTintColor(Color.fromARGB(0, 1, 1, 255));
+      busStopMarks[busStop].setIcon(NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
 
       for (int i = 0; i < 5; i++){
         if (busStop != i) {
           try { await busStopW[i].close();} catch (e) { }
-          try { busStopMarks[i].setIconTintColor(Colors.transparent); } catch (e) {}
+          try { busStopMarks[i].setIcon(NOverlayImage.fromAssetImage('assets/images/sub_marker.png')); } catch (e) {}
         }
       }
 
@@ -353,37 +338,46 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 버스정류장 정보를 슬라이드할 때 이벤트 처리
     Future<void> busStationBoxSlide() async {
-      if (busStAnicon.isDismissed) {
-        busStAnicon.forward();
-        setState(() { isTop = true;});
+      if (isCommentWidgetOpen == false){
+        if (busStAnicon.isDismissed) {
+          busStAnicon.forward();
+          setState(() { isBusWidgetTop = true;});
 
-        final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
-        cameras[index].setAnimation(animation: myFly, duration: myDuration);
-        await con.updateCamera(cameras[index]);
-      }
-      else if (busStAnicon.isCompleted) {
-        busStAnicon.reverse();
-        setState(() { isTop = false;});
+          final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
+          cameras[index].setAnimation(animation: myFly, duration: myDuration);
+          await con.updateCamera(cameras[index]);
+        }
+        else if (busStAnicon.isCompleted) {
+          busStAnicon.reverse();
+          setState(() { isBusWidgetTop = false;});
 
-        final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
-        cameras[index].setAnimation(animation: myFly, duration: myDuration);
-        await con.updateCamera(cameras[index]);
+          final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
+          cameras[index].setAnimation(animation: myFly, duration: myDuration);
+          await con.updateCamera(cameras[index]);
+        }
       }
     }
 
+    // 댓글을 슬라이드할 때 이벤트 처리
     Future<void> commentsBoxSlide() async {
-      if (commentAnicon.isDismissed) {
-        await commentAnicon.forward();
-      }
-      else if (commentAnicon.isCompleted) {
-        await commentAnicon.reverse();
+      if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
+        if (commentAnicon.isDismissed) {
+          await commentAnicon.forward();
+          setState(() {isCommentWidgetOpen = true;});
+        }
+        else if (commentAnicon.isCompleted) {
+          await commentAnicon.reverse();
+          setState(() {isCommentWidgetOpen = false;});
+        }
       }
     }
 
-    Future<void> callComments() async {
+    // 버스리스트에서 댓글 활성화버튼 이벤트 처리
+    Future<void> callComments(String busCode) async {
       await commentsBoxSlide();
+      setState(() { curBusCode = busCode; });
+      print("현재 버스코드 : ${busCode}");
     }
-
 
     return Scaffold(
 
@@ -430,7 +424,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               bottom: busStAni.value,
               left: 0, right: 0,
               height: (orientation == Orientation.portrait) ? MediaQuery.of(context).size.height * 0.125  : MediaQuery.of(context).size.height * 0.25,
-              child: BusStationWidget(onClick: busStationBoxSlide, busStation: busStopInfos[curBusStop], isTop: isTop,),
+              child: BusStationWidget(onClick: busStationBoxSlide, busStation: busStopInfos[curBusStop], isTop: isBusWidgetTop,),
             ),
 
             // 1.4 위치 변경 버튼 위젯
@@ -444,12 +438,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             Positioned(
               bottom: commentAni.value - screenHeight, left: 0, right: 0,
               child: BusChatWidget(
-                onScrollToTop: callComments,
+                onScrollToTop: commentsBoxSlide,
+                commentsCode: curBusCode,
               )
             ),
 
             // 1.6 첫 로딩 위젯
-            LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1500,),
+            LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1100,),
           ],
         ),
       ),
