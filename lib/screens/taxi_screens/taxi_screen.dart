@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/taxi_arrive_info_model.dart';
@@ -6,6 +7,8 @@ import 'package:kumoh_road/models/taxi_screen_user_model.dart';
 import 'package:kumoh_road/screens/taxi_screens/post_create_screen.dart';
 import 'package:kumoh_road/screens/taxi_screens/post_details_screen.dart';
 import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_providers.dart';
 import '../../widgets/bottom_navigation_bar.dart';
 import '../../widgets/loding_indicator_widget.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -20,11 +23,12 @@ class TaxiScreen extends StatefulWidget {
 
 class _TaxiScreenState extends State<TaxiScreen> {
   String _selectedStartInfo = "금오공과대학교";
-  String _selectedTime = (DateTime.now().hour < 10) ? "0${DateTime.now().hour}:00" : "${DateTime.now().hour}:00";
+  String? _selectedTime;
 
   @override
   Widget build(BuildContext context) {
     final log = Logger(printer: PrettyPrinter());
+    final userProvider = Provider.of<UserProvider>(context);
     final List<String> startList = ['금오공과대학교', '구미종합터미널', '구미역'];
     bool isChoicedKumoh = (_selectedStartInfo == "금오공과대학교");
 
@@ -57,10 +61,10 @@ class _TaxiScreenState extends State<TaxiScreen> {
             FutureBuilder(
               future: _fetchAndBuildPosts(context),
               builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return Expanded(
-                      child: Center(child: LoadingIndicatorWidget()));
-                else if (snapshot.hasError) {
+                    child: Center(child: LoadingIndicatorWidget()));
+                } else if (snapshot.hasError) {
                   log.e("${snapshot.error}");
                   log.e("${snapshot.stackTrace}");
                   return const Center(child: Text("게시글을 불러올 수 없습니다."));
@@ -75,13 +79,31 @@ class _TaxiScreenState extends State<TaxiScreen> {
         ),
       ),
       bottomNavigationBar: const CustomBottomNavigationBar(selectedIndex: 1),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => PostCreateScreen()));
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: writingButton(userProvider.isStudentVerified, context),
+    );
+  }
+
+  Widget writingButton(bool studentVerified, BuildContext context){
+    const Map<String, String> converter = {
+      '금오공과대학교': 'school_posts',
+      '구미종합터미널': 'express_bus_posts',
+      '구미역': 'train_posts'
+    };
+
+    return FloatingActionButton.extended(
+        onPressed: studentVerified ? () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+            return PostCreateScreen(converter[_selectedStartInfo]!, _selectedTime!);
+          }));}
+            : null,
+        icon: const Icon(Icons.add),
+        label: Text(
+          "글쓰기",
+          style: TextStyle(
+            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2
+          ),
+        ),
+        backgroundColor: studentVerified ? Theme.of(context).primaryColor : Colors.grey
     );
   }
 
@@ -130,6 +152,9 @@ class _TaxiScreenState extends State<TaxiScreen> {
     List<String> showTimeList = timeList.map((e) => e < 10 ? "0$e:00" : "$e:00")
         .toList();
 
+    if(_selectedTime == null)
+      _selectedTime = showTimeList[0];
+
     return Padding(
       padding: EdgeInsets.only(left: screenWidth * 0.02),
       child: DropdownButtonHideUnderline(
@@ -138,7 +163,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
               fontSize: defaultFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black),
-          value: showTimeList[0],
+          value: _selectedTime,
           onChanged: (String? newValue) {
             setState(() {
               _selectedTime = newValue!;
@@ -249,6 +274,9 @@ class _TaxiScreenState extends State<TaxiScreen> {
           return "$hour:$minute";
         }).toList();
 
+    if(_selectedTime == null)
+      _selectedTime = showArriveTimeList[0];
+
     return Padding(
       padding: EdgeInsets.only(left: screenWidth * 0.02),
       child: DropdownButtonHideUnderline(
@@ -257,7 +285,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
               fontSize: defaultFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black),
-          value: showArriveTimeList[0],
+          value: _selectedTime,
           onChanged: (String? newValue) {
             setState(() {
               _selectedTime = newValue!;
@@ -289,8 +317,7 @@ Future<Widget> _fetchAndBuildPosts(BuildContext context) async {
   return _buildPosts(context, postList);
 }
 
-Future<Widget> _buildPosts(BuildContext context,
-    List<TaxiScreenPostModel> postList) async {
+Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList) async {
   double screenHeight = MediaQuery.of(context).size.height;
   double screenWidth = MediaQuery.of(context).size.width;
   double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
@@ -369,7 +396,7 @@ Future<Widget> _buildPosts(BuildContext context,
                     Padding(
                       padding: leftPadding,
                       child: Text(
-                          "${postList[i].membersIdList.length + 1}/4명",
+                          "${postList[i].memberList.length + 1}/4명",
                           style: TextStyle(
                               fontSize: contentFontSize,
                               fontWeight: FontWeight.bold

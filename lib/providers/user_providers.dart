@@ -115,7 +115,7 @@ class UserProvider with ChangeNotifier {
           {'content': '합승 중 타인에 대한 불편한 발언을 했어요.', 'votes': 0},
         ],
         'qrCodeUrl': _qrCodeUrl,
-        'studentVerified' : _isStudentVerified,
+        'isStudentVerified' : _isStudentVerified,
         'isSuspended': _isSuspended,
         'createdTime': FieldValue.serverTimestamp(),
       });

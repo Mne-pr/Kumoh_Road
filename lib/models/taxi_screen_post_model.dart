@@ -1,41 +1,55 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logger/logger.dart';
 
 class TaxiScreenPostModel {
-  final String writerId;
-  final String title;
+  final String categoryTime;
+  final List<dynamic> commentList;
   final String content;
   final DateTime createdTime;
-  final int viewCount;
   final String imageUrl;
-  final List<dynamic> membersIdList;
-  final List<dynamic> commentList;
+  final List<dynamic> memberList;
+  final String title;
+  final int viewCount;
+  final bool visible;
+  final String writerId;
 
   TaxiScreenPostModel({
-    required this.writerId,
-    required this.title,
+    required this.categoryTime,
+    required this.commentList,
     required this.content,
     required this.createdTime,
-    required this.viewCount,
     required this.imageUrl,
-    required this.membersIdList,
-    required this.commentList
+    required this.memberList,
+    required this.title,
+    required this.viewCount,
+    required this.visible,
+    required this.writerId
   });
 
-  static Future<List<TaxiScreenPostModel>> getAllPostsByCollectionName(
-      String collectionName) async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionName).get();
-    List<Map<String, dynamic>> documents = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-    List<TaxiScreenPostModel> postList = documents.map((doc) => TaxiScreenPostModel(
-      writerId: doc["writer"],
-      title: doc["title"],
-      content: doc["content"],
-      createdTime: doc["createdTime"].toDate(),
-      viewCount: doc["viewCount"],
-      imageUrl: doc["image"],
-      membersIdList: doc["members"],
-      commentList: doc["commentList"]
-    )).toList();
+  static Future<List<TaxiScreenPostModel>> getAllPostsByCollectionName(String collectionName) async {
+    Logger log = Logger(printer: PrettyPrinter());
+    try{
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionName).get();
+      List<Map<String, dynamic>> documents = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+      List<TaxiScreenPostModel> postList = documents.map((doc) => TaxiScreenPostModel(
+          categoryTime: doc["categoryTime"],
+          commentList: doc["commentList"],
+          content: doc["content"],
+          createdTime: (doc["createdTime"] as Timestamp).toDate(),
+          imageUrl: doc["imageUrl"],
+          memberList: doc["memberList"],
+          title: doc["title"],
+          viewCount: doc["viewCount"],
+          visible: doc["visible"],
+          writerId: doc["writerId"]
+      )).toList();
 
-    return postList;
+      return postList;
+
+    } on Exception catch(e){
+      log.e(e);
+
+      return [];
+    }
   }
 }
