@@ -23,7 +23,7 @@ class _BarChartSample7State extends State<AdminMainScreen> {
   int maxY = 0;
   int touchedGroupIndex = -1;
   bool isLoading = true; // 데이터 로딩 상태 추적을 위한 변수
-  bool isExpanded = false;
+  bool announcementIsExpanded = true;
 
   @override
   void initState() {
@@ -245,81 +245,6 @@ class _BarChartSample7State extends State<AdminMainScreen> {
     );
   }
 
-// 공지사항 섹션
-  Widget buildAnnouncementsSection() {
-    return Container(
-      margin: const EdgeInsets.all(8.0),
-      padding: const EdgeInsets.only(
-          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(15.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 1,
-            blurRadius: 7,
-            offset: Offset(0, 3), // changes position of shadow
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.announcement, size: 25),
-                  SizedBox(width: 8),
-                  Text(
-                    '공지사항',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  // 새 공지사항 추가 버튼
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 24),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => AddAnnouncementScreen()),
-                      );
-                    },
-                  ),
-                  // 전체 공지사항 페이지로 이동하는 버튼
-                  IconButton(
-                    icon: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return ScaleTransition(scale: animation, child: child);
-                      },
-                      child: Icon(
-                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        key: ValueKey<bool>(isExpanded),
-                        size: 30, // 화살표 크기 조절
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        isExpanded = !isExpanded; // 상태 토글
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          buildAnnouncements(),
-        ],
-      ),
-    );
-  }
-
   Widget buildBarChart(List<Map<String, dynamic>> dataList) {
     if (isLoading) {
       return const Center(
@@ -491,12 +416,92 @@ class _BarChartSample7State extends State<AdminMainScreen> {
     );
   }
 
+  // 공지사항 섹션
+  Widget buildAnnouncementsSection() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.announcement, size: 25),
+                  SizedBox(width: 8),
+                  Text(
+                    '공지사항',
+                    style: TextStyle(fontSize: 15),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  // 새 공지사항 추가 버튼
+                  IconButton(
+                    icon: const Icon(Icons.add, size: 24),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => AddAnnouncementScreen()),
+                      );
+                    },
+                  ),
+                  // 전체 공지사항 페이지로 이동하는 버튼
+                  IconButton(
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: Icon(
+                        announcementIsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        key: ValueKey<bool>(announcementIsExpanded),
+                        size: 30, // 화살표 크기 조절
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        announcementIsExpanded = !announcementIsExpanded;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(height: 0),
+            secondChild: buildAnnouncements(),
+            crossFadeState: announcementIsExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 500),
+          ),
+        ],
+      ),
+    );
+  }
+
+// 공지사항 목록
   Widget buildAnnouncements() {
     return StreamBuilder<QuerySnapshot>(
-      // 쿼리 리미트 변경
       stream: FirebaseFirestore.instance.collection('announcements')
           .orderBy('date', descending: true)
-          .limit(isExpanded ? 100 : 3) // 상태에 따라 리미트 변경
           .snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.hasError) {
@@ -511,21 +516,21 @@ class _BarChartSample7State extends State<AdminMainScreen> {
           child: Column(
             children: List.generate(data.size, (index) {
               var announcementData = data.docs[index];
-              var announcement = Announcement.fromMap(announcementData.id, announcementData.data() as Map<String, dynamic>);
+              var announcement = Announcement.fromMap(announcementData.id,
+                  announcementData.data() as Map<String, dynamic>);
               return InkWell(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          AnnouncementDetailScreen(
-                              announcement: announcement),
+                          AnnouncementDetailScreen(announcement: announcement),
                     ),
                   );
                 },
                 child: Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.only(bottom: 6.0),
+                  elevation: 3,
+                  margin: const EdgeInsets.all(2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
@@ -543,8 +548,8 @@ class _BarChartSample7State extends State<AdminMainScreen> {
                     ),
                     title: Text(
                       announcement.title,
-                      maxLines: 1, // 텍스트를 한 줄로 제한
-                      overflow: TextOverflow.ellipsis, // 넘치는 텍스트를 말줄임표로 처리
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
