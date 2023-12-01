@@ -9,7 +9,7 @@ class FAQScreen extends StatelessWidget {
         title: const Text('자주 묻는 질문', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: ListView(

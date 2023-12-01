@@ -36,7 +36,7 @@ class _ReportUserScreenState extends State<ReportUserScreen> {
         title: const Text('신고하기'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: ListView(

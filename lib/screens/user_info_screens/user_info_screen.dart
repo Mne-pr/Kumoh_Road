@@ -9,6 +9,7 @@ import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/bottom_navigation_bar.dart';
 import '../../widgets/user_info_section.dart';
+import '../launch_screens/intro_screen.dart';
 import 'developer_info_screen.dart';
 import 'faq_screen.dart';
 import 'manner_temp_screen.dart';
@@ -60,7 +61,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       ],
       centerTitle: false,
       backgroundColor: Colors.white,
-      elevation: 0,
+      elevation: 1,
       automaticallyImplyLeading: false,
     );
   }
@@ -410,9 +411,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
           TextButton(
             child: const Text('로그아웃'),
-            onPressed: () {
-              userProvider.logout();
+            onPressed: () async {
+              await userProvider.logout();
               Navigator.of(ctx).popUntil((route) => route.isFirst);
+              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => IntroScreen())); // 인트로 화면으로 이동
             },
           ),
         ],
@@ -433,9 +435,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
           ),
           TextButton(
             child: const Text('탈퇴하기'),
-            onPressed: () {
-              userProvider.unlink();
+            onPressed: () async {
+              await userProvider.unlink();
               Navigator.of(ctx).popUntil((route) => route.isFirst);
+              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => IntroScreen())); // 인트로 화면으로 이동
             },
           ),
         ],

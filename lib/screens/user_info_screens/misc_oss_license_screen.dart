@@ -20,7 +20,7 @@ class MiscOssLicenseScreen extends StatelessWidget {
         title: Text(package.name, style: const TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: Container(

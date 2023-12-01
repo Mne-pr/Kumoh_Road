@@ -1,8 +1,13 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/announcement_model.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
+import '../main_screens/announcement_detail_screen.dart';
+import 'admin_add_announcement_screan.dart';
 
 class AdminMainScreen extends StatefulWidget {
   AdminMainScreen({super.key});
@@ -14,6 +19,11 @@ class AdminMainScreen extends StatefulWidget {
 // 바 차트 상태
 class _BarChartSample7State extends State<AdminMainScreen> {
   List<Map<String, dynamic>> dataList = [];
+  List<Map<String, dynamic>> posts = [];
+  int maxY = 0;
+  int touchedGroupIndex = -1;
+  bool isLoading = true; // 데이터 로딩 상태 추적을 위한 변수
+  bool isExpanded = false;
 
   @override
   void initState() {
@@ -76,6 +86,9 @@ class _BarChartSample7State extends State<AdminMainScreen> {
   }
 
   Future<void> loadData() async {
+    setState(() {
+      isLoading = true; // 데이터 로딩 시작
+    });
     var expressBusPosts = await getDocumentCounts('express_bus_posts');
     var schoolPosts = await getDocumentCounts('school_posts');
     var trainPosts = await getDocumentCounts('train_posts');
@@ -132,13 +145,23 @@ class _BarChartSample7State extends State<AdminMainScreen> {
           "icon": Icons.sentiment_very_dissatisfied
         },
       ];
+      int calculatedMaxY = dataList.fold(0, (previousValue, element) {
+        int todayMax = element['today'] ?? 0; // null 체크
+        int yesterdayMax = element['yesterday'] ?? 0; // null 체크
+        return max(previousValue, max(todayMax, yesterdayMax));
+      });
+
+      if (calculatedMaxY <= 0) {
+        maxY = 1;
+      } else {
+        maxY = calculatedMaxY + 1;
+      }
+      isLoading = false;
     });
   }
 
-  int touchedGroupIndex = -1;
-
-  BarChartGroupData generateBarGroup(
-      int x, Color color, int value, int shadowValue) {
+  BarChartGroupData generateBarGroup(int x, Color color, int value,
+      int shadowValue) {
     return BarChartGroupData(
       x: x,
       barRods: [
@@ -150,7 +173,7 @@ class _BarChartSample7State extends State<AdminMainScreen> {
         BarChartRodData(
           toY: 0,
           color: Colors.grey,
-          width: 2,
+          width: 1,
         ),
         BarChartRodData(
           toY: shadowValue.toDouble(),
@@ -162,15 +185,6 @@ class _BarChartSample7State extends State<AdminMainScreen> {
     );
   }
 
-  List<Map<String, String>> posts = [
-    {"title": "게시글 1", "content": "내용 1", "date": "2023-01-01"},
-    {"title": "게시글 2", "content": "내용 2", "date": "2023-01-02"},
-    {"title": "게시글 3", "content": "내용 3", "date": "2023-01-03"},
-    {"title": "게시글 3", "content": "내용 3", "date": "2023-01-03"},
-    {"title": "게시글 3", "content": "내용 3", "date": "2023-01-03"},
-    {"title": "게시글 3", "content": "내용 3", "date": "2023-01-03"},
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -181,209 +195,364 @@ class _BarChartSample7State extends State<AdminMainScreen> {
         elevation: 1,
         automaticallyImplyLeading: false,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  '금오로드 앱 하루 동향',
-                  style: TextStyle(fontSize: 15),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceBetween,
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.symmetric(
-                      horizontal: BorderSide(
-                        color: Colors.white54.withOpacity(0.2),
-                      ),
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          return Padding(
-                            padding:
-                            const EdgeInsets.only(right: 4.0), // 오른쪽 패딩 추가
-                            child: Text(
-                              value.toInt().toString(),
-                              style: const TextStyle(fontSize: 10), // 글씨 크기 조정
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 36,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          final icon = dataList[index]['icon'] as IconData;
-                          final isSelected = index == touchedGroupIndex;
-                          bool isReportIcon = [
-                            Icons.taxi_alert,
-                            Icons.bus_alert,
-                            Icons.sentiment_very_dissatisfied
-                          ].contains(icon);
+          buildAppTrendsSection(),
+          buildAnnouncementsSection(),
+        ],
+      ),
+      bottomNavigationBar: const AdminCustomBottomNavigationBar(
+          selectedIndex: 0),
+    );
+  }
 
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                touchedGroupIndex = index;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 4.0),
-                              child: Icon(
-                                icon,
-                                color: isSelected && isReportIcon
-                                    ? Colors.red
-                                    : (isSelected ? Colors.blue : Colors.grey),
-                                size: isSelected ? 30 : 24,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: const AxisTitles(),
-                    topTitles: const AxisTitles(),
+// 앱 동향 섹션
+  Widget buildAppTrendsSection() {
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(
+          top: 16.0, left: 16.0, right: 16.0, bottom: 3.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+              const SizedBox(width: 8),
+              const Text(
+                '금오로드 앱 하루 동향',
+                style: TextStyle(fontSize: 15),
+              ),
+            ],
+          ),
+          const Divider(),
+          buildBarChart(dataList),
+          buildChartLegend(),
+        ],
+      ),
+    );
+  }
+
+// 공지사항 섹션
+  Widget buildAnnouncementsSection() {
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(
+          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.announcement, size: 25),
+                  SizedBox(width: 8),
+                  Text(
+                    '공지사항',
+                    style: TextStyle(fontSize: 15),
                   ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (value) => const FlLine(
-                      color: Color(0x11FFFFFF),
-                      strokeWidth: 1,
-                    ),
-                  ),
-                  barGroups: dataList.asMap().entries.map((e) {
-                    final index = e.key;
-                    final data = e.value;
-                    return generateBarGroup(
-                      index,
-                      data['color'],
-                      data['today'],
-                      data['yesterday'],
-                    );
-                  }).toList(),
-                  maxY: 10,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    handleBuiltInTouches: false,
-                    touchTooltipData: BarTouchTooltipData(
-                      tooltipBgColor: Colors.transparent,
-                      tooltipMargin: 0,
-                      getTooltipItem: (
-                          BarChartGroupData group,
-                          int groupIndex,
-                          BarChartRodData rod,
-                          int rodIndex,
-                          ) {
-                        return BarTooltipItem(
-                          '${rod.toY.toInt()}',
-                          TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: rod.color,
-                            fontSize: 18,
-                            shadows: const [
-                              Shadow(
-                                color: Colors.black26,
-                                blurRadius: 12,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    touchCallback: (event, response) {
-                      if (event.isInterestedForInteractions &&
-                          response != null &&
-                          response.spot != null) {
-                        setState(() {
-                          touchedGroupIndex =
-                              response.spot!.touchedBarGroupIndex;
-                        });
-                      } else {
-                        setState(() {
-                          touchedGroupIndex = -1;
-                        });
-                      }
+                ],
+              ),
+              Row(
+                children: [
+                  // 새 공지사항 추가 버튼
+                  IconButton(
+                    icon: const Icon(Icons.add, size: 24),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => AddAnnouncementScreen()),
+                      );
                     },
                   ),
-                ),
+                  // 전체 공지사항 페이지로 이동하는 버튼
+                  IconButton(
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: Icon(
+                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        key: ValueKey<bool>(isExpanded),
+                        size: 30, // 화살표 크기 조절
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isExpanded = !isExpanded; // 상태 토글
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          buildAnnouncements(),
+        ],
+      ),
+    );
+  }
+
+  Widget buildBarChart(List<Map<String, dynamic>> dataList) {
+    if (isLoading) {
+      return const Center(
+        child: SizedBox(
+          height: 400,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 400, // 고정된 높이를 제공
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceBetween,
+          borderData: FlBorderData(
+            show: true,
+            border: Border.symmetric(
+              horizontal: BorderSide(
+                color: Colors.white54.withOpacity(0.2),
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Icon(Icons.square, color: Colors.blue),
-                SizedBox(width: 4),
-                Text("오늘"),
-                SizedBox(width: 16),
-                Icon(Icons.square, color: Colors.red),
-                SizedBox(width: 4),
-                Text("오늘 - 신고"),
-                SizedBox(width: 16),
-                Icon(Icons.square, color: Colors.grey),
-                SizedBox(width: 4),
-                Text("어제"),
-              ],
+          titlesData: FlTitlesData(
+            show: true,
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                getTitlesWidget: (value, meta) {
+                  return Padding(
+                    padding:
+                    const EdgeInsets.only(right: 4.0), // 오른쪽 패딩 추가
+                    child: Text(
+                      value.toInt().toString(),
+                      style: const TextStyle(fontSize: 10), // 글씨 크기 조정
+                    ),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 36,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  final icon = dataList[index]['icon'] as IconData;
+                  final isSelected = index == touchedGroupIndex;
+                  bool isReportIcon = [
+                    Icons.taxi_alert,
+                    Icons.bus_alert,
+                    Icons.sentiment_very_dissatisfied
+                  ].contains(icon);
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        touchedGroupIndex = index;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Icon(
+                        icon,
+                        color: isSelected && isReportIcon
+                            ? Colors.red
+                            : (isSelected ? Colors.blue : Colors.grey),
+                        size: isSelected ? 30 : 24,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            rightTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) =>
+            const FlLine(
+              color: Color(0x11FFFFFF),
+              strokeWidth: 1,
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Icon(Icons.announcement, size: 24),
-                SizedBox(width: 8),
-                Text(
-                  '공지사항',
-                  style: TextStyle(fontSize: 15),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(posts[index]['title']!),
-                    subtitle: Text(posts[index]['content']!),
-                    trailing: Text(posts[index]['date']!),
+          barGroups: dataList
+              .asMap()
+              .entries
+              .map((e) {
+            final index = e.key;
+            final data = e.value;
+            return generateBarGroup(
+              index,
+              data['color'],
+              data['today'],
+              data['yesterday'],
+            );
+          }).toList(),
+          maxY: maxY.toDouble(),
+          // 계산된 maxY 값 사용
+          barTouchData: BarTouchData(
+            enabled: true, // 터치 활성화
+            handleBuiltInTouches: true, // 기본 터치 처리 활성화
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.transparent,
+              tooltipMargin: 0,
+              getTooltipItem: (BarChartGroupData group,
+                  int groupIndex,
+                  BarChartRodData rod,
+                  int rodIndex,) {
+                return BarTooltipItem(
+                  '${rod.toY.toInt()}',
+                  TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: rod.color,
+                    fontSize: 18,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black26,
+                        blurRadius: 12,
+                      ),
+                    ],
                   ),
                 );
               },
             ),
+            touchCallback: (event, response) {
+              if (event.isInterestedForInteractions &&
+                  response != null &&
+                  response.spot != null) {
+                setState(() {
+                  touchedGroupIndex =
+                      response.spot!.touchedBarGroupIndex;
+                });
+              } else {
+                setState(() {
+                  touchedGroupIndex = -1;
+                });
+              }
+            },
           ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget buildChartLegend() {
+    return const Padding(
+      padding: EdgeInsets.all(2.0),
+      child: Row(
+        children: [
+          Icon(Icons.square, color: Colors.blue),
+          SizedBox(width: 4),
+          Text("오늘"),
+          SizedBox(width: 16),
+          Icon(Icons.square, color: Colors.red),
+          SizedBox(width: 4),
+          Text("오늘 - 신고"),
+          SizedBox(width: 16),
+          Icon(Icons.square, color: Colors.grey),
+          SizedBox(width: 4),
+          Text("어제"),
         ],
       ),
-      bottomNavigationBar:
-      const AdminCustomBottomNavigationBar(selectedIndex: 0), // 예시 인덱스
+    );
+  }
+
+  Widget buildAnnouncements() {
+    return StreamBuilder<QuerySnapshot>(
+      // 쿼리 리미트 변경
+      stream: FirebaseFirestore.instance.collection('announcements')
+          .orderBy('date', descending: true)
+          .limit(isExpanded ? 100 : 3) // 상태에 따라 리미트 변경
+          .snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return const Text('오류');
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final data = snapshot.requireData;
+
+        return SingleChildScrollView(
+          child: Column(
+            children: List.generate(data.size, (index) {
+              var announcementData = data.docs[index];
+              var announcement = Announcement.fromMap(announcementData.id, announcementData.data() as Map<String, dynamic>);
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AnnouncementDetailScreen(
+                              announcement: announcement),
+                    ),
+                  );
+                },
+                child: Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.only(bottom: 6.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.grey[400],
+                      ),
+                      child: Text(
+                        announcement.type,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    title: Text(
+                      announcement.title,
+                      maxLines: 1, // 텍스트를 한 줄로 제한
+                      overflow: TextOverflow.ellipsis, // 넘치는 텍스트를 말줄임표로 처리
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }

@@ -10,7 +10,7 @@ class TermsOfServiceScreen extends StatelessWidget {
         title: const Text('서비스 이용 약관', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: const SingleChildScrollView(

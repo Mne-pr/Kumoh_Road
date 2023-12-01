@@ -12,7 +12,7 @@ class OssLicensesScreen extends StatelessWidget {
         title: const Text('오픈소스 라이센스', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
+        elevation: 1,
         centerTitle: true,
       ),
       body: ListView.builder(
