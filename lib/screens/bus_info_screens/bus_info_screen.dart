@@ -14,6 +14,13 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
+class ButtonData {
+  final IconData icon;
+  final int nextBusSt;
+  final int clickMark;
+  ButtonData(this.icon, this.nextBusSt, this.clickMark);
+}
+
 class BusInfoScreen extends StatefulWidget {
   const BusInfoScreen({super.key});
 
@@ -108,34 +115,23 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   String curBusCode = "";
 
+  List<ButtonData> buttonData = [
+    ButtonData(Icons.school_outlined, 1, 2),
+    ButtonData(Icons.directions_bus_filled_outlined, 2, 4),
+    ButtonData(Icons.tram_outlined, 0, 0),
+  ];
+
   @override
   void initState() {
     super.initState();
 
-    // 반복문으로 줄일 수 있을 것 같음!! - 나중에
-    buttons = [
-      OutlineCircleButton( // 구미역 -> 금오공대
-        child: Icon(Icons.school_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
+    buttons = buttonData.map((data) =>
+      OutlineCircleButton(
+        child: Icon(data.icon, color: Colors.white), radius: 50.0, borderSize: 0.5,
         foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
         onTap: () async {
-          await busStopMarks[2].performClick();
-          final nextBusSt = 1;
-          if (busStAnicon.isDismissed){
-            cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration); // 사실 cameraMap[0] 대신에 0 넣으면 되는데 보기 편하라고
-            await con.updateCamera(cameras[cameraMap[nextBusSt]]);
-          } else {
-            cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
-            await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
-          }
-          setState(() { curButton = 1; });
-        },
-      ),
-      OutlineCircleButton( // 금오공대 -> 종합터미널
-        child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-        foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
-        onTap: () async {
-          await busStopMarks[4].performClick();
-          final nextBusSt = 2;
+          await busStopMarks[data.clickMark].performClick();
+          final nextBusSt = data.nextBusSt;
           if (busStAnicon.isDismissed){
             cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
             await con.updateCamera(cameras[cameraMap[nextBusSt]]);
@@ -143,27 +139,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
-          setState(() { curButton = 2; });
-        }
-      ),
-      OutlineCircleButton( // 종합터미널 -> 구미역
-          child: Icon(Icons.tram_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-          foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
-          onTap: () async {
-            await busStopMarks[0].performClick();
-            final nextBusSt = 0;
-            if (busStAnicon.isDismissed){
-              cameras[cameraMap[nextBusSt]].setAnimation(animation: myFly, duration: myDuration);
-              await con.updateCamera(cameras[cameraMap[nextBusSt]]);
-            } else {
-              cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
-              await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
-            }
-            setState(() { curButton = 0; });
-          }
-      ),
-
-    ];
+          setState(() { curButton = data.nextBusSt; });
+        },
+      )
+    ).toList();
 
     busStopW = [
       NInfoWindow.onMarker(id: busStopMarks[0].info.id, text: busStopInfos[0].mainText),
