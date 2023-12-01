@@ -102,6 +102,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 버스정류장 위젯 애니메이션 감지
   bool isBusWidgetTop = false;
+  bool isCommentWidgetOpen = false;
 
   @override
   void initState() {
@@ -316,6 +317,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               busList = await fire.get('bus_list');
               for (var b in busList) { newBusList.add(b);}
               final res = BusApiRes.fromFirestore(newBusList);
+              //final res = BusApiRes.fromJson({}); // 빈 버스 확인용
               return res;
             }
             else { throw Exception();}
@@ -352,30 +354,34 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 버스정류장 정보를 슬라이드할 때 이벤트 처리
     Future<void> busStationBoxSlide() async {
-      if (busStAnicon.isDismissed) {
-        busStAnicon.forward();
-        setState(() { isBusWidgetTop = true;});
+      if (isCommentWidgetOpen == false){
+        if (busStAnicon.isDismissed) {
+          busStAnicon.forward();
+          setState(() { isBusWidgetTop = true;});
 
-        final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
-        cameras[index].setAnimation(animation: myFly, duration: myDuration);
-        await con.updateCamera(cameras[index]);
-      }
-      else if (busStAnicon.isCompleted) {
-        busStAnicon.reverse();
-        setState(() { isBusWidgetTop = false;});
+          final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
+          cameras[index].setAnimation(animation: myFly, duration: myDuration);
+          await con.updateCamera(cameras[index]);
+        }
+        else if (busStAnicon.isCompleted) {
+          busStAnicon.reverse();
+          setState(() { isBusWidgetTop = false;});
 
-        final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
-        cameras[index].setAnimation(animation: myFly, duration: myDuration);
-        await con.updateCamera(cameras[index]);
+          final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
+          cameras[index].setAnimation(animation: myFly, duration: myDuration);
+          await con.updateCamera(cameras[index]);
+        }
       }
     }
 
     Future<void> commentsBoxSlide() async {
       if (commentAnicon.isDismissed) {
         await commentAnicon.forward();
+        setState(() {isCommentWidgetOpen = true;});
       }
       else if (commentAnicon.isCompleted) {
         await commentAnicon.reverse();
+        setState(() {isCommentWidgetOpen = false;});
       }
     }
 
