@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../../widgets/bottom_navigation_bar.dart';
+import 'translate_address_screen.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import "package:http/http.dart" as http;
 
@@ -35,9 +36,10 @@ class _PathMapScreenState extends State<PathMapScreen> {
     Fluttertoast.showToast(
       msg: errorMessage,
       gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.red,
-      fontSize: 20,
+      backgroundColor: Colors.grey,
+      fontSize: 20.0,
       textColor: Colors.black,
+      toastLength: Toast.LENGTH_SHORT,
     );
   }
 
@@ -97,7 +99,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
 
   void mapSet() async {
     if (originAddress.text == "" || destinationAddress.text == "") {
-      errorView("주소 입력이 비어있습니다");
+      errorView("주소 입력란이 비어있습니다");
     } else {
       if (inputString[0] != originAddress.text) {
         inputString[0] = originAddress.text;
@@ -147,7 +149,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
           children: <Widget>[
             NaverMap(
               options: const NaverMapViewOptions(
-                minZoom: 10,
+                minZoom: 6,
                 maxZoom: 18,
                 pickTolerance: 8,
                 locale: Locale('kr'),
@@ -193,6 +195,14 @@ class _PathMapScreenState extends State<PathMapScreen> {
                           textAlignVertical: TextAlignVertical.bottom,
                           textAlign: TextAlign.left,
                           onSubmitted: (text) {},
+                          onTap: () async {
+                            final getAddress = await Navigator.push(
+                              context, MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
+                            );
+                            if(getAddress != null){
+                              originAddress.text = getAddress as String;
+                            }
+                          },
                           decoration: const InputDecoration(
                             hintText: "출발지를 입력하세요",
                             filled: true,
@@ -220,6 +230,14 @@ class _PathMapScreenState extends State<PathMapScreen> {
                           textAlignVertical: TextAlignVertical.bottom,
                           textAlign: TextAlign.left,
                           onSubmitted: (text) {},
+                          onTap: () async {
+                            final getAddress = await Navigator.push(
+                              context, MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
+                            );
+                            if(getAddress != null){
+                              destinationAddress.text = getAddress as String;
+                            }
+                          },
                           decoration: const InputDecoration(
                             hintText: "도착지를 입력하세요",
                             filled: true,
@@ -239,7 +257,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
                       margin: EdgeInsets.fromLTRB(MediaQuery.of(context).size.width * 0.3, 5, MediaQuery.of(context).size.width * 0.3, 0),
                       child: SizedBox(
                         width: (MediaQuery.of(context).size.width - marginSize * 2),
-                        height: 30,
+                        height: 35,
                         child: TextButton(
                           onPressed: () => {
                             originTextFocus.unfocus(),
