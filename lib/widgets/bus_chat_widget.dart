@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/models/comment_model.dart';
 
 class BusChatWidget extends StatefulWidget {
   final VoidCallback onScrollToTop;
@@ -14,11 +15,29 @@ class _BusChatWidgetState extends State<BusChatWidget> {
   final TextEditingController _commentController = TextEditingController();
   final fire = FirebaseFirestore.instance;
   bool isNoChat = true;
+  late List<Comment> comments = [];
+
+  void getComments() async {
+    //final curDoc = fire.collection('bus_chat').doc(widget.commentsCode);
+    final curDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
+
+    DocumentSnapshot fireData = await curDoc.get();
+    List<Map<String,dynamic>> newCommentList = [];
+    if (fireData.exists){
+      final commentList = await fireData.get('comments');
+      for (var c in commentList) { newCommentList.add(c);}
+      setState(() {
+        comments = CommentApiRes.fromFireStore(newCommentList).comments;
+      });
+    }
+    else { setState(() { comments = [];});}
+  }
 
   @override
   void initState() {
     super.initState();
     _commentController.addListener(handleTxtChange);
+    getComments();
   }
 
   void handleTxtChange() {
@@ -31,17 +50,11 @@ class _BusChatWidgetState extends State<BusChatWidget> {
   Widget build(BuildContext context) {
 
     void submitComment() {
-      // 댓글 서버에 보내야
+      // 댓글 서버에 보내야 - 본인 정보 provider에서 확인가능
       print('Submitted comment: ${_commentController.text}');
       _commentController.clear();
       try {FocusScope.of(context).unfocus();} catch(e) {}
     }
-
-    void getComments() {
-      final curDoc = fire.collection('bus_chat').doc(widget.commentsCode);
-      // 이제 가져오기만
-    }
-
 
     return Container(
       margin: EdgeInsets.zero,
@@ -63,15 +76,16 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                 widget.onScrollToTop();
               },
               child: ListView.builder(
-                itemCount: 20,
+                itemCount: comments.length,
                 itemBuilder: (context, index) {
+                  Comment comment = comments[index];
                   // 첫째 줄
                   if (index == 0) {
                     return Container(
                       child: Stack(
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                          ListTile(title: Text('Item ${index + 1}'))
+                          ListTile(title: Text(comment.comment))
                         ],
                       ),
                     );
@@ -80,7 +94,7 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                   // 나머지 줄
                   return Container(
                     decoration: BoxDecoration( border: Border( top: BorderSide(width: 1.0, color: Colors.grey.shade200),), ),
-                    child: ListTile(title: Text('Item ${index + 1}')),
+                    child: ListTile(title: Text(comment.comment)),
                   );
                 },
               ),

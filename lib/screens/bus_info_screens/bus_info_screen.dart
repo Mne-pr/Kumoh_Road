@@ -14,6 +14,9 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
+// 댓글 열려 있을 때 마크 클릭하면 사라져야 하겠음
+
+
 class ButtonData {
   final IconData icon;
   final int nextBusSt;
@@ -98,8 +101,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     NCameraUpdate.scrollAndZoomTo(target: terminalPos.target,  zoom: terminalPos.zoom), // 종합터미널
     NCameraUpdate.scrollAndZoomTo(target: terminalSPos.target, zoom: terminalSPos.zoom) // 종합터미널 축소
   ];
-
-
   final cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
 
   // 탐색할 버스 - 망할
