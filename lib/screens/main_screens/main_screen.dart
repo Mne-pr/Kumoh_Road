@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/main_screen_button_model.dart';
 import 'package:kumoh_road/screens/main_screens/weather_screen.dart';
 import '../../models/announcement_model.dart';
+import '../../models/bus_station_model.dart';
 import '../../models/taxi_screen_post_model.dart';
 import '../../models/taxi_screen_user_model.dart';
 import '../../utilities/url_launcher_util.dart';
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
   bool trainPostsIsExpanded = true;
   bool busPostsIsExpanded = true;
   bool schoolPostsIsExpanded = true;
+  bool busListIsExpanded = true;
   List<MainScreenButtonModel> items = [];
 
 // 사용자 상호작용 버튼을 만드는 메서드
@@ -129,6 +131,13 @@ class _MainScreenState extends State<MainScreen> {
               Icons.school,
               schoolPostsIsExpanded,
                   () => setState(() => schoolPostsIsExpanded = !schoolPostsIsExpanded)
+          ),
+          buildBusSection(
+              'bus_station_info',
+              '댓글을 기다리는 버스', // 섹션 제목
+              Icons.comment_outlined, // 버스 아이콘
+              busListIsExpanded, // 확장 상태를 추적하는 변수
+                  () => setState(() => busListIsExpanded = !busListIsExpanded) // 확장 상태 토글
           ),
           ListTile(
             leading: const Icon(Icons.person),
@@ -422,6 +431,115 @@ class _MainScreenState extends State<MainScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget buildBusSection(String collectionName, String title, IconData iconData, bool isExpanded, VoidCallback toggleExpansion) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
+      margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
+      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(iconData, size: 24),
+                  const SizedBox(width: 8),
+                  Text(title, style: const TextStyle(fontSize: 15)),
+                ],
+              ),
+              IconButton(
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: Icon(
+                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    key: ValueKey<bool>(isExpanded),
+                    size: 24,
+                  ),
+                ),
+                onPressed: toggleExpansion,
+              ),
+            ],
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(height: 0),
+            secondChild: buildBusList(collectionName),
+            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildBusList(String collectionName) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection(collectionName)
+          .orderBy('arrtime', descending: true)
+          .limit(5)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
+        return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
+          children: snapshot.data!.docs.map((doc) {
+            Bus busInfo = Bus.fromJson(doc.data() as Map<String, dynamic>);
+            return InkWell(
+              onTap: () {
+                // 버스 상세 정보 보기 동작
+              },
+              child: Card(
+                elevation: 3,
+                margin: const EdgeInsets.all(2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey[400],
+                    ),
+                    child: Text(
+                      busInfo.arrtime.toString(), // 정류장 이름
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  title: Text(
+                    busInfo.routeno, // 버스 번호
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  // 여기에 추가적인 버스 정보를 표시할 수 있습니다.
                 ),
               ),
             );
