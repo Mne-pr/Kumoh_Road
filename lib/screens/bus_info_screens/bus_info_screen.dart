@@ -39,11 +39,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   
   // 지도의 마크와 마크 위에 띄울 위젯
   final busStopMarks = [
-    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역"),
-    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협"),
-    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점"),
-    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)"),
-    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널"),
+    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역", ),
+    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협", ),
+    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점", ),
+    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)", ),
+    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널", ),
   ];
   late final busStopW;
   
@@ -249,7 +249,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             'code':      bus.code,      // 고유문자
           });
           // 파베에 버스 채팅리스트 생성
-          await fire.collection('bus_chat').doc(bus.code).set({});
+          await fire.collection('bus_chat').doc(bus.code).set({'comments': []});
         }
 
         // 기존 버스인 경우 - 업데이트
@@ -343,12 +343,12 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; });
 
-      busStopMarks[busStop].setIconTintColor(Color.fromARGB(0, 1, 1, 255));
+      busStopMarks[busStop].setIcon(NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
 
       for (int i = 0; i < 5; i++){
         if (busStop != i) {
           try { await busStopW[i].close();} catch (e) { }
-          try { busStopMarks[i].setIconTintColor(Colors.transparent); } catch (e) {}
+          try { busStopMarks[i].setIcon(NOverlayImage.fromAssetImage('assets/images/sub_marker.png')); } catch (e) {}
         }
       }
 
@@ -378,6 +378,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
+    // 댓글을 슬라이드할 때 이벤트 처리
     Future<void> commentsBoxSlide() async {
       if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
         if (commentAnicon.isDismissed) {
@@ -391,6 +392,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
+    // 버스리스트에서 댓글 활성화버튼 이벤트 처리
     Future<void> callComments(String busCode) async {
       await commentsBoxSlide();
       setState(() { curBusCode = busCode; });

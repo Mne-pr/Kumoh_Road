@@ -100,7 +100,6 @@ class _BusListWidgetState extends State<BusListWidget> {
     if (isRefreshing) {
       return Container(
         padding: EdgeInsets.all(0),
-        color: Colors.white,
         decoration: BoxDecoration(
           border: Border( top: BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),),
         ),
@@ -189,9 +188,7 @@ class _BusListWidgetState extends State<BusListWidget> {
           ),
         )
         : Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-          ),
+          decoration: BoxDecoration(color: Colors.white,),
           height: MediaQuery.of(context).size.height / 2,
           child: Center(child: Text("버스가 없습니다",style: TextStyle(fontSize: 30))),
         ),
