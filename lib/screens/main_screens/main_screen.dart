@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:kumoh_road/models/main_screen_button_model.dart';
 import 'package:kumoh_road/screens/main_screens/weather_screen.dart';
 import '../../models/announcement_model.dart';
@@ -19,10 +18,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  bool announcementIsExpanded = false;
-  bool trainPostsIsExpanded = false;
-  bool busPostsIsExpanded = false;
-  bool schoolPostsIsExpanded = false;
+  bool announcementIsExpanded = true;
+  bool trainPostsIsExpanded = true;
+  bool busPostsIsExpanded = true;
+  bool schoolPostsIsExpanded = true;
   List<MainScreenButtonModel> items = [];
 
 // 사용자 상호작용 버튼을 만드는 메서드
@@ -32,14 +31,20 @@ class _MainScreenState extends State<MainScreen> {
       label: Text(model.title, style: const TextStyle(color: Colors.black)),
       onPressed: () => model.onTap(),
       style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.black, backgroundColor: Colors.white, // 텍스트 및 아이콘 색상
+        primary: Colors.white, // 배경색
+        onPrimary: Colors.black, // 전경색(텍스트 및 아이콘 색상)
         elevation: 3, // 그림자 깊이
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50.0),
+          side: BorderSide(color: Colors.grey), // 테두리 추가
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         textStyle: const TextStyle(fontSize: 12), // 텍스트 크기 조정
+        shadowColor: Colors.grey.withOpacity(0.5), // 그림자 색상
       ),
     );
   }
+
   @override
   void initState() {
     super.initState();
@@ -95,7 +100,6 @@ class _MainScreenState extends State<MainScreen> {
       ),
     ];
   }
-
 
 
   @override
@@ -167,12 +171,12 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-
   Widget buildAnnouncementsSection() {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
       margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-      padding:
-          const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey),
@@ -182,7 +186,7 @@ class _MainScreenState extends State<MainScreen> {
             color: Colors.grey.withOpacity(0.5),
             spreadRadius: 1,
             blurRadius: 7,
-            offset: const Offset(0, 3), // changes position of shadow
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -201,35 +205,32 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder:
-                          (Widget child, Animation<double> animation) {
-                        return ScaleTransition(scale: animation, child: child);
-                      },
-                      child: Icon(
-                        announcementIsExpanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        key: ValueKey<bool>(announcementIsExpanded),
-                        size: 30, // 화살표 크기 조절
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        announcementIsExpanded =
-                            !announcementIsExpanded; // 상태 토글
-                      });
-                    },
+              IconButton(
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: Icon(
+                    announcementIsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    key: ValueKey<bool>(announcementIsExpanded),
+                    size: 24,
                   ),
-                ],
+                ),
+                onPressed: () {
+                  setState(() {
+                    announcementIsExpanded = !announcementIsExpanded;
+                  });
+                },
               ),
             ],
           ),
-          buildAnnouncements(),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(height: 0),
+            secondChild: buildAnnouncements(),
+            crossFadeState: announcementIsExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 500),
+          ),
         ],
       ),
     );
@@ -237,11 +238,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget buildAnnouncements() {
     return StreamBuilder<QuerySnapshot>(
-      // 쿼리 리미트 변경
       stream: FirebaseFirestore.instance
           .collection('announcements')
           .orderBy('date', descending: true)
-          .limit(announcementIsExpanded ? 10 : 3) // 상태에 따라 리미트 변경
+          .limit(4)
           .snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.hasError) {
@@ -269,15 +269,14 @@ class _MainScreenState extends State<MainScreen> {
                   );
                 },
                 child: Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.only(bottom: 6.0),
+                  elevation: 3,
+                  margin: const EdgeInsets.all(2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: ListTile(
                     leading: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.grey[400],
@@ -289,8 +288,8 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                     title: Text(
                       announcement.title,
-                      maxLines: 1, // 텍스트를 한 줄로 제한
-                      overflow: TextOverflow.ellipsis, // 넘치는 텍스트를 말줄임표로 처리
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -303,7 +302,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget buildRideSharingSection(String collectionName, String title, IconData iconData, bool isExpanded, VoidCallback toggleExpansion) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500), // 속도를 빠르게 조정
+      curve: Curves.fastOutSlowIn,
       margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
       padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
@@ -315,7 +316,7 @@ class _MainScreenState extends State<MainScreen> {
             color: Colors.grey.withOpacity(0.5),
             spreadRadius: 1,
             blurRadius: 7,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 3), // changes position of shadow
           ),
         ],
       ),
@@ -347,78 +348,86 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ],
           ),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection(collectionName)
-                //.where('createdTime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now())) // Todo UI 구현 이후 추가 예정
-                .orderBy('createdTime', descending: true)
-                .limit(isExpanded ? 20 : 3)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const CircularProgressIndicator();
-              return ListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
-                children: snapshot.data!.docs.map((doc) {
-                  TaxiScreenPostModel postInfo = TaxiScreenPostModel(
-                      categoryTime: doc["categoryTime"],
-                      commentList: doc["commentList"],
-                      content: doc["content"],
-                      createdTime: (doc["createdTime"] as Timestamp).toDate(),
-                      imageUrl: doc["imageUrl"],
-                      memberList: doc["memberList"],
-                      title: doc["title"],
-                      viewCount: doc["viewCount"],
-                      visible: doc["visible"],
-                      writerId: doc["writerId"]
-                  );
-                  String formattedTime = DateFormat('HH:mm').format(postInfo.createdTime); // 생성 시간 포맷
-
-                  return InkWell(
-                    onTap: () async {
-                      TaxiScreenUserModel writerInfo = await TaxiScreenUserModel.getUserById(postInfo.writerId);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PostDetailsScreen(
-                            writerUserInfo: writerInfo, // writerInfo 전달
-                            postInfo: postInfo, // postInfo 전달
-                          ),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      elevation: 4,
-                      margin: const EdgeInsets.only(bottom: 6.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.grey[400],
-                          ),
-                          child: Text(
-                            formattedTime,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        title: Text(
-                          doc['title'],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
+          AnimatedCrossFade(
+            firstChild: const SizedBox(height: 0), // 축소된 상태일 때의 위젯
+            secondChild: buildPostsList(collectionName), // 확장된 상태일 때의 위젯
+            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 500),
           ),
         ],
       ),
+    );
+  }
+
+  Widget buildPostsList(String collectionName) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection(collectionName)
+      //.where('categoryTime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now())) // Todo UI 구현 이후 추가 예정
+          .orderBy('categoryTime', descending: true)
+          .limit(5)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
+        return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
+          children: snapshot.data!.docs.map((doc) {
+            TaxiScreenPostModel postInfo = TaxiScreenPostModel(
+                categoryTime: doc["categoryTime"],
+                commentList: doc["commentList"],
+                content: doc["content"],
+                createdTime: (doc["createdTime"] as Timestamp).toDate(),
+                imageUrl: doc["imageUrl"],
+                memberList: doc["memberList"],
+                title: doc["title"],
+                viewCount: doc["viewCount"],
+                visible: doc["visible"],
+                writerId: doc["writerId"]
+            );
+
+            return InkWell(
+              onTap: () async {
+                TaxiScreenUserModel writerInfo = await TaxiScreenUserModel.getUserById(postInfo.writerId);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PostDetailsScreen(
+                      writerUserInfo: writerInfo, // writerInfo 전달
+                      postInfo: postInfo, // postInfo 전달
+                    ),
+                  ),
+                );
+              },
+              child: Card(
+                elevation: 3,
+                margin: const EdgeInsets.all(2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey[400],
+                    ),
+                    child: Text(
+                      postInfo.categoryTime,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  title: Text(
+                    doc['title'],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }
