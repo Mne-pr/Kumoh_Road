@@ -91,6 +91,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     NCameraUpdate.scrollAndZoomTo(target: terminalPos.target,  zoom: terminalPos.zoom), // 종합터미널
     NCameraUpdate.scrollAndZoomTo(target: terminalSPos.target, zoom: terminalSPos.zoom) // 종합터미널 축소
   ];
+
+
   final cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
 
   // 탐색할 버스 - 망할
@@ -104,6 +106,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   bool isBusWidgetTop = false;
   bool isCommentWidgetOpen = false;
 
+  String curBusCode = "";
+
   @override
   void initState() {
     super.initState();
@@ -112,7 +116,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     buttons = [
       OutlineCircleButton( // 구미역 -> 금오공대
         child: Icon(Icons.school_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-        foregroundColor: Color(0xff05d686),borderColor: Colors.white,
+        foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
         onTap: () async {
           await busStopMarks[2].performClick();
           final nextBusSt = 1;
@@ -128,7 +132,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       ),
       OutlineCircleButton( // 금오공대 -> 종합터미널
         child: Icon(Icons.directions_bus_filled_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-        foregroundColor: Color(0xff05d686), borderColor: Colors.white,
+        foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
         onTap: () async {
           await busStopMarks[4].performClick();
           final nextBusSt = 2;
@@ -144,7 +148,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       ),
       OutlineCircleButton( // 종합터미널 -> 구미역
           child: Icon(Icons.tram_outlined, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-          foregroundColor: Color(0xff05d686),borderColor: Colors.white,
+          foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
           onTap: () async {
             await busStopMarks[0].performClick();
             final nextBusSt = 0;
@@ -375,7 +379,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     }
 
     Future<void> commentsBoxSlide() async {
-      if (MediaQuery.of(context).viewInsets.bottom == 0) { // 키보드 창 활성화되어 있으면 금지
+      if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
         if (commentAnicon.isDismissed) {
           await commentAnicon.forward();
           setState(() {isCommentWidgetOpen = true;});
@@ -387,10 +391,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
-    Future<void> callComments() async {
+    Future<void> callComments(String busCode) async {
       await commentsBoxSlide();
+      setState(() { curBusCode = busCode; });
+      print("현재 버스코드 : ${busCode}");
     }
-
 
     return Scaffold(
 
@@ -451,12 +456,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             Positioned(
               bottom: commentAni.value - screenHeight, left: 0, right: 0,
               child: BusChatWidget(
-                onScrollToTop: callComments,
+                onScrollToTop: commentsBoxSlide,
+                commentsCode: curBusCode,
               )
             ),
 
             // 1.6 첫 로딩 위젯
-            LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1500,),
+            LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1100,),
           ],
         ),
       ),

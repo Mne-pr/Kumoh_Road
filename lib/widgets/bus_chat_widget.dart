@@ -1,15 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class BusChatWidget extends StatefulWidget {
   final VoidCallback onScrollToTop;
-  const BusChatWidget({required this.onScrollToTop, super.key});
+  final String commentsCode;
+  const BusChatWidget({required this.onScrollToTop, required this.commentsCode, super.key});
 
   @override
   State<BusChatWidget> createState() => _BusChatWidgetState();
 }
 class _BusChatWidgetState extends State<BusChatWidget> {
   final TextEditingController _commentController = TextEditingController();
+  final fire = FirebaseFirestore.instance;
   bool isNoChat = true;
 
   @override
@@ -34,8 +37,20 @@ class _BusChatWidgetState extends State<BusChatWidget> {
       try {FocusScope.of(context).unfocus();} catch(e) {}
     }
 
+    void getComments() {
+      final curDoc = fire.collection('bus_chat').doc(widget.commentsCode);
+      // 이제 가져오기만
+    }
+
+
     return Container(
       margin: EdgeInsets.zero,
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(width: 2.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),
+          bottom: BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),
+        ),
+      ),
       child: Column(
         children: [
           // 댓글
@@ -53,7 +68,6 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                   // 첫째 줄
                   if (index == 0) {
                     return Container(
-                      decoration: BoxDecoration( border: Border(top: BorderSide(width: 1.0, color: Colors.grey.shade200),), ),
                       child: Stack(
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
@@ -75,7 +89,7 @@ class _BusChatWidgetState extends State<BusChatWidget> {
 
           // 댓글 입력
           Container(
-            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.black38,width: 1.0)) ),
+            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(width: 1.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),) ),
             height: 60, //
             child: Padding(
               padding: const EdgeInsets.fromLTRB(5, 8, 5, 8),
@@ -84,7 +98,7 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                   Expanded(
                     child: TextField(
                       controller: _commentController,
-                      decoration: InputDecoration(filled: true, hintText: '댓글 입력...',fillColor: Color(0xff05d686).withOpacity(0.2)),
+                      decoration: InputDecoration(filled: true, hintText: '댓글 입력',fillColor: const Color(0xFF3F51B5).withOpacity(0.1)),
                       onSubmitted: (String text) { if (!isNoChat) submitComment(); },
                     ),
                   ),
@@ -97,7 +111,7 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                       splashColor: Color(0xff05d686), // 물결 효과 색상 설정
                       child: Padding(
                         padding: EdgeInsets.all(9.0),
-                        child: Icon(Icons.send, color: isNoChat ? Colors.grey : Colors.black),
+                        child: Icon(Icons.send, color: isNoChat ? Colors.grey : const Color(0xFF3F51B5)),
                       ),
                     ),
                   ),

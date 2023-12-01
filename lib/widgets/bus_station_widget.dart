@@ -29,9 +29,8 @@ class BusStationWidget extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
           boxShadow: [ // 위아래 그림자
-            BoxShadow(color: Colors.black.withOpacity(0.1), spreadRadius: 0, blurRadius: 10, offset: Offset(0,-5)),
-          ],
-        ),
+            BoxShadow(color: const Color(0xFF3F51B5).withOpacity(0.15), spreadRadius: 0, blurRadius: 10, offset: Offset(0,-5)),
+          ],),
         child: Column(
           children: [
             SizedBox(height: 20,),
@@ -39,7 +38,7 @@ class BusStationWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 SizedBox(width: 20,),
-                Icon(Icons.location_on, color: Colors.blue, size: 25),
+                Icon(Icons.location_on, color: const Color(0xFF3F51B5), size: 25),
                 SizedBox(width: 5),
                 Expanded(
                   child: Column(
@@ -74,7 +73,7 @@ class BusStationWidget extends StatelessWidget {
 class BusListWidget extends StatefulWidget {
   final List<Bus> busList;
   final VoidCallback onScrollToTop;
-  final VoidCallback onCommentsCall;
+  final Function(String) onCommentsCall;
   final bool isLoading;
   final Future<void> Function() onRefresh;
 
@@ -102,6 +101,9 @@ class _BusListWidgetState extends State<BusListWidget> {
       return Container(
         padding: EdgeInsets.all(0),
         color: Colors.white,
+        decoration: BoxDecoration(
+          border: Border( top: BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),),
+        ),
         child: Center(
           child: SizedBox(
             height: MediaQuery.of(context).size.height / 2,
@@ -116,6 +118,10 @@ class _BusListWidgetState extends State<BusListWidget> {
         (numOfBus > 0)
         ? Container(
           decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(width: 2.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),
+              bottom: BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),
+            ),
             color: Colors.white,
           ),
           height: MediaQuery.of(context).size.height / 2,
@@ -131,11 +137,11 @@ class _BusListWidgetState extends State<BusListWidget> {
                   if (index >= numOfBus) {return Column(children: [ Divider(), SizedBox(height: 85,)]);}
                   Bus bus = widget.busList[index];
                   // 남는 시간에 따른 색 분류
-                  final urgentColor = ((bus.arrtime/60).toInt() >= 5) ? Colors.blue : Colors.red;
+                  final urgentColor = ((bus.arrtime/60).toInt() >= 5) ? const Color(0xFF3F51B5) : Colors.red;
                   final busColor = (bus.routetp == '일반버스') ? Color(0xff05d686) : Colors.purple;
                   return Column(
                     children: [
-                      Divider(thickness: 1.0, height: 1.0,),
+                      (index == 0) ? SizedBox(width: 0,) : Divider(thickness: 1.0, height: 1.0,),
                       Row(
                         children: [
                           Expanded(
@@ -169,8 +175,9 @@ class _BusListWidgetState extends State<BusListWidget> {
                             ),
                           ),
                           IconButton(
-                            onPressed: () { widget.onCommentsCall();},
+                            onPressed: () { widget.onCommentsCall(bus.code);},
                             icon: Icon(Icons.arrow_circle_up_outlined),
+                            color: const Color(0xFF3F51B5),
                           ),
                           SizedBox(width: 18,),
                         ],
@@ -193,7 +200,7 @@ class _BusListWidgetState extends State<BusListWidget> {
           right: MediaQuery.of(context).size.width * 0.05, bottom: MediaQuery.of(context).size.height * 0.03,
           child: OutlineCircleButton(
             child: Icon(Icons.refresh, color: Colors.white,), radius: 50.0, borderSize: 0.5,
-            foregroundColor: isRefreshing ? Colors.transparent : Color(0xff05d686), borderColor: Colors.white,
+            foregroundColor: isRefreshing ? Colors.transparent : const Color(0xFF3F51B5), borderColor: Colors.white,
             onTap: () async {
               await widget.onRefresh();
             },),
