@@ -361,14 +361,16 @@ class _MainScreenState extends State<MainScreen> {
                 physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
                 children: snapshot.data!.docs.map((doc) {
                   TaxiScreenPostModel postInfo = TaxiScreenPostModel(
-                      writerId: doc['writer'],
-                      title: doc['title'],
-                      content: doc['content'],
-                      createdTime: (doc['createdTime'] as Timestamp).toDate(),
-                      viewCount: doc['viewCount'],
-                      imageUrl: doc['image'],
-                      membersIdList: doc['members'],
-                      commentList: doc['commentList']
+                      categoryTime: doc["categoryTime"],
+                      commentList: doc["commentList"],
+                      content: doc["content"],
+                      createdTime: (doc["createdTime"] as Timestamp).toDate(),
+                      imageUrl: doc["imageUrl"],
+                      memberList: doc["memberList"],
+                      title: doc["title"],
+                      viewCount: doc["viewCount"],
+                      visible: doc["visible"],
+                      writerId: doc["writerId"]
                   );
                   String formattedTime = DateFormat('HH:mm').format(postInfo.createdTime); // 생성 시간 포맷
 

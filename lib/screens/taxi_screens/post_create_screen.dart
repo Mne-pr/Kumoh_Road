@@ -194,6 +194,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 1,
+        centerTitle: true,
         ),
       body: SafeArea(
         child: GestureDetector( // 키보드 외 화면 터치 시 키보드의 포커스를 해제하기 위함
@@ -242,7 +243,12 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
               );
             }
           },
-          label: const Text('작성 완료'),
+          label: Text(
+            '작성 완료',
+            style: TextStyle(
+                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2
+            ),
+          ),
         ),
       ),
 
