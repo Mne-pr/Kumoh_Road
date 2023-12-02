@@ -55,6 +55,7 @@ class BusApiRes {
       var item = json['response']['body']['items']['item'];
       List<dynamic> itemList = (item is List) ? item : [item];
       busList = itemList.map((i) => Bus.fromJson(i)).toList();
+
       busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
     } catch(e) {busList = [];}
 
@@ -66,6 +67,10 @@ class BusApiRes {
 
     try {
       busList = fire.map((data) => Bus.fromJson(data)).toList();
+      busList = busList.map((bus) {
+        bus.setCode('${bus.nodeid}-${bus.routeno}-${bus.routeid}');
+        return bus;
+      }).toList();
       busList.sort((a, b) => a.arrtime.compareTo(b.arrtime));
     } catch(e) {busList=[];};
 
