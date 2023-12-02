@@ -28,8 +28,6 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
   String _content = "";
 
   Widget photoInput(BuildContext context){
-    Logger log = Logger(printer: PrettyPrinter());
-
     return Row(
       children: [
         InkWell(
@@ -47,7 +45,6 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
               final File? imageFile = await ImagePickerUtils.pickImageFromCamera();
               setState(() {
                 _imagePath = imageFile?.path ?? "";
-                log.i(_imagePath);
               });
             }
           },
@@ -190,7 +187,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text('글쓰기', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('글쓰기', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 1,
@@ -216,14 +213,18 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
         child: FloatingActionButton.extended(
           onPressed: () async {
             if(_formKey.currentState!.validate()){
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('저장 중')),
+              );
+              
               _formKey.currentState!.save();
 
               String imageUrl = "";
               if(_imagePath != null){
                 imageUrl = await uploadImage(_imagePath!);
               }
-              CollectionReference collectionReference = FirebaseFirestore.instance.collection(widget.collectionId);
 
+              CollectionReference collectionReference = FirebaseFirestore.instance.collection(widget.collectionId);
               collectionReference.add({
                 'imageUrl': imageUrl,
                 'writerId': userProvider.id.toString(),
@@ -236,6 +237,9 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                 'memberList': <String>[],
                 'visible': true
               });
+
+              int newPostCount = userProvider.postCount + 1;
+              await userProvider.updateUserInfo(postCount: newPostCount);
 
               // TODO: 생성된 글 상세화면으로 이동하기(글 상세화면 구현 후)
               ScaffoldMessenger.of(context).showSnackBar(

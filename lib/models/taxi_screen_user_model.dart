@@ -1,43 +1,82 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kumoh_road/models/user_model.dart';
+import 'package:logger/logger.dart';
 
-class TaxiScreenUserModel {
-  int age;
-  String email;
-  String gender;
-  double mannerTemperature;
-  String nickname;
-  String profileImageUrl;
-  String? qrCodeUrl;
-  bool? studentVerified;
-  List<dynamic> mannerList;
-  List<dynamic> unmannerList;
+class TaxiScreenUserModel extends UserModel{
+  TaxiScreenUserModel({
+    required String userId,
+    required String nickname,
+    required String profileImageUrl,
+    required int age,
+    required String gender,
+    required double mannerTemperature,
+    required List<Map<String, dynamic>>? mannerList,
+    required List<Map<String, dynamic>>? unmannerList,
+    required String? qrCodeUrl,
+    required List<int> badgeList,
+    required int commentCount,
+    required int postCount,
+    required int postCommentCount,
+    required int reportCount,
+    bool isStudentVerified = false,
+  }) : super(
+    userId: userId,
+    nickname: nickname,
+    profileImageUrl: profileImageUrl,
+    age: age,
+    gender: gender,
+    mannerTemperature: mannerTemperature,
+    mannerList: mannerList,
+    unmannerList: unmannerList,
+    qrCodeUrl: qrCodeUrl,
+    isStudentVerified: isStudentVerified,
+    badgeList: badgeList,
+    commentCount: commentCount,
+    postCount: postCount,
+    postCommentCount: postCommentCount,
+    reportCount: reportCount
+  );
 
-  TaxiScreenUserModel(
-      {required this.age,
-      required this.email,
-      required this.gender,
-      required this.mannerList,
-      required this.mannerTemperature,
-      required this.nickname,
-      required this.profileImageUrl,
-      required this.qrCodeUrl,
-      required this.studentVerified,
-      required this.unmannerList});
+  factory TaxiScreenUserModel.fromUserModel(UserModel userModel) {
+    return TaxiScreenUserModel(
+      userId: userModel.userId,
+      nickname: userModel.nickname,
+      profileImageUrl: userModel.profileImageUrl,
+      age: userModel.age,
+      gender: userModel.gender,
+      mannerTemperature: userModel.mannerTemperature,
+      mannerList: userModel.mannerList,
+      unmannerList: userModel.unmannerList,
+      qrCodeUrl: userModel.qrCodeUrl,
+      isStudentVerified: userModel.isStudentVerified,
+      badgeList: userModel.badgeList,
+      commentCount: userModel.commentCount,
+      postCount: userModel.postCount,
+      postCommentCount: userModel.postCommentCount,
+      reportCount: userModel.reportCount,
+    );
+  }
 
   static Future<TaxiScreenUserModel> getUserById(String writerId) async {
     DocumentSnapshot writerSnapshot = await FirebaseFirestore.instance.collection('users').doc(writerId).get();
-    Map<String, dynamic> document = writerSnapshot.data() as Map<String, dynamic>;
-    return TaxiScreenUserModel(
-        age: document["age"] ?? 25,
-        email: document["email"],
-        gender: document["gender"] ?? "남성",
-        mannerTemperature: document["mannerTemperature"],
-        nickname: document["nickname"],
-        profileImageUrl: document["profileImageUrl"],
-        qrCodeUrl: document["qrCodeUrl"] ?? "",
-        studentVerified: document["studentVerified"] ?? false,
-        mannerList: document["mannerList"],
-        unmannerList: document["unmannerList"],
-    );
+    UserModel userModel = UserModel.fromDocument(writerSnapshot);
+    TaxiScreenUserModel result = TaxiScreenUserModel.fromUserModel(userModel);
+
+    return result;
+  }
+
+  static Future<List<TaxiScreenUserModel>> getUserList(List<String> userIdList) async {
+    Logger log = Logger(printer: PrettyPrinter());
+    try{
+      final snapshot = await FirebaseFirestore.instance.collection('users').get();
+      List<TaxiScreenUserModel> userList = snapshot.docs
+          .where((userDoc) => userIdList.contains(userDoc.id))
+          .map((userDoc) => TaxiScreenUserModel.fromUserModel(UserModel.fromDocument(userDoc)))
+          .toList();
+      return userList;
+    }on Exception catch(e){
+      log.e(e);
+      return [];
+    }
   }
 }
