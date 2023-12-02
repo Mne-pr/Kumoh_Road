@@ -4,6 +4,7 @@ import 'package:kumoh_road/screens/user_info_screens/report_user_screen.dart';
 import '../../models/user_model.dart';
 import '../../widgets/manner_detail_widget.dart';
 import '../../widgets/user_info_section.dart';
+import 'other_badge_screen.dart';
 import 'other_user_manner_screen.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
@@ -61,7 +62,14 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             title: const Text('배지 정보 조회'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // 활동 배지 정보 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtherUserBadgeScreen(
+                    badgeList: otherUser!.badgeList, // 다른 사용자의 배지 리스트 전달
+                  ),
+                ),
+              );
             },
           ),
           ListTile(
