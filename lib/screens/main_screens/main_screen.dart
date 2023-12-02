@@ -489,7 +489,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           AnimatedCrossFade(
             firstChild: const SizedBox(height: 0),
-            secondChild: buildBusList(),
+            secondChild: buildBusList(collectionName),
             crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 500),
           ),
@@ -498,10 +498,10 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
   
-  Widget buildBusList() {
+  Widget buildBusList(String collectionName) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('bus_station_info')
+          .collection(collectionName)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
