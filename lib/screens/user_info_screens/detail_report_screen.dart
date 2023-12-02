@@ -27,9 +27,8 @@ class _DetailReportScreenState extends State<DetailReportScreen> {
   void initState() {
     super.initState();
     final kakaoLoginProvider = Provider.of<UserProvider>(context, listen: false);
-    String? currentUserId = kakaoLoginProvider.id.toString();
-    if (currentUserId != null) {
-      _reportManager = ReportManager(currentUserId);
+    if (kakaoLoginProvider.id != null) {
+      _reportManager = ReportManager(kakaoLoginProvider);
     } else {
       // 현재 사용자 ID가 없는 경우, 첫 번째 화면으로 이동
       WidgetsBinding.instance.addPostFrameCallback((_) {

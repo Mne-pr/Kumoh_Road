@@ -37,14 +37,14 @@ class _KakaoLoginPageState extends State<KakaoLoginPage> with SingleTickerProvid
 
     if (userProvider.isLogged) {
       if (userProvider.isSuspended) {
-        await _showAccountSuspendedDialog();
+        await _showAccountSuspendedDialog(); // 계정 정지 다이얼로그
       } else if (userProvider.age == null || userProvider.gender == null) {
-        await _showAdditionalInfoDialog();
+        await _showAdditionalInfoDialog(); // 추가 정보 입력 다이얼로그
       } else {
         await Navigator.push(context, MaterialPageRoute(builder: (context) => const MainScreen()));
       }
     } else {
-      _showLoginError();
+      _showLoginError(); // 로그인 에러 메시지
     }
     setState(() => _isLoading = false);
   }
