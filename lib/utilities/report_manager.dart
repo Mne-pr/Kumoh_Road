@@ -23,6 +23,7 @@ class ReportManager {
       reporterUserId: _userProvider.id.toString(),
       reason: reason,
       category: category,
+      reportedUserId: reportedUserId, // 신고된 사용자 ID
     );
   }
 
@@ -31,6 +32,7 @@ class ReportManager {
     required String postId,
     required String reason,
     required String category,
+    required String reportedUserId,
   }) async {
     await _reportEntity(
       entityType: 'post',
@@ -38,21 +40,24 @@ class ReportManager {
       reporterUserId: _userProvider.id.toString(),
       reason: reason,
       category: category,
+      reportedUserId: reportedUserId, // 게시글 작성자 ID
     );
   }
 
   // 게시글 댓글 신고 메서드
   Future<void> reportPostComment({
-    required String postId,
+    required String postCommentId,
     required String reason,
     required String category,
+    required String reportedUserId,
   }) async {
     await _reportEntity(
       entityType: 'postComment',
-      entityId: postId,
+      entityId: postCommentId,
       reporterUserId: _userProvider.id.toString(),
       reason: reason,
       category: category,
+      reportedUserId: reportedUserId, // 댓글 작성자 ID
     );
   }
 
@@ -61,6 +66,7 @@ class ReportManager {
     required String commentId,
     required String reason,
     required String category,
+    required String reportedUserId,
   }) async {
     await _reportEntity(
       entityType: 'comment',
@@ -68,6 +74,7 @@ class ReportManager {
       reporterUserId: _userProvider.id.toString(),
       reason: reason,
       category: category,
+      reportedUserId: reportedUserId, // 댓글 작성자 ID
     );
   }
 
@@ -77,8 +84,10 @@ class ReportManager {
     required String reporterUserId,
     required String reason,
     required String category,
+    required String reportedUserId,
   }) async {
     try {
+      // Firestore에 신고 기록 저장
       DocumentReference reportDoc = _firestore.collection('reports').doc();
       await reportDoc.set({
         'entityType': entityType,
@@ -90,15 +99,30 @@ class ReportManager {
         'isHandledByAdmin': false,
       });
 
-      // 신고 카운트 증가
-      int newReportCount = _userProvider.reportCount + 1;
-      await _userProvider.updateUserInfo(reportCount: newReportCount);
-
+      // 신고 대상 사용자의 매너 온도 감소
+      await _decreaseUserMannerTemperature(reportedUserId);
     } catch (e) {
       print('Error reporting $entityType: $e');
-      // 예외 처리
+      // 여기에 예외 처리 로직
     }
   }
+
+  Future<void> _decreaseUserMannerTemperature(String reportedUserId) async {
+    DocumentReference userDoc = _firestore.collection('users').doc(reportedUserId);
+    var userSnapshot = await userDoc.get();
+
+    if (userSnapshot.exists) {
+      var data = userSnapshot.data() as Map<String, dynamic>;
+      double currentTemperature = data['mannerTemperature']?.toDouble() ?? 36.5;
+      double newTemperature = currentTemperature - 0.1;
+
+      // 소수점 첫째 자리까지만 나타내기
+      String formattedTemperature = newTemperature.toStringAsFixed(1);
+
+      await userDoc.update({'mannerTemperature': double.parse(formattedTemperature)});
+    }
+  }
+
 
   // 특정 엔티티 유형에 대한 내 신고 가져오기 메서드
   Future<List<Map<String, dynamic>>> fetchMyReports() async {
@@ -115,7 +139,6 @@ class ReportManager {
       }).toList();
     } catch (e) {
       print('Error fetching reports for user ${_userProvider.id.toString()}: $e');
-      // 예외 처리
       return [];
     }
   }

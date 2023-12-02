@@ -17,23 +17,26 @@ class OtherUserProfileScreen extends StatefulWidget {
 }
 
 class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
-  UserModel? otherUser; // UserModel은 사용자 데이터를 저장하는 모델 클래스입니다.
+  UserModel? otherUser;
 
   @override
   void initState() {
     super.initState();
-    _fetchOtherUserInfo();
+    _listenToUserInfoChanges();
   }
 
-  void _fetchOtherUserInfo() async {
-    var docSnapshot = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
-    if (docSnapshot.exists) {
-      setState(() {
-        otherUser = UserModel.fromDocument(docSnapshot);
-      });
-    } else {
-      print('사용자 정보를 찾을 수 없습니다');
-    }
+  void _listenToUserInfoChanges() {
+    FirebaseFirestore.instance.collection('users').doc(widget.userId)
+        .snapshots()
+        .listen((docSnapshot) {
+      if (docSnapshot.exists) {
+        setState(() {
+          otherUser = UserModel.fromDocument(docSnapshot);
+        });
+      } else {
+        print('사용자 정보를 찾을 수 없습니다');
+      }
+    }, onError: (error) => print("Listen failed: $error"));
   }
 
   @override
