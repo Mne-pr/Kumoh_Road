@@ -4,29 +4,28 @@ class Comment{
   final String comment;
   final bool enable;
   final DateTime time;
-  final String who;
+  final String userCode;
 
-  Comment({required this.comment, required this.enable, required this.time, required this.who});
+  Comment({required this.comment, required this.enable, required this.time, required this.userCode});
 }
 
 class CommentApiRes{
   final List<Comment> comments;
   CommentApiRes({required this.comments});
 
-  factory CommentApiRes.fromFireStore(List<Map<String,dynamic>> fire) {
+  factory CommentApiRes.fromFireStore(List<Map<String,dynamic>> fireData) {
     List<Comment> commentList;
 
     try{
-       commentList = fire.map((map) {
+      commentList = fireData.map((map) {
         return Comment(
           comment: map['comment'],
           enable: map['enable'],
           time: (map['time'] as Timestamp).toDate(),
-          who: map['who'],
+          userCode: map['user_code'],
         );
       }).toList();
-    } catch(e) { commentList = [];}
-
+    } catch(e) { print(e); commentList = [];}
 
     return CommentApiRes(comments: commentList);
   }

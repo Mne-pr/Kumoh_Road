@@ -7,14 +7,22 @@ import 'package:flutter/material.dart';
 import 'package:kumoh_road/screens/bus_info_screens/loading_screen.dart';
 import 'package:kumoh_road/widgets/outline_circle_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:provider/provider.dart';
 import '../../models/bus_station_model.dart';
+import '../../models/comment_model.dart';
+import '../../models/user_model.dart';
+import '../../providers/user_providers.dart';
 import '../../widgets/bottom_navigation_bar.dart';
 import 'package:http/http.dart' as http;
 
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
+// 수정해야
 // 댓글 열려 있을 때 마크 클릭하면 사라져야 하겠음
+// 댓글 열려 있을 때 농협을 슬라이드 하던가, 지역이동 버튼을 누르면 사라져야
+// 버스 없을 때도 슬라이드 먹히게 - ok
+// 각종 상황에 대한 안내문구 ㄱㄱ
 
 
 class ButtonData {
@@ -57,17 +65,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   ];
   late final busStopW;
   
-  // 버스정류장 정보와 그 상태들
-  final busStopInfos = [
-    BusSt(code:"GMB80", id:10080,subText:'경상북도 구미시 구미중앙로 70',  mainText:'구미역'),
-    BusSt(code:"GMB167",id:10167,subText:'경상북도 구미시 원평동 1008-40',mainText:'농협'),
-    BusSt(code:"GMB132",id:10132,subText:'경상북도 구미시 거의동 550',    mainText:'금오공대종점'),
-    BusSt(code:"GMB131",id:10131,subText:'경상북도 구미시 거의동 589-8',  mainText:'금오공대입구(옥계중학교방면)'),
-    BusSt(code: "GMB91",id:10091,subText: "경상북도 구미시 원평동 1103",  mainText: '종합버스터미널'),
-  ];
-  late int curBusStop = 0;
-  late List<Bus> busList = [];
-  
   // 위치 이동 버튼과 상태
   late List<OutlineCircleButton> buttons;
   late int curButton = 0;
@@ -103,9 +100,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   ];
   final cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
 
-  // 탐색할 버스 - 망할
-  // List<String> checkBus = ['51-1','57','190','190-3','192','193','195','196','557','900','5200'];
-
   // 자주 쓸 거 같은
   NCameraAnimation myFly = NCameraAnimation.fly;
   Duration myDuration = Duration(milliseconds: 200);
@@ -113,14 +107,71 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // 버스정류장 위젯 애니메이션 감지
   bool isBusWidgetTop = false;
   bool isCommentWidgetOpen = false;
-
+  // 버스정류장 정보와 그 상태들
+  final busStopInfos = [
+    BusSt(code:"GMB80", id:10080,subText:'경상북도 구미시 구미중앙로 70',  mainText:'구미역'),
+    BusSt(code:"GMB167",id:10167,subText:'경상북도 구미시 원평동 1008-40',mainText:'농협'),
+    BusSt(code:"GMB132",id:10132,subText:'경상북도 구미시 거의동 550',    mainText:'금오공대종점'),
+    BusSt(code:"GMB131",id:10131,subText:'경상북도 구미시 거의동 589-8',  mainText:'금오공대입구(옥계중학교방면)'),
+    BusSt(code: "GMB91",id:10091,subText: "경상북도 구미시 원평동 1103",  mainText: '종합버스터미널'),
+  ];
+  late int curBusStop = 0;
+  late List<Bus> busList = [];
   String curBusCode = "";
+  // 댓글 정보와 그 상태들
+  late List<Comment> comments = [];
+  late List<UserModel> users = [];
+  bool isValidUser = false;
+
+  Future<void> getComments() async {
+    setState(() { isLoading = true;});
+    final commentDoc = fire.collection('bus_chat').doc(curBusCode);
+    //final commentDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
+    final userCollection = fire.collection('users');
+    List<UserModel> tempUsers = [];
+
+    DocumentSnapshot fireData = await commentDoc.get();
+    List<Map<String,dynamic>> newCommentList = [];
+
+    // 버스에 대한 comments 가져오기
+    if (fireData.exists){
+      final commentList = fireData.get('comments');
+      for (var c in commentList) {
+        try { newCommentList.add(c);} catch(e) {print(e);}
+      }
+      setState(() { comments = CommentApiRes.fromFireStore(newCommentList).comments;});
+
+      // 각 comments에 대한 유저 정보 가져오기
+      for (final comment in comments) {
+        try {
+          DocumentSnapshot user = await userCollection.doc(comment.userCode).get();
+          tempUsers.add(UserModel.fromDocument(user));
+        } catch(e) {print(e);}
+      }
+      setState(() { users = tempUsers; });
+    }
+    else { setState(() { comments = []; users=[];});}
+    setState(() { isLoading = false;});
+    //print('받은 개수 : ${newCommentList.length}');
+  }
 
   List<ButtonData> buttonData = [
     ButtonData(Icons.school_outlined, 1, 2),
     ButtonData(Icons.directions_bus_filled_outlined, 2, 4),
     ButtonData(Icons.tram_outlined, 0, 0),
   ];
+
+  void reAnimation(double screenHeight, Orientation orientation) {
+
+    busStAni = Tween(begin: 0.0, end: screenHeight*0.5)
+        .animate(busStAnicon)..addListener(() {setState(() {});});
+    chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.53)
+        .animate(busStAnicon)..addListener(() {setState(() {});});
+    busListAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.0)
+        .animate(busStAnicon)..addListener(() {setState(() {});});
+    commentAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.0)
+        .animate(commentCurveAni)..addListener(() {setState(() {});});
+  }
 
   @override
   void initState() {
@@ -157,19 +208,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    userProvider.startListeningToUserChanges();
 
     // 기기의 화면 크기를 이용해 애니메이션 재설정
     double screenHeight = MediaQuery.of(context).size.height;
     Orientation orientation = MediaQuery.of(context).orientation;
-
-    busStAni = Tween(begin: 0.0, end: screenHeight*0.5)
-        .animate(busStAnicon)..addListener(() {setState(() {});});
-    chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.53)
-        .animate(busStAnicon)..addListener(() {setState(() {});});
-    busListAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.0)
-        .animate(busStAnicon)..addListener(() {setState(() {});});
-    commentAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.0)
-        .animate(commentCurveAni)..addListener(() {setState(() {});});
+    reAnimation(screenHeight, orientation);
 
     // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
     Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
@@ -200,7 +245,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       // 두 코드 리스트에서 공통된 버스 찾음
       Set<String> commonCodes = busCodesFromFire.toSet().intersection(busCodesFromApi.toSet());
 
-      // 두 코드 리스트에서 공통된 버스 제거
+      // 두 코드 리스트에서 공통된 버스 무시
       busCodesFromFire.removeWhere((name) => commonCodes.contains(name)); // 파베에서 제거해야 할 버스들만 남음
       busCodesFromApi.removeWhere((name) => commonCodes.contains(name));  // 파베에 추가해야 할 버스들만 남음
 
@@ -253,8 +298,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             '${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
         if (res.statusCode == 200) {
           // 파베에 새 버스리스트로 업데이트시킴
-          final fromApi = BusApiRes.fromJson(
-              jsonDecode(utf8.decode(res.bodyBytes)));
+          final fromApi = BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
           await compareSources(fromApi.buses, nodeId);
           return (fromApi);
         }
@@ -276,15 +320,14 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         DateTime lastUpdate = station.get('last_update').toDate();
         DateTime now = DateTime.now();
         var difference = now.difference(lastUpdate);
-        print('파베시간 : ${lastUpdate.toString()}');
-        print('현재시간 : ${now.toString()}');
+        //print('파베시간 : ${lastUpdate.toString()}');
+        //print('현재시간 : ${now.toString()}');
 
         // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
-        if (difference.inMinutes >= 10) { print("업데이트 - api!! ${nodeId}");
+        if (difference.inMinutes >= 10) { //print("업데이트 - api!! ${nodeId}");
           // 이렇게 api 새로 호출할 때만 로딩화면
           setState(() { isLoading = true;});
-          try{
-            // 마지막 업데이트를 현재 시간으로 수정
+          try{ // 마지막 업데이트를 현재 시간으로 수정
             await curDoc.update({'last_update': Timestamp.fromDate(now)});
             busList = await getBusListFromApi(nodeId);
             setState(() { isLoading = false;});
@@ -293,7 +336,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         }
 
         // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
-        else { print("업데이트 - 파베!! ${nodeId}");
+        else { //print("업데이트 - 파베!! ${nodeId}");
           try {
             final fire = await curDoc.get();
             List<Map<String,dynamic>> newBusList = [];
@@ -322,7 +365,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     // 버스 업데이트 버튼 리스너
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; });
-
       busStopMarks[busStop].setIcon(NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
 
       for (int i = 0; i < 5; i++){
@@ -358,11 +400,12 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
-    // 댓글을 슬라이드할 때 이벤트 처리
+    // 댓글을 슬라이드할 때 이벤트 처리 - 아래 함수와 통합각
     Future<void> commentsBoxSlide() async {
       if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
         if (commentAnicon.isDismissed) {
-          await commentAnicon.forward();
+          await commentAnicon.forward(); // 댓글 들고오기
+          await getComments();
           setState(() {isCommentWidgetOpen = true;});
         }
         else if (commentAnicon.isCompleted) {
@@ -374,10 +417,35 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 버스리스트에서 댓글 활성화버튼 이벤트 처리
     Future<void> callComments(String busCode) async {
+      setState(() { curBusCode = busCode; comments = []; users = []; });
       await commentsBoxSlide();
-      setState(() { curBusCode = busCode; });
-      print("현재 버스코드 : ${busCode}");
     }
+
+    // 댓글 등록 시 이벤트 처리
+    void submitComment(String comment) async {
+      print("여기 왔는지.. comment : ${comment}");
+
+      // 본인 정보 가져오기
+      final userCode = userProvider.id;
+
+      // 댓글 문서 가져오기
+      final chatDoc = fire.collection('bus_chat').doc(curBusCode);
+      //final chatDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
+
+      // 문서의 comments 필드에 추가
+      await chatDoc.update({
+        'comments' : FieldValue.arrayUnion([{
+          'comment': comment,
+          'enable': true,
+          'time' : Timestamp.now(),
+          'user_code': userCode.toString(),
+        }])
+      });
+
+      // 댓글 다시 불러오기
+      await getComments();
+    }
+
 
     return Scaffold(
 
@@ -415,7 +483,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 isLoading: isLoading,
                 onRefresh: updateBusListBox,
                 onScrollToTop: busStationBoxSlide,
-                onCommentsCall: callComments,
+                onCommentsCall: (String busCode){ callComments(busCode); },
               ),
             ),
 
@@ -439,7 +507,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               bottom: commentAni.value - screenHeight, left: 0, right: 0,
               child: BusChatWidget(
                 onScrollToTop: commentsBoxSlide,
-                commentsCode: curBusCode,
+                submitComment: submitComment,
+                isLoading: isLoading,
+                comments: comments,
+                users: users,
               )
             ),
 
