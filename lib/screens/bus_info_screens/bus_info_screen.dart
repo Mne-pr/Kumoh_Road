@@ -32,6 +32,7 @@ class ButtonData {
   ButtonData(this.icon, this.nextBusSt, this.clickMark);
 }
 
+
 class BusInfoScreen extends StatefulWidget {
   const BusInfoScreen({super.key});
 
@@ -42,12 +43,12 @@ class BusInfoScreen extends StatefulWidget {
 class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateMixin {
 
   // 로딩 상태
-  late bool isLoading = true;
+  late bool   isLoading      = true;
   late double loadingOpacity = 1.0;
   
   // api 호출주소
   final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
-  final serKey = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
+  final serKey  = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
 
   // 파이어베이스
   final fire = FirebaseFirestore.instance;
@@ -57,11 +58,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   
   // 지도의 마크와 마크 위에 띄울 위젯
   final busStopMarks = [
-    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역", ),
-    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협", ),
-    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점", ),
-    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)", ),
-    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널", ),
+    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역",),
+    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협",),
+    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점",),
+    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)",),
+    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널",),
   ];
   late final busStopW;
   
@@ -70,22 +71,22 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late int curButton = 0;
 
   // 애니메이션 컨트롤러
-  late AnimationController busStAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
-  late CurvedAnimation busStCurveAni =   CurvedAnimation(parent: busStAnicon, curve: Curves.easeInOutExpo);
+  late AnimationController busStAnicon   = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
   late AnimationController commentAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
-  late CurvedAnimation commentCurveAni =   CurvedAnimation(parent: commentAnicon, curve: Curves.easeInOutExpo);
+  late CurvedAnimation busStCurveAni     = CurvedAnimation(parent: busStAnicon,   curve: Curves.easeInOutExpo);
+  late CurvedAnimation commentCurveAni   = CurvedAnimation(parent: commentAnicon, curve: Curves.easeInOutExpo);
 
-  // 버스정류장, 위치교체버튼, 버스목록(댓글) 애니메이션
+  // 버스정류장, 위치교체버튼, 버스목록, 댓글 애니메이션
   late Animation<double> busStAni;
   late Animation<double> chBtnAni;
   late Animation<double> busListAni;
   late Animation<double> commentAni;
 
   // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
-  static const gumiPos  = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
-  static const gumiSPos = NCameraPosition(target: NLatLng(36.12567222, 128.3313162), zoom: 15.2, bearing: 0, tilt: 0);
-  static const kumohPos = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
-  static const kumohSPos= NCameraPosition(target: NLatLng(36.13420749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
+  static const gumiPos     = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
+  static const gumiSPos    = NCameraPosition(target: NLatLng(36.12567222, 128.3313162), zoom: 15.2, bearing: 0, tilt: 0);
+  static const kumohPos    = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
+  static const kumohSPos   = NCameraPosition(target: NLatLng(36.13420749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
   static const terminalPos = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
   static const terminalSPos= NCameraPosition(target: NLatLng(36.12002942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
   
@@ -100,13 +101,14 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   ];
   final cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
 
-  // 자주 쓸 거 같은
+  // 자주 사용할 거 같은
   NCameraAnimation myFly = NCameraAnimation.fly;
-  Duration myDuration = Duration(milliseconds: 200);
+  Duration myDuration    = Duration(milliseconds: 200);
 
   // 버스정류장 위젯 애니메이션 감지
-  bool isBusWidgetTop = false;
+  bool isBusWidgetTop      = false;
   bool isCommentWidgetOpen = false;
+
   // 버스정류장 정보와 그 상태들
   final busStopInfos = [
     BusSt(code:"GMB80", id:10080,subText:'경상북도 구미시 구미중앙로 70',  mainText:'구미역'),
@@ -115,18 +117,20 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     BusSt(code:"GMB131",id:10131,subText:'경상북도 구미시 거의동 589-8',  mainText:'금오공대입구(옥계중학교방면)'),
     BusSt(code: "GMB91",id:10091,subText: "경상북도 구미시 원평동 1103",  mainText: '종합버스터미널'),
   ];
-  late int curBusStop = 0;
-  late List<Bus> busList = [];
-  String curBusCode = "";
+  late int    curBusStop = 0;
+  late String curBusCode = "";
+  late List<Bus> busList    = [];
+
   // 댓글 정보와 그 상태들
-  late List<Comment> comments = [];
-  late List<UserModel> users = [];
-  bool isValidUser = false;
+  late List<Comment>   comments = [];
+  late List<UserModel> users    = [];
+  late bool isValidUser = false;
 
   Future<void> getComments() async {
     setState(() { isLoading = true;});
+
     final commentDoc = fire.collection('bus_chat').doc(curBusCode);
-    //final commentDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
+    //final commentDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020'); // 개발용
     final userCollection = fire.collection('users');
     List<UserModel> tempUsers = [];
 
@@ -137,40 +141,36 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     if (fireData.exists){
       final commentList = fireData.get('comments');
       for (var c in commentList) {
-        try { newCommentList.add(c);} catch(e) {print(e);}
+        try { newCommentList.add(c);} catch(e) { print(e);}
       }
       setState(() { comments = CommentApiRes.fromFireStore(newCommentList).comments;});
 
       // 각 comments에 대한 유저 정보 가져오기
       for (final comment in comments) {
         try {
-          DocumentSnapshot user = await userCollection.doc(comment.userCode).get();
+          final user = await userCollection.doc(comment.userCode).get();
           tempUsers.add(UserModel.fromDocument(user));
-        } catch(e) {print(e);}
+        } catch(e) { print(e);}
       }
+
       setState(() { users = tempUsers; });
     }
     else { setState(() { comments = []; users=[];});}
+
     setState(() { isLoading = false;});
-    //print('받은 개수 : ${newCommentList.length}');
   }
 
   List<ButtonData> buttonData = [
-    ButtonData(Icons.school_outlined, 1, 2),
+    ButtonData(Icons.school_outlined,                1, 2),
     ButtonData(Icons.directions_bus_filled_outlined, 2, 4),
-    ButtonData(Icons.tram_outlined, 0, 0),
+    ButtonData(Icons.tram_outlined,                  0, 0),
   ];
 
   void reAnimation(double screenHeight, Orientation orientation) {
-
-    busStAni = Tween(begin: 0.0, end: screenHeight*0.5)
-        .animate(busStAnicon)..addListener(() {setState(() {});});
-    chBtnAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 0.53)
-        .animate(busStAnicon)..addListener(() {setState(() {});});
-    busListAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.0)
-        .animate(busStAnicon)..addListener(() {setState(() {});});
-    commentAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.0)
-        .animate(commentCurveAni)..addListener(() {setState(() {});});
+    busStAni =   Tween(begin: 0.0,                  end: screenHeight * 0.50).animate(busStAnicon)    ..addListener(() {setState(() {});});
+    chBtnAni =   Tween(begin: screenHeight * 0.035, end: screenHeight * 0.53).animate(busStAnicon)    ..addListener(() {setState(() {});});
+    busListAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.00).animate(busStAnicon)    ..addListener(() {setState(() {});});
+    commentAni = Tween(begin: screenHeight * 0.035, end: screenHeight * 1.00).animate(commentCurveAni)..addListener(() {setState(() {});});
   }
 
   @override
@@ -208,13 +208,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    Orientation orientation = MediaQuery.of(context).orientation;
+    double screenHeight     = MediaQuery.of(context).size.height;
     final userProvider = Provider.of<UserProvider>(context);
     userProvider.startListeningToUserChanges();
-
-    // 기기의 화면 크기를 이용해 애니메이션 재설정
-    double screenHeight = MediaQuery.of(context).size.height;
-    Orientation orientation = MediaQuery.of(context).orientation;
-    reAnimation(screenHeight, orientation);
 
     // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
     Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
@@ -290,7 +287,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       await curDoc.update({'bus_list': tmpBusList});
       return;
     }
-
     // 버스리스트를 api에서 가져오는 함수
     Future<BusApiRes> getBusListFromApi(final nodeId) async {
       try {
@@ -307,8 +303,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         }
       } catch(e) { throw Exception(e); }
     }
-
-    // 정류장의 정보 가져오는 함수 - 아래 두 함수에서 호출함
+    // 정류장의 정보 가져오는 함수
     Future<BusApiRes> fetchBusInfo(final nodeId) async {
       final curDoc = fire.collection('bus_station_info').doc(nodeId);
       // 해당 버스정류장의 정보 가져오기
@@ -354,7 +349,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
       else { print('Failed to load that bus station'); return BusApiRes.fromJson({});}
     }
-
     // 정류장 정보 얻어와 리스트 저장하는 함수
     Future<void> updateBusListBox() async {
       setState(() { isLoading = true;});
@@ -362,7 +356,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       setState(() { busList = res.buses; isLoading = false;});
     }
 
-    // 버스 업데이트 버튼 리스너
+
+    // 버스 업데이트 버튼 클릭 시 이벤트 처리 함수
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; });
       busStopMarks[busStop].setIcon(NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
@@ -377,8 +372,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       await updateBusListBox();
       setState(() {isLoading = false; loadingOpacity = 0.8;});
     }
-
-    // 버스정류장 정보를 슬라이드할 때 이벤트 처리
+    // 버스정류장 정보를 슬라이드할 때 이벤트 처리 함수
     Future<void> busStationBoxSlide() async {
       if (isCommentWidgetOpen == false){
         if (busStAnicon.isDismissed) {
@@ -400,7 +394,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
-    // 댓글을 슬라이드할 때 이벤트 처리 - 아래 함수와 통합각
+    // 댓글을 슬라이드할 때 이벤트 처리 함수
     Future<void> commentsBoxSlide() async {
       if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
         if (commentAnicon.isDismissed) {
@@ -414,13 +408,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         }
       }
     }
-
     // 버스리스트에서 댓글 활성화버튼 이벤트 처리
     Future<void> callComments(String busCode) async {
       setState(() { curBusCode = busCode; comments = []; users = []; });
       await commentsBoxSlide();
     }
-
     // 댓글 등록 시 이벤트 처리
     void submitComment(String comment) async {
       print("여기 왔는지.. comment : ${comment}");
@@ -446,6 +438,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       await getComments();
     }
 
+
+    reAnimation(screenHeight, orientation); // 기기의 화면 크기로 애니메이션 재설정
 
     return Scaffold(
 
@@ -520,7 +514,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         ),
       ),
 
-      // 2. 어플 공통의 네비게이션 바 배치
+      // 2. 어플 공통의 네비게이션 바
       bottomNavigationBar: const CustomBottomNavigationBar(selectedIndex: 2,),
     );
   }
