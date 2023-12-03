@@ -52,4 +52,35 @@ class TaxiScreenPostModel {
       return [];
     }
   }
+
+  static Future<List<TaxiScreenPostModel>> getAllPostByCollectionAndTime(String collectionId, String categoryTime) async {
+    Logger log = Logger(printer: PrettyPrinter());
+    try{
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionId)
+          .where("categoryTime", isEqualTo: categoryTime)
+          .get();
+      List<Map<String, dynamic>> documents = querySnapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+      List<TaxiScreenPostModel> postList = documents.map((doc) => TaxiScreenPostModel(
+          categoryTime: doc["categoryTime"],
+          commentList: doc["commentList"],
+          content: doc["content"],
+          createdTime: (doc["createdTime"] as Timestamp).toDate(),
+          imageUrl: doc["imageUrl"],
+          memberList: doc["memberList"],
+          title: doc["title"],
+          viewCount: doc["viewCount"],
+          visible: doc["visible"],
+          writerId: doc["writerId"]
+      )).toList();
+
+      return postList;
+
+    } on Exception catch(e){
+      log.e(e);
+
+      return [];
+    }
+  }
 }

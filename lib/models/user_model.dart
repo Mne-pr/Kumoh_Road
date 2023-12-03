@@ -21,6 +21,12 @@ class UserModel {
   List<Map<String, dynamic>>? unmannerList;
   String? qrCodeUrl;
   bool isStudentVerified;
+  bool isSuspended;
+  List<int> badgeList;
+  int postCount;
+  int postCommentCount;
+  int commentCount;
+  int reportCount;
 
   UserModel({
     required this.userId,
@@ -33,6 +39,12 @@ class UserModel {
     this.unmannerList,
     this.qrCodeUrl,
     this.isStudentVerified = false,
+    this.isSuspended = false,
+    required this.badgeList,
+    required this.postCount,
+    required this.postCommentCount,
+    required this.commentCount,
+    required this.reportCount,
   });
 
   factory UserModel.fromDocument(DocumentSnapshot doc) {
@@ -48,6 +60,13 @@ class UserModel {
       unmannerList: List<Map<String, dynamic>>.from(data['unmannerList'] ?? []),
       qrCodeUrl: data['qrCodeUrl'],
       isStudentVerified: data['isStudentVerified'] ?? false,
+      isSuspended: data['isSuspended'] ?? false,
+      badgeList: List<int>.from(data['badgeList'] ?? [0, 0, 0, 0, 0, 0, 0, 0, 0]),
+      postCount: data['postCount'] ?? 0,
+      postCommentCount: data['postCommentCount'] ?? 0,
+      commentCount: data['commentCount'] ?? 0,
+      reportCount: data['reportCount'] ?? 0,
     );
   }
 }
+

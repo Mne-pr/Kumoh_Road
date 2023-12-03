@@ -20,10 +20,9 @@ class _ReportListScreenState extends State<ReportListScreen> {
     super.initState();
     final kakaoLoginProvider = Provider.of<UserProvider>(
         context, listen: false);
-    String? currentUserId = kakaoLoginProvider.id.toString();
 
-    if (currentUserId != null) {
-      _reportManager = ReportManager(currentUserId);
+    if (kakaoLoginProvider.id != null) {
+      _reportManager = ReportManager(kakaoLoginProvider);
       _reportList = _reportManager.fetchMyReports();
     } else {
       // 현재 사용자 ID가 없는 경우, 첫 번째 화면으로 이동

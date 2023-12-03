@@ -20,6 +20,11 @@ class UserProvider with ChangeNotifier {
   String? _qrCodeUrl;
   bool _isStudentVerified = false;
   bool _isSuspended = false;
+  List<int> _badgeList = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  int _postCount = 0;       // 게시글 카운트
+  int _postCommentCount = 0;  //게시글 댓글 카운트
+  int _commentCount = 0;    // 댓글 카운트
+  int _reportCount = 0;     // 신고 카운트
   StreamSubscription<DocumentSnapshot>? _userChangesSubscription;
 
   int? get id => _id;
@@ -35,6 +40,11 @@ class UserProvider with ChangeNotifier {
   String? get qrCodeUrl => _qrCodeUrl;
   bool get isStudentVerified => _isStudentVerified;
   bool get isSuspended => _isSuspended;
+  List<int> get badgeList => _badgeList;
+  int get postCount => _postCount;
+  int get postCommentCount => _postCommentCount;
+  int get commentCount => _commentCount;
+  int get reportCount => _reportCount;
 
   Future<void> login() async {
     try {
@@ -117,6 +127,11 @@ class UserProvider with ChangeNotifier {
         'qrCodeUrl': _qrCodeUrl,
         'isStudentVerified' : _isStudentVerified,
         'isSuspended': _isSuspended,
+        'badgeList': _badgeList,
+        'postCount': _postCount,
+        'postCommentCount': _postCommentCount,
+        'commentCount': _commentCount,
+        'reportCount': _reportCount,
         'createdTime': FieldValue.serverTimestamp(),
       });
     }
@@ -189,6 +204,11 @@ class UserProvider with ChangeNotifier {
     _qrCodeUrl = data?['qrCodeUrl'];
     _isStudentVerified = data?['isStudentVerified'] ?? false;
     _isSuspended = data?['isSuspended'] ?? false;
+    _badgeList = List<int>.from(data?['badgeList'] ??  [0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    _postCount = data?['postCount'] ?? 0;
+    _postCommentCount = data?['postCommentCount'] ?? 0;
+    _commentCount = data?['commentCount'] ?? 0;
+    _reportCount = data?['reportCount'] ?? 0;
   }
 
   // 리소스 정리 메서드
@@ -199,7 +219,7 @@ class UserProvider with ChangeNotifier {
   }
 
   // 사용자 정보 업데이트 메서드
-  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url, bool? isStudentVerified}) async {
+  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url, bool? isStudentVerified, List<int>? badgeList, int? postCount, int? commentCount, int? reportCount}) async {
     if (_id != null) {
       var userDocument = FirebaseFirestore.instance.collection('users').doc(_id.toString());
       var updateData = <String, dynamic>{};
@@ -223,6 +243,18 @@ class UserProvider with ChangeNotifier {
       }
       if (isStudentVerified != null) {
         updateData['isStudentVerified'] = isStudentVerified;
+      }
+      if (badgeList != null) {
+        updateData['badgeList'] = badgeList;
+      }
+      if (postCount != null) {
+        updateData['postCount'] = postCount;
+      }
+      if (commentCount != null) {
+        updateData['commentCount'] = commentCount;
+      }
+      if (reportCount != null) {
+        updateData['reportCount'] = reportCount;
       }
       if (updateData.isNotEmpty) {
         await userDocument.update(updateData);
@@ -281,6 +313,11 @@ class UserProvider with ChangeNotifier {
     _qrCodeUrl = null;
     _isStudentVerified = false;
     _isSuspended = false;
+    _badgeList =  [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    _postCount = 0;       // 게시글 카운트
+    _postCommentCount = 0;
+    _commentCount = 0;    // 댓글 카운트
+    _reportCount = 0;     // 신고 카운트
   }
 
   // 휴대폰에 저장된 사용자 데이터 초기화

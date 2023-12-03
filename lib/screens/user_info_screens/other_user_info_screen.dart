@@ -4,6 +4,7 @@ import 'package:kumoh_road/screens/user_info_screens/report_user_screen.dart';
 import '../../models/user_model.dart';
 import '../../widgets/manner_detail_widget.dart';
 import '../../widgets/user_info_section.dart';
+import 'other_badge_screen.dart';
 import 'other_user_manner_screen.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
@@ -16,23 +17,26 @@ class OtherUserProfileScreen extends StatefulWidget {
 }
 
 class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
-  UserModel? otherUser; // UserModel은 사용자 데이터를 저장하는 모델 클래스입니다.
+  UserModel? otherUser;
 
   @override
   void initState() {
     super.initState();
-    _fetchOtherUserInfo();
+    _listenToUserInfoChanges();
   }
 
-  void _fetchOtherUserInfo() async {
-    var docSnapshot = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
-    if (docSnapshot.exists) {
-      setState(() {
-        otherUser = UserModel.fromDocument(docSnapshot);
-      });
-    } else {
-      print('사용자 정보를 찾을 수 없습니다');
-    }
+  void _listenToUserInfoChanges() {
+    FirebaseFirestore.instance.collection('users').doc(widget.userId)
+        .snapshots()
+        .listen((docSnapshot) {
+      if (docSnapshot.exists) {
+        setState(() {
+          otherUser = UserModel.fromDocument(docSnapshot);
+        });
+      } else {
+        print('사용자 정보를 찾을 수 없습니다');
+      }
+    }, onError: (error) => print("Listen failed: $error"));
   }
 
   @override
@@ -61,7 +65,14 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             title: const Text('배지 정보 조회'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // 활동 배지 정보 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtherUserBadgeScreen(
+                    badgeList: otherUser!.badgeList, // 다른 사용자의 배지 리스트 전달
+                  ),
+                ),
+              );
             },
           ),
           ListTile(

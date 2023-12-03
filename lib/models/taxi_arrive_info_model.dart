@@ -46,6 +46,22 @@ class ArriveInfo{
     return result;
   }
 
+  static Future<List<ArriveInfo>> fetchSchoolCreatedTime() async {
+    QuerySnapshot<Map<String, dynamic>> allDocument = await FirebaseFirestore.instance.collection("school_posts").get();
+
+    List<ArriveInfo> arriveInfoList = [];
+
+    for (var doc in allDocument.docs) {
+      // Firestore의 Timestamp를 DateTime으로 변환
+      DateTime arriveDateTime = (doc.data()['createdTime'] as Timestamp).toDate();
+
+      // ArriveInfo 객체 생성 및 리스트에 추가
+      arriveInfoList.add(ArriveInfo(arriveDateTime: arriveDateTime));
+    }
+
+    return arriveInfoList;
+  }
+
   static Future<List<ArriveInfo>> fetchTrainArriveInfoFromDb() async {
     QuerySnapshot<Map<String, dynamic>> allDocument = await FirebaseFirestore.instance.collection("train_arrival_info").get();
 

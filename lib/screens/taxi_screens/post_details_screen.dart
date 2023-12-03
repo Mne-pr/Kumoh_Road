@@ -244,8 +244,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
 
     String name = widget.writerUserInfo.nickname;
 
-    List<dynamic> mannerList = widget.writerUserInfo.mannerList;
-    List<dynamic> unmannerList = widget.writerUserInfo.unmannerList;
+    List<dynamic> mannerList = widget.writerUserInfo.mannerList ?? [];
+    List<dynamic> unmannerList = widget.writerUserInfo.unmannerList ?? [];
     int mannerCnt = 0;
     int unmannerCnt = 0;
     for(int i = 0; i < mannerList.length; i++){

@@ -5,6 +5,7 @@ import 'package:kumoh_road/screens/user_info_screens/qr_register_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/report_list_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/student_verification_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/terms_service_screen.dart';
+import 'package:kumoh_road/screens/user_info_screens/user_badge_screen.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/bottom_navigation_bar.dart';
@@ -198,7 +199,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   icon: Icons.security_outlined,
                   label: '배지 정보',
                   onPressed: () {
-                    // 배지 정보 화면으로 이동하는 코드 구현
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => BadgeScreen()),
+                    );
                   },
                 ),
               ),

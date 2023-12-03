@@ -497,53 +497,67 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-
+  
   Widget buildBusList(String collectionName) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(collectionName)
-          .orderBy('arrtime', descending: true)
-          .limit(5)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
-        return ListView(
+        List<Bus> allBuses = [];
+
+        for (var doc in snapshot.data!.docs) {
+          var data = doc.data();
+          if (data is Map<String, dynamic>) {
+            var busList = List.from(data['bus_list'] as List<dynamic> ?? []);
+            allBuses.addAll(busList.map((busData) => Bus.fromJson(busData as Map<String, dynamic>)));
+          }
+        }
+
+        // 버스 리스트를 arrtime으로 정렬
+        allBuses.sort((a, b) => a.arrtime.compareTo(b.arrtime));
+
+        // 가장 빨리 오는 버스 5대만 선택
+        allBuses = allBuses.take(4).toList();
+
+        return ListView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
-          children: snapshot.data!.docs.map((doc) {
-            Bus busInfo = Bus.fromJson(doc.data() as Map<String, dynamic>);
-            return InkWell(
-              onTap: () {
-                // 버스 상세 정보 보기 동작
-              },
-              child: Card(
-                elevation: 3,
-                margin: const EdgeInsets.all(2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: allBuses.length,
+          itemBuilder: (context, index) {
+            Bus busInfo = allBuses[index];
+
+            // 초를 분으로 변환 (60초 미만은 1분으로 표시)
+            int minutes = (busInfo.arrtime / 60).ceil();
+            String timeDisplay = "${minutes}분전";
+
+            return Card(
+              elevation: 3,
+              margin: const EdgeInsets.all(2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.grey[400],
+                  ),
+                  child: Text(
+                    timeDisplay, // 도착 예정 시간 (분으로 표시)
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.grey[400],
-                    ),
-                    child: Text(
-                      busInfo.arrtime.toString(), // 정류장 이름
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  title: Text(
-                    busInfo.routeno, // 버스 번호
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  // 여기에 추가적인 버스 정보를 표시할 수 있습니다.
+                title: Text(
+                  '${busInfo.nodenm}: ${busInfo.routeno}', // 버스 번호
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             );
-          }).toList(),
+          },
         );
       },
     );
