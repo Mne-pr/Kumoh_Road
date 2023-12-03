@@ -18,12 +18,12 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
-// 수정해야
-// 댓글 열려 있을 때 마크 클릭하면 사라져야 하겠음
-// 댓글 열려 있을 때 농협을 슬라이드 하던가, 지역이동 버튼을 누르면 사라져야
-// 버스 없을 때도 슬라이드 먹히게 - ok
-// 각종 상황에 대한 안내문구 ㄱㄱ
-
+// 해야할거
+// 댓글 열려 있을 때 마크 클릭하면 사라져야 함
+// 댓글 열려 있을 때 농협을 슬라이드 하던가, 지역이동 버튼을 누르면 사라져야 함
+// 각종 상황에 대한 안내문구 필요
+// 버스 없을때 화면 수정
+// 댓글 로딩할 때 화면 수정
 
 class ButtonData {
   final IconData icon;
@@ -208,36 +208,26 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context)..startListeningToUserChanges();
     Orientation orientation = MediaQuery.of(context).orientation;
     double screenHeight     = MediaQuery.of(context).size.height;
-    final userProvider = Provider.of<UserProvider>(context);
-    userProvider.startListeningToUserChanges();
 
     // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
     Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
-      final DocumentSnapshot check;
-      List<String> busCodesFromFire;
-      final curDoc = fire.collection('bus_station_info').doc(nodeId);
-      var tmpBusList;
+      final stationDoc = fire.collection('bus_station_info').doc(nodeId);
+      List<String> busCodesFromFire, busCodesFromApi;
+      BusList curBuslist;
 
-      // 파베의 bus_list에서 업데이트 할 버스정류장의 문서 이름 리스트를 가져옴
-      try {
-        check = await curDoc.get();
-        tmpBusList = check.get('bus_list');
-        busCodesFromFire = tmpBusList.map<String>((bus) => bus['code'] as String).toList();
-      } catch(error) {print("get bus_list error : ${error.toString()}"); busCodesFromFire = [];}
+      // 파베의 bus_list에서 버스코드 리스트를 가져옴 - 예외처리 되어있음
+      DocumentSnapshot station = await stationDoc.get();
+      curBuslist = BusList.fromDocument(station);
+      busCodesFromFire = curBuslist.buses.map((bus) => bus.code).toList();
 
       // 각 버스의 도착지 결정해야
 
 
-
-      // api 리스트로부터 이름을 가져옴 - 고유문자 생성
-      List<String> busCodesFromApi = busListFromApi.map((bus) {
-        var code = '${bus.nodeid}-${bus.routeno}-${bus.routeid}';
-        bus.setCode(code);
-        return bus.code;
-      }).toList();
-      print('fire_code_list : ${busCodesFromFire.toString()}, api_list : ${busCodesFromApi.toString()}');
+      // api의 bus_list에서 버스코드 리스트를 가져옴
+      busCodesFromApi = busListFromApi.map((bus) => bus.code).toList();
 
       // 두 코드 리스트에서 공통된 버스 찾음
       Set<String> commonCodes = busCodesFromFire.toSet().intersection(busCodesFromApi.toSet());
@@ -246,114 +236,97 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       busCodesFromFire.removeWhere((name) => commonCodes.contains(name)); // 파베에서 제거해야 할 버스들만 남음
       busCodesFromApi.removeWhere((name) => commonCodes.contains(name));  // 파베에 추가해야 할 버스들만 남음
 
-      // 버스 목록에서 지나간 버스 제거
+      // 버스 목록에서 지나간 버스 제거, 파베에서 삭제
       for (String code in busCodesFromFire) {
-        tmpBusList.removeWhere((bus) => bus['code'] == code);
-        // 파베의 버스 채팅 리스트 삭제
-        try{
-          await fire.collection('bus_chat').doc(code).delete();
-        } catch(e) {}
+        curBuslist.buses.removeWhere((bus) => bus.code == code);
+        try{ await fire.collection('bus_chat').doc(code).delete(); }
+          catch(e) { print('deleting chat list error : ${e.toString()}');}
       }
 
       // 새 버스를 추가, 기존 버스 업데이트
       for (Bus bus in busListFromApi) {
-        // 새로운 버스인 경우 - 추가
-        if (busCodesFromApi.contains(bus.code)) {
-          tmpBusList.add({
-            'arrprevstationcnt': bus.arrprevstationcnt, // 남은 정류장 수
-            'arrtime':   bus.arrtime,   // 도착예상시간(초)
-            'nodeid':    bus.nodeid,    // 정류소 ID
-            'nodenm':    bus.nodenm,    // 정류소명
-            'routeid':   bus.routeid,   // 노선 ID
-            'routeno':   bus.routeno,   // 노선번호 - 버스번호
-            'routetp':   bus.routetp,   // 노선유형
-            'vehicletp': bus.vehicletp, // 자량유형
-            'code':      bus.code,      // 고유문자
-          });
+
+        if (busCodesFromApi.contains(bus.code)) { // 새로운 버스인 경우 - 추가
+          curBuslist.buses.add(bus);
           // 파베에 버스 채팅리스트 생성
-          await fire.collection('bus_chat').doc(bus.code).set({'comments': []});
+          try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': []});}
+            catch(e) { print('adding chat list error : ${e.toString()}');}
+
+        }
+        else { // 기존 버스인 경우 - 업데이트
+          Bus busToUpdate = curBuslist.buses.firstWhere((mapBus) => mapBus.code == bus.code);
+          busToUpdate.arrprevstationcnt = bus.arrprevstationcnt;
+          busToUpdate.arrtime = bus.arrtime;
         }
 
-        // 기존 버스인 경우 - 업데이트
-        else {
-          var busToUpdate = tmpBusList.firstWhere((b) => b['code'] == bus.code);
-          busToUpdate['arrprevstationcnt'] = bus.arrprevstationcnt;
-          busToUpdate['arrtime'] = bus.arrtime;
-        }
       }
-      print('제거해야 할 버스 : ${busCodesFromFire.toString()}, 추가해야 할 버스 : ${busCodesFromApi.toString()}');
 
       // 수정한 목록을 파베에 업데이트
-      await curDoc.update({'bus_list': tmpBusList});
+      await stationDoc.update({'bus_list': curBuslist.buses});
       return;
     }
+
     // 버스리스트를 api에서 가져오는 함수
-    Future<BusApiRes> getBusListFromApi(final nodeId) async {
+    Future<BusList> getBusListFromApi(final nodeId) async {
       try {
-        final res = await http.get(Uri.parse(
-            '${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
-        if (res.statusCode == 200) {
-          // 파베에 새 버스리스트로 업데이트시킴
-          final fromApi = BusApiRes.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
-          await compareSources(fromApi.buses, nodeId);
-          return (fromApi);
+        final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
+        BusList buslist;
+
+        if (res.statusCode == 200) { // 파베에 업뎃시켜
+          try{
+            buslist = BusList.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
+            await compareSources(buslist.buses, nodeId);
+          } catch(e) {buslist = BusList.fromJson({}); throw Exception(e);}
+          return (buslist);
         }
-        else {
-          throw Exception('Failed to load buses info');
-        }
-      } catch(e) { throw Exception(e); }
+        else { throw Exception('Failed to load buses info');}
+
+      } catch(e) { print('getBusListFromApi error : ${e.toString()}'); return BusList.fromJson({});}
     }
+
     // 정류장의 정보 가져오는 함수
-    Future<BusApiRes> fetchBusInfo(final nodeId) async {
-      final curDoc = fire.collection('bus_station_info').doc(nodeId);
-      // 해당 버스정류장의 정보 가져오기
-      var station = await curDoc.get();
-      final busList;
+    Future<BusList> fetchBusInfo(final nodeId) async {
+      final stationDoc = fire.collection('bus_station_info').doc(nodeId);
+      DocumentSnapshot station = await stationDoc.get();
+      BusList buslist;
 
       if (station.exists) {
         // 정보 중 마지막 업데이트 시간 확인
-        DateTime lastUpdate = station.get('last_update').toDate();
-        DateTime now = DateTime.now();
+        DateTime now = DateTime.now(), lastUpdate = station.get('last_update').toDate(); // 불길
         var difference = now.difference(lastUpdate);
-        //print('파베시간 : ${lastUpdate.toString()}');
-        //print('현재시간 : ${now.toString()}');
 
         // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
-        if (difference.inMinutes >= 10) { //print("업데이트 - api!! ${nodeId}");
-          // 이렇게 api 새로 호출할 때만 로딩화면
+        if (difference.inMinutes < 10) { // print("업데이트 - api!! ${nodeId}");
           setState(() { isLoading = true;});
-          try{ // 마지막 업데이트를 현재 시간으로 수정
-            await curDoc.update({'last_update': Timestamp.fromDate(now)});
-            busList = await getBusListFromApi(nodeId);
-            setState(() { isLoading = false;});
-            return busList;
-          } catch(e) {print(e); return BusApiRes.fromJson({});}
+
+          try{
+            buslist = await getBusListFromApi(nodeId);
+            // buslist = BusList.fromJson({}); 확인용
+            await stationDoc.update({'last_update': Timestamp.fromDate(now)}); // 진행되면 업뎃하게끔
+          } catch(e) { print('try station update error : ${e.toString()}'); return BusList.fromJson({});}
+
+          setState(() { isLoading = false;});
+          return buslist;
         }
 
-        // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
-        else { //print("업데이트 - 파베!! ${nodeId}");
+        // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴 - 문제없음
+        else { // print("업데이트 - 파베!! ${nodeId}");
+
           try {
-            final fire = await curDoc.get();
-            List<Map<String,dynamic>> newBusList = [];
-            if (fire.exists) {
-              busList = await fire.get('bus_list');
-              for (var b in busList) { newBusList.add(b);}
-              final res = BusApiRes.fromFirestore(newBusList);
-              //final res = BusApiRes.fromJson({}); // 빈 버스 확인용
-              return res;
-            }
-            else { throw Exception();}
-            // 위의 코드 수정할 필요 있어보임
-          } catch(e) {print(e); return BusApiRes.fromJson({});}
+            buslist = BusList.fromDocument(station);
+          } catch(e) { print('try station get error : ${e.toString()}'); return BusList.fromJson({});}
+
+          return buslist;
         }
       }
-      else { print('Failed to load that bus station'); return BusApiRes.fromJson({});}
+      else { print('Failed to load that bus station'); return BusList.fromJson({});}
     }
+
     // 정류장 정보 얻어와 리스트 저장하는 함수
     Future<void> updateBusListBox() async {
       setState(() { isLoading = true;});
-      BusApiRes res = await fetchBusInfo(busStopInfos[curBusStop].code);
-      setState(() { busList = res.buses; isLoading = false;});
+      BusList buslist = await fetchBusInfo(busStopInfos[curBusStop].code);
+      setState(() { busList = buslist.buses; isLoading = false;});
     }
 
 
@@ -372,6 +345,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       await updateBusListBox();
       setState(() {isLoading = false; loadingOpacity = 0.8;});
     }
+
     // 버스정류장 정보를 슬라이드할 때 이벤트 처리 함수
     Future<void> busStationBoxSlide() async {
       if (isCommentWidgetOpen == false){
@@ -394,6 +368,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
+
     // 댓글을 슬라이드할 때 이벤트 처리 함수
     Future<void> commentsBoxSlide() async {
       if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
@@ -408,11 +383,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         }
       }
     }
+
     // 버스리스트에서 댓글 활성화버튼 이벤트 처리
     Future<void> callComments(String busCode) async {
       setState(() { curBusCode = busCode; comments = []; users = []; });
       await commentsBoxSlide();
     }
+
     // 댓글 등록 시 이벤트 처리
     void submitComment(String comment) async {
       print("여기 왔는지.. comment : ${comment}");
