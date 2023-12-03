@@ -262,7 +262,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
 
       // 수정한 목록을 파베에 업데이트
-      await stationDoc.update({'bus_list': curBuslist.buses});
+      await stationDoc.update({'busList': curBuslist.buses});
       return;
     }
 
@@ -292,25 +292,25 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
       if (station.exists) {
         // 정보 중 마지막 업데이트 시간 확인
-        DateTime now = DateTime.now(), lastUpdate = station.get('last_update').toDate(); // 불길
+        DateTime now = DateTime.now(), lastUpdate = station.get('lastUpdate').toDate(); // 불길
         var difference = now.difference(lastUpdate);
 
         // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
-        if (difference.inMinutes < 10) { // print("업데이트 - api!! ${nodeId}");
+        if (difference.inMinutes >= 10) { print("업데이트 - api!! ${nodeId}");
           setState(() { isLoading = true;});
 
           try{
             buslist = await getBusListFromApi(nodeId);
             // buslist = BusList.fromJson({}); 확인용
-            await stationDoc.update({'last_update': Timestamp.fromDate(now)}); // 진행되면 업뎃하게끔
+            await stationDoc.update({'lastUpdate': Timestamp.fromDate(now)}); // 진행되면 업뎃하게끔
           } catch(e) { print('try station update error : ${e.toString()}'); return BusList.fromJson({});}
 
           setState(() { isLoading = false;});
           return buslist;
         }
 
-        // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴 - 문제없음
-        else { // print("업데이트 - 파베!! ${nodeId}");
+        // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
+        else { print("업데이트 - 파베!! ${nodeId}");
 
           try {
             buslist = BusList.fromDocument(station);
@@ -392,7 +392,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 댓글 등록 시 이벤트 처리
     void submitComment(String comment) async {
-      print("여기 왔는지.. comment : ${comment}");
 
       // 본인 정보 가져오기
       final userCode = userProvider.id;
@@ -406,8 +405,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         'comments' : FieldValue.arrayUnion([{
           'comment': comment,
           'enable': true,
-          'time' : Timestamp.now(),
-          'user_code': userCode.toString(),
+          'createdTime' : Timestamp.now(),
+          'writerId': userCode.toString(),
         }])
       });
 
