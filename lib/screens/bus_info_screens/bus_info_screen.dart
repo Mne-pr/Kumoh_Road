@@ -393,7 +393,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     // 댓글 등록 시 이벤트 처리
     void submitComment(String comment) async {
 
-      // 본인 정보 가져오기
+      // 본인 정보 가져오기 - 최적화 쌉가능인데.. 나중에 하자
       final userCode = userProvider.id;
 
       // 댓글 문서 가져오기
@@ -409,6 +409,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           'writerId': userCode.toString(),
         }])
       });
+      
+      // 유저의 코멘트 수 증가
+      await userProvider.updateUserInfo(commentCount: userProvider.commentCount+1);
 
       // 댓글 다시 불러오기
       await getComments();
