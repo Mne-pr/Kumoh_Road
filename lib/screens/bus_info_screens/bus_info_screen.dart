@@ -24,7 +24,6 @@ import '../../widgets/bus_station_widget.dart';
 // 각종 상황에 대한 안내문구 필요
 // 버스 없을때 화면 수정 - 테두리
 // 댓글 로딩할 때 화면 수정 - 테두리
-// 댓글 파베에 저장은 되는데 출력이 다시 안되는 오류 있음
 
 class ButtonData {
   final IconData icon;
@@ -386,9 +385,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     // 댓글 등록 시 이벤트 처리
     void submitComment(String comment) async {
 
-      // 본인 정보 가져오기 - 최적화 쌉가능인데.. 나중에 하자
-      final userCode = userProvider.id;
-
       // 댓글 문서 가져오기
       final chatDoc = fire.collection('bus_chat').doc(curBusCode);
       //final chatDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
@@ -399,7 +395,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           'comment': comment,
           'enable': true,
           'createdTime' : Timestamp.now(),
-          'writerId': userCode.toString(),
+          'writerId': userProvider.id.toString(),
         }])
       });
       
@@ -471,12 +467,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             // 1.5 댓글 위젯
             Positioned(
               bottom: commentAni.value - screenHeight, left: 0, right: 0,
-              child: BusChatWidget(
+              child: BusChatListWidget(
                 onScrollToTop: commentsBoxSlide,
                 submitComment: submitComment,
-                isLoading: isLoading,
-                comments:  comments,
-                users:     commentUsers,
+                isLoading:     isLoading,
+                comments:      comments,
+                commentUsers:  commentUsers,
+                isStudentVerified: userProvider.isStudentVerified,
               )
             ),
 
