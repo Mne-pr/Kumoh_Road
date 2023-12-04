@@ -4,27 +4,29 @@ import 'package:kumoh_road/models/comment_model.dart';
 
 import '../models/user_model.dart';
 
-class BusChatWidget extends StatefulWidget {
+// 버스 채팅 리스트
+class BusChatListWidget extends StatefulWidget {
   final Function(String) submitComment;
   final VoidCallback onScrollToTop;
-  final List<Comment> comments;
-  final List<UserModel> users;
+  final List<Comment>   comments;
+  final List<UserModel> commentUsers;
   final bool isLoading;
+  final bool isStudentVerified;
 
-  const BusChatWidget({
+  const BusChatListWidget({
     required this.onScrollToTop,
     required this.submitComment,
     required this.isLoading,
     required this.comments,
-    required this.users,
+    required this.commentUsers,
+    required this.isStudentVerified,
     super.key
   });
 
   @override
-  State<BusChatWidget> createState() => _BusChatWidgetState();
+  State<BusChatListWidget> createState() => _BusChatListWidgetState();
 }
-
-class _BusChatWidgetState extends State<BusChatWidget> {
+class _BusChatListWidgetState extends State<BusChatListWidget> {
   final TextEditingController commentCon = TextEditingController();
   bool isNoChat = true;
 
@@ -61,8 +63,10 @@ class _BusChatWidgetState extends State<BusChatWidget> {
       );
     }
 
-    List<Comment> commentList = widget.comments;
-    List<UserModel> userList  = widget.users;
+    List<Comment> commentList = widget.comments; 
+    List<UserModel> userList  = widget.commentUsers;
+    bool verified = widget.isStudentVerified;
+    //bool verified = true;
 
     // 댓글 추가 로직
     void submitComment() {
@@ -88,7 +92,7 @@ class _BusChatWidgetState extends State<BusChatWidget> {
 
             child: RefreshIndicator(
               displacement: 100000, // 인디케이터 보이지 않도록
-              onRefresh:    () async {widget.onScrollToTop();},
+              onRefresh:    () async { widget.onScrollToTop();},
 
               child: ListView.builder(
                 itemCount:   commentList.length,
@@ -101,13 +105,15 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                       child: Stack(
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                          ListTile (title: Text('${user.nickname} : ${comment.comment}')), // ui 수정해야
+                          OneChatWidget( user: user, comment: comment ),
                   ],),);}
 
                   else { // 나머지 줄
                     return Container(
-                      decoration: BoxDecoration( border: Border( top: BorderSide(width: 1.0, color: Colors.grey.shade200),), ),
-                      child:      ListTile(title: Text('${user.nickname} : ${comment.comment}')), // ui 수정해야
+                      decoration: BoxDecoration( border: Border(
+                                    top: BorderSide(width: 1.0, color: Colors.grey.shade200),
+                                    bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
+                      ), child:   OneChatWidget( user: user, comment: comment ),
                   );}
 
                 },
@@ -129,7 +135,18 @@ class _BusChatWidgetState extends State<BusChatWidget> {
                   Expanded(
                     child: TextField(
                       controller:  commentCon,
-                      decoration:  InputDecoration(filled: true, hintText: '댓글 입력',fillColor: const Color(0xFF3F51B5).withOpacity(0.1)),
+                      enabled: verified,
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      decoration:  InputDecoration(
+                          filled: true,
+                          hintText: verified ? '댓글 입력' : '댓글을 작성하려면 학생인증이 필요합니다',
+                          hintStyle: verified
+                              ? (isNoChat ? TextStyle(color: const Color(0xFF3F51B5)) : TextStyle(color: Color(0xFF3F51B5).withOpacity(0.1)))
+                              : TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                          fillColor: verified
+                              ? (isNoChat ? const Color(0xFF3F51B5).withOpacity(0.1) : const Color(0xFF3F51B5).withOpacity(0.6))
+                              : Color(0xFF3F51B5).withOpacity(0.1)
+                      ),
                       onSubmitted: (String text) { if (!isNoChat) submitComment(); },
                   ),),
 
@@ -159,5 +176,49 @@ class _BusChatWidgetState extends State<BusChatWidget> {
   void dispose() {
     commentCon.dispose();
     super.dispose();
+  }
+}
+
+
+// 채팅 객체 하나
+class OneChatWidget extends StatefulWidget {
+  final UserModel user;
+  final Comment comment;
+
+  const OneChatWidget({
+    required UserModel this.user,
+    required Comment this.comment,
+    super.key
+  });
+
+  @override
+  State<OneChatWidget> createState() => _chatState();
+}
+
+class _chatState extends State<OneChatWidget> {
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(10),
+      child: Row(
+        children: <Widget>[
+          CircleAvatar( backgroundImage: NetworkImage(widget.user.profileImageUrl),),
+          SizedBox(width: 10,),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(widget.user.nickname, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),),
+                SizedBox(height: 5,),
+                Text(widget.comment.comment, style: TextStyle(fontSize: 17),),
+              ],
+            ),
+          ),
+          IconButton(onPressed: () {}, icon: Icon(Icons.more_vert),),
+        ],
+      ),
+    );
   }
 }
