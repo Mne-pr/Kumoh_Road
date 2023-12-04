@@ -110,8 +110,6 @@ class BusList {
 
       try {
         buslist = tempBusList.map((bus) => Bus.fromJson(bus)).toList();
-
-
         buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
       } catch(e) { print('Buslist.fromDocument error: ${e.toString()}'); buslist=[];};
     }
