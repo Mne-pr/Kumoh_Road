@@ -402,8 +402,9 @@ class _MainScreenState extends State<MainScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => PostDetailsScreen(
-                      writerUserInfo: writerInfo, // writerInfo 전달
-                      postInfo: postInfo, // postInfo 전달
+                      writer: writerInfo, // writerInfo 전달
+                      post: postInfo, // postInfo 전달
+                      collectionName: collectionName
                     ),
                   ),
                 );

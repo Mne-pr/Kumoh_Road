@@ -53,11 +53,14 @@ class TaxiScreenPostModel {
     }
   }
 
-  static Future<List<TaxiScreenPostModel>> getAllPostByCollectionAndTime(String collectionId, String categoryTime) async {
+  static Future<List<TaxiScreenPostModel>> getAllPostByCollectionAndDateTime(String collectionId, String categoryTime, DateTime today) async {
     Logger log = Logger(printer: PrettyPrinter());
     try{
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionId)
           .where("categoryTime", isEqualTo: categoryTime)
+          .where("createdTime",
+            isGreaterThanOrEqualTo: DateTime(today.year, today.month, today.day),
+            isLessThan: DateTime(today.year, today.month, today.day+1))
           .get();
       List<Map<String, dynamic>> documents = querySnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)

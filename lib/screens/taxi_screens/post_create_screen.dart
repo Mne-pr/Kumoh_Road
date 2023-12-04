@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/models/taxi_screen_user_model.dart';
+import 'package:kumoh_road/screens/taxi_screens/post_details_screen.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -182,7 +184,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider userProvider = Provider.of<UserProvider>(context);
+    final UserProvider currUser = Provider.of<UserProvider>(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -201,8 +203,6 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
               children: [
                 photoInput(context),
                 formInput()
-                // titleInput(context, titleController),
-                // contentInput(context, contentController, maxLine: 5)
               ],
             ),
           ),
@@ -216,18 +216,15 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('저장 중')),
               );
-              
               _formKey.currentState!.save();
-
               String imageUrl = "";
               if(_imagePath != null){
                 imageUrl = await uploadImage(_imagePath!);
               }
-
               CollectionReference collectionReference = FirebaseFirestore.instance.collection(widget.collectionId);
               collectionReference.add({
                 'imageUrl': imageUrl,
-                'writerId': userProvider.id.toString(),
+                'writerId': currUser.id.toString(),
                 'title': _title,
                 'content': _content,
                 'createdTime': DateTime.now(),
@@ -237,14 +234,12 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                 'memberList': <String>[],
                 'visible': true
               });
-
-              int newPostCount = userProvider.postCount + 1;
-              await userProvider.updateUserInfo(postCount: newPostCount);
-
-              // TODO: 생성된 글 상세화면으로 이동하기(글 상세화면 구현 후)
+              int newPostCount = currUser.postCount + 1;
+              await currUser.updateUserInfo(postCount: newPostCount);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('저장 완료')),
               );
+              Navigator.of(context).pop();
             }
           },
           label: Text(
