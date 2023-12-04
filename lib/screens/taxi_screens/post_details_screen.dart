@@ -1,393 +1,412 @@
-import 'dart:io';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
+import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/screens/main_screens/main_screen.dart';
 import 'package:kumoh_road/widgets/user_info_section.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-import '../../utilities/image_picker_util.dart';
-import '../../widgets/loding_indicator_widget.dart';
+import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
 
 class PostDetailsScreen extends StatefulWidget {
-  final TaxiScreenUserModel writerUserInfo;
-  final TaxiScreenPostModel postInfo;
-
-  const PostDetailsScreen(
-      {super.key, required this.writerUserInfo, required this.postInfo});
+  final TaxiScreenUserModel writer;
+  final TaxiScreenPostModel post;
+  final String collectionName;
+  const PostDetailsScreen({super.key, required this.writer, required this.post, required this.collectionName});
 
   @override
   State<PostDetailsScreen> createState() => _PostDetailsScreenState();
 }
 
 class _PostDetailsScreenState extends State<PostDetailsScreen> {
-  String? _imagePath; // 촬영한 사진의 경로를 저장하는 변수
-
+  final _formKey = GlobalKey<FormState>();
+  String _content = "";
+  bool _bottomShowed = true;
+  FocusNode inputFocusNode = FocusNode();
+  
+  @override
+  void initState() {
+    super.initState();
+    inputFocusNode.addListener(() {
+      if(inputFocusNode.hasFocus){
+        setState(() {
+          _bottomShowed = false;
+        });
+      }
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
+    Logger log = Logger(printer: PrettyPrinter());
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildButtonSection(context),
-            _buildImageSection(context),
-            const Divider(),
-            UserInfoSection(
-              nickname: widget.writerUserInfo.nickname,
-              imageUrl: widget.writerUserInfo.profileImageUrl,
-              age: widget.writerUserInfo.age,
-              gender: widget.writerUserInfo.gender,
-              mannerTemperature: widget.writerUserInfo.mannerTemperature,
+          body: SafeArea(
+            child: GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                setState(() {
+                  _bottomShowed = true;
+                });
+              },
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTopSection(),
+                    UserInfoSection(
+                      nickname: widget.writer.nickname,
+                      imageUrl: widget.writer.profileImageUrl,
+                      age: widget.writer.age,
+                      gender: widget.writer.gender,
+                      mannerTemperature: widget.writer.mannerTemperature,
+                    ),
+                    const Divider(),
+                    _buildPostContentSection(context),
+                    const Divider(),
+                    _buildReviewSection(context),
+                    const Divider(),
+                    FutureBuilder(
+                      future: _buildCommentSection(context),
+                      builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+                        if (snapshot.hasError){
+                          log.e(snapshot.error);
+                          log.e(snapshot.stackTrace);
+                          return const Center(
+                            child: Text("댓글 로딩 실패"),
+                          );
+                        }
+                        else if (snapshot.hasData) {
+                          return snapshot.data!;
+                        } else {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const Divider(),
-            _buildPostContentSection(context),
-            const Divider(),
-            _buildReviewSection(context),
-            const Divider(),
-            FutureBuilder(
-                future: _buildCommentSection(context),
-                builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: LoadingIndicatorWidget());
-                  } else if (snapshot.hasError){
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text('Error : ${snapshot.error}'),
-                            Text('Stack trace : ${snapshot.stackTrace}'),
-                          ],
-                        ),
-                      );
-                  }
-                  else if (snapshot.hasData) {return snapshot.data!;}
-                  else {return const Center(child: Text('No data available'));}
-                },
-            ),
-          ],
-        ),
-      ),
+          ),
+          floatingActionButton: _bottomShowed
+            ? _buildBottomSection(context)
+            : const SizedBox(width: 0,),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        );
+  }
+
+  PopupMenuItem<String> menuItem(String menuText){
+    return PopupMenuItem<String>(
+      onTap: (){
+        //todo: 신고 페이지로 이동
+      },
+      child: Text(menuText)
     );
   }
 
-  Widget _buildButtonSection(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
+  Widget _buildTopSection(){
+    return Stack(
       children: [
-        IconButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.arrow_back_ios_outlined)),
-        IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const MainScreen(),
+        _buildImageSection(context),
+        Positioned(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                IconButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back_ios_outlined,
+                      color: Colors.white,
+                    )
                 ),
-              );
-            },
-            icon: const Icon(Icons.home_outlined)),
+                IconButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const MainScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.home_outlined,
+                      color: Colors.white,
+                    )
+                ),
+                const Spacer(),
+                PopupMenuButton<String>(
+                    color: Colors.white,
+                    itemBuilder: (context){
+                      return [
+                        menuItem("신고하기")
+                      ];
+                    })
+              ],
+            )),
       ],
     );
   }
 
-  Widget _buildImageSection(BuildContext context) {
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-
-    return InkWell(
-        onTap: () async {
-          if (await Permission.camera.request().isGranted) {
-            final File? imageFile =
-                await ImagePickerUtils.pickImageFromCamera();
-            if (imageFile != null) {
-              setState(() {
-                _imagePath = imageFile.path;
-              });
+  Widget imageWidget(String imageUrl, BuildContext context){
+    return imageUrl.isEmpty
+      ? Image.asset(
+        'assets/images/default_avatar.png',
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.width * 0.7,
+        fit: BoxFit.cover,
+      )
+      : Image.network(
+          widget.post.imageUrl,
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            return child;
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if(loadingProgress == null){
+              return child;
+            } else{
+              return const Center(child: CircularProgressIndicator(),);
             }
-          }
-        },
-        child: Column(
-          children: [
-            _imagePath == null ? const Icon(Icons.camera_alt) :
-                Center(
-                    child: Image.file(
-                    File(_imagePath!),
-                    height: MediaQuery.of(context).size.height / 5,
-                    fit: BoxFit.cover,
-                    ),
-                ),
-            Visibility(
-                visible: _imagePath == null ? true : false,
-                child: Center(
-                    child: Text("출발 장소 촬영",
-                        style: TextStyle(fontSize: defaultFontSize, fontWeight: FontWeight.bold),
-                    ),
-                ),
-            ),
-          ],
-        ),
-    );
+          },
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.width * 0.7,
+          fit: BoxFit.cover,
+      );
+  }
+
+  Widget _buildImageSection(BuildContext context) {
+    return imageWidget(widget.post.imageUrl, context);
   }
 
   Widget _buildPostContentSection(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-    double leftPadding = screenWidth * 0.03;
-    double topPadding = screenHeight * 0.005;
-
-    return Padding(
-      padding: EdgeInsets.only(left: leftPadding),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.title, color: Colors.grey),
-              Padding(
-                padding: EdgeInsets.only(left: leftPadding),
-                child: Text(
-                  "제목",
-                  style: TextStyle(color: Colors.black26, fontSize: defaultFontSize),
-                ),
-              ),
-              Padding(
-                  padding: EdgeInsets.only(left: leftPadding),
-                  child: Text(widget.postInfo.title,
-                      style: TextStyle(
-                        fontSize: defaultFontSize,
-                        fontWeight: FontWeight.bold,
-                      ),
-                  ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.post.title,
+          style: TextStyle(
+            fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2,
+            fontWeight: FontWeight.bold,
           ),
-          Padding(
-            padding: EdgeInsets.only(top: topPadding),
-            child: Row(
-              children: [
-                Icon(Icons.watch_later_outlined, color: Colors.grey),
-                Padding(
-                    padding: EdgeInsets.only(left: leftPadding),
-                    child: Text(
-                      "작성",
-                      style: TextStyle(
-                          color: Colors.black26,
-                          fontSize: defaultFontSize
-                      ),
-                    ),
-                ),
-                Padding(
-                    padding: EdgeInsets.only(left: leftPadding),
-                    child: Text(
-                      "${widget.postInfo.createdTime.hour}시 ${widget.postInfo.createdTime.minute}분",
-                      style: TextStyle(
-                          fontSize: defaultFontSize, fontWeight: FontWeight.bold
-                      ),
-                    ),
-                ),
-              ],
-            ),
+        ),
+        Text(
+          "${DateTime.now().difference(widget.post.createdTime).inMinutes}분전",
+          style: const TextStyle(
+            color: Colors.grey
           ),
-          Padding(
-            padding: EdgeInsets.only(top: topPadding),
-            child: Row(
-              children: [
-                const Icon(Icons.touch_app_outlined, color: Colors.grey),
-                Padding(
-                    padding: EdgeInsets.only(left: leftPadding),
-                    child: Text(
-                      "조회",
-                      style: TextStyle(color: Colors.black26, fontSize: defaultFontSize),
-                    ),
-                ),
-                Padding(
-                    padding: EdgeInsets.only(left: leftPadding),
-                    child: Text(
-                      "${widget.postInfo.viewCount}회",
-                      style: TextStyle(
-                          fontSize: defaultFontSize, fontWeight: FontWeight.bold),
-                    ),
-                ),
-              ],
-            ),
+        ),
+        Text(widget.post.content),
+        Text(
+          "조회 ${widget.post.viewCount}회",
+          style: const TextStyle(
+            color: Colors.grey
           ),
-          Padding(
-            padding: EdgeInsets.only(top: topPadding),
-            child: Row(
-              children: [
-                Padding(
-                    padding: EdgeInsets.only(left: leftPadding),
-                    child: Text(
-                      widget.postInfo.content,
-                      style: TextStyle(
-                        fontSize: defaultFontSize,
-                      ),
-                    )),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildReviewSection(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
     double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-    double leftPadding = screenWidth * 0.03;
-    double topPadding = screenHeight * 0.005;
-
-    String name = widget.writerUserInfo.nickname;
-
-    List<dynamic> mannerList = widget.writerUserInfo.mannerList ?? [];
-    List<dynamic> unmannerList = widget.writerUserInfo.unmannerList ?? [];
-    int mannerCnt = 0;
-    int unmannerCnt = 0;
-    for(int i = 0; i < mannerList.length; i++){
-      int cnt1 = mannerList[i]["votes"];
-      int cnt2 = unmannerList[i]["votes"];
-      mannerCnt += cnt1;
-      unmannerCnt += cnt2;
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: leftPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("$name님의 택시 합승 최근 리뷰",
-              style: TextStyle(fontSize: defaultFontSize * 1.1, fontWeight: FontWeight.bold),
-          ),
-          Row(children: [
-            const Text("매너 리뷰 "),
-            Text("$mannerCnt개", style: const TextStyle(fontWeight: FontWeight.bold),)
-          ],),
-          Row(children: [
-            const Text("비매너 리뷰 "),
-            Text("$unmannerCnt개", style: const TextStyle(fontWeight: FontWeight.bold),)
-          ],),
-        ],
-      ),
+    // 매너와 언매너 리스트 합치기
+    List<Map<String, dynamic>> reviewList = widget.writer.mannerList!
+        .followedBy(widget.writer.unmannerList!)
+        .toList();
+    reviewList.sort((a, b) => b["votes"].compareTo(a["votes"]));
+    List<Map<String, dynamic>> showList = reviewList.take(3).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("${widget.writer.nickname}님의 택시 합승 최근 리뷰",
+            style: TextStyle(fontSize: defaultFontSize * 1.2, fontWeight: FontWeight.bold),
+        ),
+        Text("${showList[0]['content']}"),
+        Text("${showList[1]['content']}"),
+        Text("${showList[2]['content']}"),
+      ],
     );
   }
 
   Future<Widget> _buildCommentSection(BuildContext context) async {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-    double leftPadding = screenWidth * 0.03;
-    double topPadding = screenHeight * 0.005;
+    UserProvider user = Provider.of<UserProvider>(context);
 
-    ImageProvider backgroundImage = NetworkImage(widget.writerUserInfo.profileImageUrl);
-
-    int cntComment = widget.postInfo.commentList.length;
-    List<dynamic> commentList = widget.postInfo.commentList; //
-    if(cntComment > 3){ // 최근 댓글 3개만 가져오도록
-      commentList = widget.postInfo.commentList.sublist(cntComment - 3);
+    List<dynamic> commentList = widget.post.commentList;
+    if(widget.post.commentList.length > 3){
+      commentList = widget.post.commentList.sublist(widget.post.commentList.length - 3);
     }
+    List<String> commentUserIdList = commentList
+        .map((e) => e['user_code'] as String)
+        .toList();
+    List<TaxiScreenUserModel> commentUserList = await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
 
-    // 각각의 comment의 userId 값으로 사용자의 정보 리스트 (commentUserList)
-    List<TaxiScreenUserModel> commentUserList = [];
-    for(var comment in commentList){
-      TaxiScreenUserModel commentUser = await TaxiScreenUserModel.getUserById(comment["userId"]);
-      commentUserList.add(commentUser);
-    }
-
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-              padding: EdgeInsets.only(left: leftPadding),
-              child: Text("댓글",
-                  style: TextStyle(fontSize: defaultFontSize * 1.1, fontWeight: FontWeight.bold)
-              )
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: leftPadding),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: backgroundImage,
-                  onBackgroundImageError: (_, __) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("댓글",
+            style: TextStyle(
+              fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2,
+              fontWeight: FontWeight.bold
+            )
+        ),
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: NetworkImage(user.profileImageUrl!),
+            ),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: TextFormField(
+                  focusNode: inputFocusNode,
+                  decoration: const InputDecoration(
+                    hintText: "댓글 작성하기",
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey),
+                    ),
+                    border: UnderlineInputBorder(),
+                  ),
+                  onSaved: (value) {
                     setState(() {
-                      backgroundImage =
-                          const AssetImage('assets/images/default_avatar.png');
+                      _content = value!;
                     });
                   },
+                  validator: (value) {
+                    if(value == null || value.isEmpty) {
+                      return "내용을 입력해주세요";
+                    }
+                    return null;
+                  },
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: leftPadding),
-                    child: const TextField(
-                      decoration: InputDecoration(
-                        hintText: "댓글 추가하기",
-                        border: UnderlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ),
-            ],),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: (widget.postInfo.commentList.length < 4) ? widget.postInfo.commentList.length : 3,
-              // commentList 와 commentUserList로 사용자 이미지, 사용자 이름, 댓글 내용 위젯 생성하기
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.only(left: leftPadding, right: leftPadding, top: topPadding),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundImage: NetworkImage(commentUserList[index].profileImageUrl),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: leftPadding),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(commentUserList[index].nickname, style: const TextStyle(fontWeight: FontWeight.bold),),
-                            Padding(
-                              padding: EdgeInsets.only(top: topPadding),
-                              child: Text(commentList[index]["content"])
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              },
+              ),
             ),
-          ),
-        ],
-      ),
+            IconButton(
+              onPressed: () async {
+                Logger log = Logger(printer: PrettyPrinter());
+                if(_formKey.currentState!.validate()) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('댓글 저장 중..')),
+                  );
+
+                  _formKey.currentState!.save();
+                  try {
+                    FirebaseFirestore firestore = FirebaseFirestore.instance;
+                    CollectionReference collection = firestore.collection(widget.collectionName);
+                    QuerySnapshot querySnapshot = await collection
+                        .where('createdTime', isEqualTo: widget.post.createdTime)
+                        .get();
+                    var doc = querySnapshot.docs.first;
+                    var commentList = doc['commentList'] as List<dynamic>;
+                    var newComment = {
+                        'user_code': user.id.toString(),
+                        'comment': _content,
+                        'time': DateTime.now(),
+                        'enable': true
+                    };
+                    commentList.add(newComment);
+                    await collection.doc(doc.id).update({'commentList': commentList});
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('댓글 작성 완료!')),
+                    );
+                    FocusScope.of(context).unfocus();
+                    setState(() { });
+                  } on Exception catch (error) {
+                    log.e(error);
+                  }
+                }
+              },
+              icon: const Icon(Icons.send),
+              color: Colors.grey,
+            )
+        ],),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: commentList.length,
+          itemBuilder: (context, index) {
+            return commentItem(context, commentList[index] as Map<String, dynamic>, commentUserList[index]);
+          },
+        ),
+      ],
     );
   }
 
-  // _buildBottomSection(BuildContext context) {
-  //   return Padding(
-  //     padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-  //     child: Row(
-  //       children: [
-  //         Column(
-  //           children: [
-  //             Text(),
-  //             Text(data)
-  //           ],
-  //         ),
-  //         ElevatedButton(onPressed: onPressed, child: child)
-  //       ],
-  //     ),
-  //   );
-  // }
+  Widget commentItem(BuildContext context, Map<String, dynamic> comment, TaxiScreenUserModel user) {
+    DateTime writeTime = (comment['time'] as Timestamp).toDate();
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundImage: NetworkImage(user.profileImageUrl),
+        ),
+        Column(
+          children: [
+            Row(
+              children: [
+                Text(user.nickname),
+                Padding(
+                  padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.02),
+                  child: Text(
+                    "${DateTime.now().difference(writeTime).inMinutes}분전",
+                    style: const TextStyle(
+                      color: Colors.grey
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Text(comment['comment'])
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget _buildBottomSection(BuildContext context) {
+    UserProvider currUser = Provider.of<UserProvider>(context);
+    return Row(
+      children: [
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.05,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "정원 4명중 ${widget.post.memberList.length + 1}명 참여중",
+                style: TextStyle(
+                  fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2,
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+              Text(
+                "${widget.writer.gender}만 참여가능",
+                style: TextStyle(
+                  fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize!,
+                  color: Colors.grey
+                ),
+              )
+            ],
+          ),
+        ),
+        const Spacer(),
+        ElevatedButton(
+          onPressed: () {
+            if(widget.writer.userId == currUser.id.toString()){
+              return;
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('승객 호소인 클릭함')),
+            );
+          },
+          child: widget.writer.userId == currUser.id.toString()
+            ? const Text("합승중")
+            : const Text("합승하기")
+        )
+      ],
+    );
+  }
 
 // Widget _buildBottom(BuildContext context) {}
 }

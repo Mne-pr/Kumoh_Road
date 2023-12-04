@@ -68,7 +68,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                 } else if (snapshot.hasError) {
                   log.e("${snapshot.error}");
                   log.e("${snapshot.stackTrace}");
-                  return const Center(child: Text("게시글을 불러올 수 없습니다"));
+                  return const Center(child: Text("게시글 로딩 실패"));
                 } else if (snapshot.hasData) {
                   return snapshot.data ?? const Center(child: Text('게시글이 없습니다'));
                 } else {
@@ -109,15 +109,12 @@ class _TaxiScreenState extends State<TaxiScreen> {
   }
 
   Widget _buildStartInfo(BuildContext context, List<String> startList) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-
     return Padding(
-      padding: EdgeInsets.only(left: screenWidth * 0.04),
+      padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.04),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           style: TextStyle(
-              fontSize: defaultFontSize * 1.1,
+              fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.1,
               fontWeight: FontWeight.bold,
               color: Colors.black),
           value: _selectedStartInfo,
@@ -152,7 +149,8 @@ class _TaxiScreenState extends State<TaxiScreen> {
       timeList.add(hour);
     }
 
-    List<String> showTimeList = timeList.map((e) => e < 10 ? "0$e:00" : "$e:00")
+    List<String> showTimeList = timeList
+        .map((e) => e < 10 ? "0$e:00" : "$e:00")
         .toList();
     if(!showTimeList.contains(_selectedTime)) {
       _selectedTime = showTimeList[0];
@@ -204,7 +202,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
     // if) DB의 도착 정보 != 오늘 날짜
     if (!isSameDate) {
       List<ArriveInfo> putArriveInfoList = [];
-
       Fluttertoast.showToast(
         msg: "데이터를 로딩 중입니다\n기다려 주세요!!!!",
         toastLength: Toast.LENGTH_LONG,
@@ -212,14 +209,12 @@ class _TaxiScreenState extends State<TaxiScreen> {
         timeInSecForIosWeb: 3,
         fontSize: defaultFontSize,
       );
-
       // api에서 오늘 도착정보 가져오기
       if (isChoicedGumiStation) {
         putArriveInfoList = await ArriveInfo.getTrainArriveInfoFromApi();
       } else {
         putArriveInfoList = await ArriveInfo.getBusArriveInfoFromApi();
       }
-
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // 기존의 도착 정보 삭제
       final WriteBatch batch = firestore.batch();
@@ -227,7 +222,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
       for (QueryDocumentSnapshot document in querySnapshot.docs) {
         batch.delete(document.reference);
       }
-
       putArriveInfoList = putArriveInfoList // 중복된 시간 제거(고속버스와 시외버스의 도착시간 정보가 겹칠 경우 대비)
           .map((e) => '${e.arriveDateTime.hour}:${e.arriveDateTime.minute}')
           .toSet()
@@ -315,62 +309,59 @@ class _TaxiScreenState extends State<TaxiScreen> {
     } else if (_selectedStartInfo == "구미역") {
       collectionName = "train_posts";
     }
-
-    List<ArriveInfo> arriveInfoList = [];
-    // DB의 기존 게시글 가져오기(DB 학교 게시판의 글과 오늘 날짜 비교를 위한 작업)
-    arriveInfoList = await ArriveInfo.fetchSchoolCreatedTime();
-    DateTime now = DateTime.now();
-
-    if(arriveInfoList.isNotEmpty){
-      DateTime saveDay = arriveInfoList[0].arriveDateTime;
-      bool isSameDate = now.year == saveDay.year && now.month == saveDay.month && now.day == saveDay.day;
-      if (!isSameDate) {
-        final FirebaseFirestore firestore = FirebaseFirestore.instance;
-        // 기존의 학교 게시글 정보 삭제
-        final WriteBatch batch = firestore.batch();
-        final QuerySnapshot querySnapshot = await firestore.collection("school_posts").get();
-        for (QueryDocumentSnapshot document in querySnapshot.docs) {
-          batch.delete(document.reference);
-        }
-        await batch.commit(); // 쿼리 일괄 전송
-      }
-    }
-
-    // 현재 출발지와 현재 선택한 시간(categoryTime 필드)인 모든 게시글 읽어오기
-    List<TaxiScreenPostModel> postList = await TaxiScreenPostModel.getAllPostByCollectionAndTime(collectionName, _selectedTime!);
-
+    // 현재 출발지, 현재 categoryTime, 오늘 날짜인 문서만 필터링
+    List<TaxiScreenPostModel> postList = await TaxiScreenPostModel.getAllPostByCollectionAndDateTime(collectionName, _selectedTime!, DateTime.now());
     return _buildPosts(context, postList);
   }
 
   Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList) async {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-    double imageHeight = screenHeight * 0.2;
-    double contentFontSize = defaultFontSize;
-    EdgeInsets leftPadding = EdgeInsets.only(left: screenWidth * 0.01);
-
     // 선택한 시간의 등록된 게시물이 없을 시
     if(postList.isEmpty) {
       return const Center(child: Text("게시물을 등록해주세요!"),);
     }
-
     // 모든 작성자 정보를 읽어오기
     List<String> userIdList = postList
         .map((e) => e.writerId)
         .toList();
     List<TaxiScreenUserModel> writerList = await TaxiScreenUserModel.getUserList(userIdList);
-
+    Logger log = Logger(printer: PrettyPrinter());
+    log.i(writerList.length);
     return Expanded(
       child: ListView.builder(
         itemCount: postList.length,
-        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
         itemBuilder: (context, int index) {
           return Column(
             children: [
               GestureDetector(
-                onTap: () {
-                  //todo: 상세 페이지 이동
+                onTap: () async {
+                  const Map<String, String> collectionConverter = {
+                    '금오공과대학교': 'school_posts',
+                    '구미종합터미널': 'express_bus_posts',
+                    '구미역': 'train_posts'
+                  };
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (context) =>
+                        PostDetailsScreen(
+                          writer: writerList[index],
+                          post: postList[index],
+                          collectionName: collectionConverter[_selectedStartInfo]!,
+                        )
+                        // PostDetailsScreen(writer: writerList[index], post: postList[index], collectionId: collectionConverter[_selectedStartInfo]!,)
+                  ));
+
+                  // 조회수 1 증가
+                  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+                  QuerySnapshot querySnapshot = await firestore
+                      .collection(collectionConverter[_selectedStartInfo]!)
+                      .where('categoryTime', isEqualTo: _selectedTime)
+                      .where('writerId', isEqualTo: writerList[index].userId)
+                      .get();
+                  for (var doc in querySnapshot.docs) {
+                    await firestore
+                        .collection(collectionConverter[_selectedStartInfo]!)
+                        .doc(doc.id)
+                        .update({'viewCount': FieldValue.increment(1)});
+                  }
                 },
                 child: Row(
                   children: [
@@ -392,13 +383,23 @@ class _TaxiScreenState extends State<TaxiScreen> {
                             'assets/images/default_avatar.png',
                             width: 100,
                             height: 100,
-                            fit: BoxFit.fill,
+                            fit: BoxFit.cover,
                             )
                               : Image.network(
                             postList[index].imageUrl,
+                            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                              return child;
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if(loadingProgress == null){
+                                return child;
+                              } else{
+                                return const Center(child: CircularProgressIndicator(),);
+                              }
+                            },
                             width: 100,
                             height: 100,
-                            fit: BoxFit.fill,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -413,7 +414,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                             Text(
                               postList[index].title,
                               style: TextStyle(
-                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.1,
+                                fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.clip,
@@ -427,7 +428,8 @@ class _TaxiScreenState extends State<TaxiScreen> {
                                   ),
                                 ),
                                 Text(
-                                  "${DateTime.now().difference(postList[index].createdTime).inMinutes}분전"
+                                  "${DateTime.now().difference(postList[index].createdTime).inMinutes}분전",
+                                  style: const TextStyle(color: Colors.grey),
                                 )
                               ],
                             ),
@@ -441,7 +443,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                             Row(
                               children: [
                                 const Spacer(), // Row의 나머지 공간을 채워 아이콘을 오른쪽으로 밀어냄
-                                const Icon(Icons.rate_review_outlined, color: Colors.grey), // 사용하고자 하는 아이콘으로 변경
+                                const Icon(Icons.comment_outlined, color: Colors.grey), // 사용하고자 하는 아이콘으로 변경
                                 Text("${postList[index].commentList.length}"), // 실제 댓글 수를 나타내는 필드로 변경
                               ],
                             ),
