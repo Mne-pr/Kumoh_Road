@@ -511,7 +511,7 @@ class _MainScreenState extends State<MainScreen> {
         for (var doc in snapshot.data!.docs) {
           var data = doc.data();
           if (data is Map<String, dynamic>) {
-            var busList = List.from(data['bus_list'] as List<dynamic> ?? []);
+            var busList = List.from(data['busList'] as List<dynamic> ?? []);
             allBuses.addAll(busList.map((busData) => Bus.fromJson(busData as Map<String, dynamic>)));
           }
         }
