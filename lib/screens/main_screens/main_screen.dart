@@ -91,15 +91,6 @@ class _MainScreenState extends State<MainScreen> {
           );
         },
       ),
-      MainScreenButtonModel(
-        icon: Icons.chat,
-        title: '인공지능 채팅',
-        color: Colors.blueGrey,
-        url: '',
-        onTap: () {
-          // AI Chat 화면으로 이동
-        },
-      ),
     ];
   }
 
