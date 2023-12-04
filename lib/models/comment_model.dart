@@ -3,30 +3,45 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Comment{
   final String comment;
   final bool enable;
-  final DateTime time;
-  final String userCode;
+  final DateTime createdTime;
+  final String writerId;
 
-  Comment({required this.comment, required this.enable, required this.time, required this.userCode});
+  Comment({
+    required this.comment,
+    required this.enable,
+    required this.createdTime,
+    required this.writerId
+  });
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      enable: json['enable'],
+      comment: json['comment'].toString(),
+      createdTime: (json['createdTime'] as Timestamp).toDate(),
+      writerId: json['writerId'].toString(),
+    );
+  }
 }
 
-class CommentApiRes{
+class CommentList{
   final List<Comment> comments;
-  CommentApiRes({required this.comments});
+  CommentList({required this.comments});
 
-  factory CommentApiRes.fromFireStore(List<Map<String,dynamic>> fireData) {
-    List<Comment> commentList;
+  factory CommentList.fromDocument(DocumentSnapshot doc) {
+    List<Map<String,dynamic>> tempCommentList = [];
+    List<Comment> commentList = [];
 
-    try{
-      commentList = fireData.map((map) {
-        return Comment(
-          comment: map['comment'],
-          enable: map['enable'],
-          time: (map['time'] as Timestamp).toDate(),
-          userCode: map['user_code'],
-        );
-      }).toList();
-    } catch(e) { print(e); commentList = [];}
+    if (doc.exists){
+      final comments = doc.get('comments');
+      for (var comment in comments) { tempCommentList.add(comment);}
 
-    return CommentApiRes(comments: commentList);
+      try {
+        commentList = tempCommentList.map((comment) => Comment.fromJson(comment)).toList();
+        commentList.sort((comment1, comment2) => comment1.createdTime.compareTo(comment2.createdTime));
+      } catch(e) { print('CommentList.fromDocument error: ${e.toString()}'); commentList=[];}
+
+    } else {commentList = [];}
+
+    return CommentList(comments: commentList);
   }
 }
