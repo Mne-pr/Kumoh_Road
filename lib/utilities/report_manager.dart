@@ -95,9 +95,13 @@ class ReportManager {
         'reason': reason,
         'category': category,
         'createdTime': FieldValue.serverTimestamp(),
-        'reporterUserId': reporterUserId,
+        'reportedUserId': reportedUserId,   // 신고된 유저 ID
+        'reporterUserId': reporterUserId,  //신고한 유저 ID
         'isHandledByAdmin': false,
       });
+      // 신고 카운트 증가
+      int newReportCount = _userProvider.reportCount + 1;
+      await _userProvider.updateUserInfo(reportCount: newReportCount);
 
       // 신고 대상 사용자의 매너 온도 감소
       await _decreaseUserMannerTemperature(reportedUserId);

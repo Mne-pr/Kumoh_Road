@@ -288,9 +288,20 @@ class UserProvider with ChangeNotifier {
             .collection('users')
             .doc(_id.toString())
             .delete();
+
+        // 사용자가 작성한 신고를 삭제
+        QuerySnapshot reportsSnapshot = await FirebaseFirestore.instance
+            .collection('reports')
+            .where('reporterUserId', isEqualTo: _id.toString())
+            .get();
+
+        for (var doc in reportsSnapshot.docs) {
+          await doc.reference.delete();
+        }
       }
     } catch (error) {
       // 연결 끊기 실패 처리
+      print('Error unlinking user: $error');
     } finally {
       _resetLocalUserData();
       await _clearLocalUserData();
