@@ -363,16 +363,26 @@ class _MainScreenState extends State<MainScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(collectionName)
-      //.where('categoryTime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now())) // Todo UI 구현 이후 추가 예정
           .orderBy('categoryTime', descending: true)
-          .limit(5)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
+        var now = DateTime.now();
+        var nowTotalMinutes = now.hour * 60 + now.minute;
+        var filteredDocs = snapshot.data!.docs.where((doc) {
+          var timeParts = doc["categoryTime"].split(':');
+          var docHour = int.parse(timeParts[0]);
+          var docMinute = int.parse(timeParts[1]);
+          var docTotalMinutes = docHour * 60 + docMinute;
+          return docTotalMinutes >= nowTotalMinutes;
+        }).toList();
+
+        // 필터링된 결과에서 상위 5개 문서만 선택
+        var limitedDocs = filteredDocs.take(5).toList();
         return ListView(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
-          children: snapshot.data!.docs.map((doc) {
+          physics: const NeverScrollableScrollPhysics(),
+          children: limitedDocs.map((doc) {
             TaxiScreenPostModel postInfo = TaxiScreenPostModel(
                 categoryTime: doc["categoryTime"],
                 commentList: doc["commentList"],
