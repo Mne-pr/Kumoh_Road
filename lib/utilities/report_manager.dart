@@ -131,10 +131,12 @@ class ReportManager {
   // 특정 엔티티 유형에 대한 내 신고 가져오기 메서드
   Future<List<Map<String, dynamic>>> fetchMyReports() async {
     try {
-      // 'reports' 컬렉션에서 reporterUserId가 현재 로그인한 사용자 ID와 일치하는 문서를 조회
+      // 'reports' 컬렉션에서 reporterUserId가 현재 로그인한 사용자 ID와 일치하고,
+      // createdTime으로 내림차순 정렬된 문서를 조회
       var reportsSnapshot = await _firestore
           .collection('reports')
-          .where('reporterUserId', isEqualTo:  _userProvider.id.toString())
+          .where('reporterUserId', isEqualTo: _userProvider.id.toString())
+          .orderBy('createdTime', descending: true)
           .get();
 
       return reportsSnapshot.docs.map((doc) => {
