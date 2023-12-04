@@ -87,8 +87,15 @@ class BusList {
       var totalCount = body['totalCount'];
       if (totalCount == 0) { throw Exception('No buses available'); }
 
-      List<dynamic> items = body['items']['item'];
-      buslist = items.map((i) => Bus.fromJson(i)).toList();
+      var items = body['items']['item'];
+      if (items is List) {
+        // item이 리스트일 경우
+        buslist = items.map((i) => Bus.fromJson(i)).toList();
+      } else {
+        // item이 단일 객체일 경우
+        buslist.add(Bus.fromJson(items));
+      }
+
       buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
 
     } catch(e) {
@@ -110,8 +117,6 @@ class BusList {
 
       try {
         buslist = tempBusList.map((bus) => Bus.fromJson(bus)).toList();
-
-
         buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
       } catch(e) { print('Buslist.fromDocument error: ${e.toString()}'); buslist=[];};
     }

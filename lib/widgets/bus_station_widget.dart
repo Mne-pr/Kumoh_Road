@@ -166,7 +166,7 @@ class _BusListWidgetState extends State<BusListWidget> {
                                                 children: <Widget>[
                                                   SizedBox(height: 2),
                                                   Text(
-                                                    '${bus.routeno} | 방향적어야함',
+                                                    '${bus.routeno}',
                                                     style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
                                                   SizedBox(height: 10),
                                                   Text(
@@ -189,7 +189,7 @@ class _BusListWidgetState extends State<BusListWidget> {
                                 ),
                                 IconButton(
                                   onPressed: () { widget.onCommentsCall(bus.code); print('버스코드 전달 ${bus.code}');},
-                                  icon: Icon(Icons.arrow_circle_up_outlined),
+                                  icon: Icon(Icons.comment_outlined), //Icons.arrow_circle_up_outlined
                                   color: const Color(0xFF3F51B5),
                                 ),
                                 SizedBox(width: 18,),

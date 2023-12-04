@@ -22,8 +22,8 @@ import '../../widgets/bus_station_widget.dart';
 // 댓글 열려 있을 때 마크 클릭하면 사라져야 함
 // 댓글 열려 있을 때 농협을 슬라이드 하던가, 지역이동 버튼을 누르면 사라져야 함
 // 각종 상황에 대한 안내문구 필요
-// 버스 없을때 화면 수정
-// 댓글 로딩할 때 화면 수정
+// 버스 없을때 화면 수정 - 테두리
+// 댓글 로딩할 때 화면 수정 - 테두리
 
 class ButtonData {
   final IconData icon;
@@ -122,42 +122,34 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late List<Bus> busList    = [];
 
   // 댓글 정보와 그 상태들
-  late List<Comment>   comments = [];
-  late List<UserModel> users    = [];
+  late List<Comment>   comments     = [];
+  late List<UserModel> commentUsers = [];
   late bool isValidUser = false;
 
   Future<void> getComments() async {
     setState(() { isLoading = true;});
 
-    final commentDoc = fire.collection('bus_chat').doc(curBusCode);
     //final commentDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020'); // 개발용
+    final commentDoc =     fire.collection('bus_chat').doc(curBusCode);
     final userCollection = fire.collection('users');
+    CommentList commentlist;
     List<UserModel> tempUsers = [];
 
-    DocumentSnapshot fireData = await commentDoc.get();
-    List<Map<String,dynamic>> newCommentList = [];
+    DocumentSnapshot commentData = await commentDoc.get();
 
     // 버스에 대한 comments 가져오기
-    if (fireData.exists){
-      final commentList = fireData.get('comments');
-      for (var c in commentList) {
-        try { newCommentList.add(c);} catch(e) { print(e);}
-      }
-      setState(() { comments = CommentApiRes.fromFireStore(newCommentList).comments;});
+    commentlist = CommentList.fromDocument(commentData);
 
-      // 각 comments에 대한 유저 정보 가져오기
-      for (final comment in comments) {
-        try {
-          final user = await userCollection.doc(comment.userCode).get();
-          tempUsers.add(UserModel.fromDocument(user));
-        } catch(e) { print(e);}
-      }
-
-      setState(() { users = tempUsers; });
+    // 각 comment에 대한 유저 가져오기
+    for (final comment in commentlist.comments) {
+      try {
+        final users = await userCollection.doc(comment.writerId).get();
+        final user = UserModel.fromDocument(users);
+        tempUsers.add(user);
+      } catch(e) { print('get user data about comment error : ${e.toString()}');}
     }
-    else { setState(() { comments = []; users=[];});}
 
-    setState(() { isLoading = false;});
+    setState(() { comments = commentlist.comments; commentUsers = tempUsers; isLoading = false;});
   }
 
   List<ButtonData> buttonData = [
@@ -386,15 +378,12 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 버스리스트에서 댓글 활성화버튼 이벤트 처리
     Future<void> callComments(String busCode) async {
-      setState(() { curBusCode = busCode; comments = []; users = []; });
+      setState(() { curBusCode = busCode; comments = []; commentUsers = []; });
       await commentsBoxSlide();
     }
 
     // 댓글 등록 시 이벤트 처리
     void submitComment(String comment) async {
-
-      // 본인 정보 가져오기 - 최적화 쌉가능인데.. 나중에 하자
-      final userCode = userProvider.id;
 
       // 댓글 문서 가져오기
       final chatDoc = fire.collection('bus_chat').doc(curBusCode);
@@ -406,7 +395,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           'comment': comment,
           'enable': true,
           'createdTime' : Timestamp.now(),
-          'writerId': userCode.toString(),
+          'writerId': userProvider.id.toString(),
         }])
       });
       
@@ -478,12 +467,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             // 1.5 댓글 위젯
             Positioned(
               bottom: commentAni.value - screenHeight, left: 0, right: 0,
-              child: BusChatWidget(
+              child: BusChatListWidget(
                 onScrollToTop: commentsBoxSlide,
                 submitComment: submitComment,
-                isLoading: isLoading,
-                comments: comments,
-                users: users,
+                isLoading:     isLoading,
+                comments:      comments,
+                commentUsers:  commentUsers,
+                isStudentVerified: userProvider.isStudentVerified,
               )
             ),
 
