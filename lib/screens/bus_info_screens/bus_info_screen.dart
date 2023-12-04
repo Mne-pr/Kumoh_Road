@@ -222,9 +222,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       DocumentSnapshot station = await stationDoc.get();
       curBuslist = BusList.fromDocument(station);
       busCodesFromFire = curBuslist.buses.map((bus) => bus.code).toList();
-
       // 각 버스의 도착지 결정해야
-
 
       // api의 bus_list에서 버스코드 리스트를 가져옴
       busCodesFromApi = busListFromApi.map((bus) => bus.code).toList();
@@ -262,7 +260,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
 
       // 수정한 목록을 파베에 업데이트
-      await stationDoc.update({'busList': curBuslist.buses});
+      await stationDoc.update({'busList': curBuslist.getArrayFormat()});
       return;
     }
 
@@ -272,9 +270,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
         BusList buslist;
 
+        final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
+
         if (res.statusCode == 200) { // 파베에 업뎃시켜
           try{
-            buslist = BusList.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
+            buslist = BusList.fromJson(decodeRes);
             await compareSources(buslist.buses, nodeId);
           } catch(e) {buslist = BusList.fromJson({}); throw Exception(e);}
           return (buslist);
@@ -311,13 +311,12 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
         // 업데이트 한 지 10분이 안 됨 - 파베에서 그대로 받아옴
         else { print("업데이트 - 파베!! ${nodeId}");
-
           try {
             buslist = BusList.fromDocument(station);
           } catch(e) { print('try station get error : ${e.toString()}'); return BusList.fromJson({});}
-
           return buslist;
         }
+
       }
       else { print('Failed to load that bus station'); return BusList.fromJson({});}
     }
@@ -326,6 +325,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     Future<void> updateBusListBox() async {
       setState(() { isLoading = true;});
       BusList buslist = await fetchBusInfo(busStopInfos[curBusStop].code);
+
       setState(() { busList = buslist.buses; isLoading = false;});
     }
 

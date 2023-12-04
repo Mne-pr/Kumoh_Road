@@ -56,21 +56,45 @@ class BusList {
   final List<Bus> buses;
   BusList({required this.buses});
 
-  factory BusList.fromJson(Map<String, dynamic> json) {
+
+  List<Map<String, dynamic>> getArrayFormat() {
+    List<Map<String, dynamic>> target = [];
+
+    for (Bus bus in buses) {
+      target.add({
+        'arrprevstationcnt': bus.arrprevstationcnt, // 남은 정류장 수
+        'arrtime':           bus.arrtime,           // 도착예상시간(초)
+        'nodeid':            bus.nodeid,            // 정류소 ID
+        'nodenm':            bus.nodenm,            // 정류소명
+        'routeid':           bus.routeid,           // 노선 ID
+        'routeno':           bus.routeno,           // 노선번호 - 버스번호
+        'routetp':           bus.routetp,           // 노선유형
+        'vehicletp':         bus.vehicletp,         // 자량유형
+        'code':              bus.code,              // 고유문자
+      });
+    }
+
+    return target;
+  }
+
+  factory BusList.fromJson(final json) {
     List<Bus> buslist = [];
 
-    try{
+    try {
       var body = json['response']['body'];
-      if (body['totalCount'] == 0 || body['items'] == '') { throw Exception('there is no bus');}
-      else {
-        var item = body['items']['item'];
-        List<dynamic> itemList = (item is List) ? item : [item];
+      if (body == null) { throw Exception('Body is null'); }
 
-        buslist = itemList.map((i) => Bus.fromJson(i)).toList();
-        buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
-      }
+      var totalCount = body['totalCount'];
+      if (totalCount == 0) { throw Exception('No buses available'); }
 
-    } catch(e) { print('Buslist.fromJson error: ${e.toString()}'); buslist = [];}
+      List<dynamic> items = body['items']['item'];
+      buslist = items.map((i) => Bus.fromJson(i)).toList();
+      buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
+
+    } catch(e) {
+      print('BusList.fromJson error(ignore if error is []): ${e.toString()}');
+      buslist = [];
+    }
 
     return BusList(buses: buslist);
   }
@@ -81,11 +105,13 @@ class BusList {
     List<dynamic> field;
 
     if (doc.exists) {
-      field = doc.get('bus_list');
+      field = doc.get('busList');
       for (var busInfo in field) { tempBusList.add(busInfo);}
 
       try {
         buslist = tempBusList.map((bus) => Bus.fromJson(bus)).toList();
+
+
         buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
       } catch(e) { print('Buslist.fromDocument error: ${e.toString()}'); buslist=[];};
     }
