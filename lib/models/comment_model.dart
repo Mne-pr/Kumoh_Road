@@ -5,7 +5,6 @@ class Comment{
   final bool     enable;
   final DateTime createdTime;
   final String   writerId;
-  String         code;
   String         targetDoc; // (버스채팅=> 버스코드)
 
   Comment({
@@ -14,8 +13,7 @@ class Comment{
     required this.createdTime,
     required this.writerId,
     this.targetDoc="",
-    this.code="",
-  }) { this.code = '${this.writerId}-${this.createdTime}'; }
+  });
 
   factory Comment.fromJson(Map<String, dynamic> json, {String extraData=""}) {
     return Comment(
@@ -26,8 +24,8 @@ class Comment{
       targetDoc: extraData,
     );
   }
-}
 
+}
 class CommentList{
   final List<Comment> comments;
   CommentList({required this.comments});
@@ -50,3 +48,5 @@ class CommentList{
     return CommentList(comments: commentList);
   }
 }
+
+

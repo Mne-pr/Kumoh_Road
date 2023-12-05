@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/comment_model.dart';
+import '../../models/report_bus_chat.dart';
 import '../../models/user_model.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../../widgets/report_count_widget.dart';
