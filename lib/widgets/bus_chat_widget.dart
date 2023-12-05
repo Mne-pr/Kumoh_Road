@@ -7,6 +7,7 @@ import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/utilities/report_manager.dart';
 
 import '../models/user_model.dart';
+import '../screens/user_info_screens/other_user_info_screen.dart';
 
 // 버스 채팅 리스트
 class BusChatListWidget extends StatefulWidget {
@@ -213,27 +214,62 @@ class _chatState extends State<OneChatWidget> {
     }
   }
 
+  // 댓글 등록
+  Future<void> reportComment(ReportManager manager) async {
+    await manager.reportComment(
+      category: widget.comment.comment,   // 댓글 내용
+      reportedUserId: widget.user.userId, // 신고한 유저 아이디 - 본인
+      reason: widget.comment.targetDoc,   // 버스 코드 (버스정류장아이디-버스번호-버스경로)
+      commentId: widget.comment.createdTime.toString(),     // 댓글 생성 시간 - 댓글 구별용
+    );
+  }
+
+  // 댓글 삭제 - 미확인
+  Future<void> deleteComment() async {
+    final comment = widget.comment;
+    final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
+    
+    try {
+      DocumentSnapshot doc = await busChatDoc.get();
+      if (doc.exists) {
+        List<dynamic> items = List.from(doc['comments']);
+        items.removeWhere((item) => (
+            (item['createdTime'] as Timestamp) == comment.createdTime &&
+            item['writerId'] as String == comment.writerId &&
+            item['comment'] as String == comment.comment
+        ));
+
+        await busChatDoc.update({'comments': items});
+      }
+    } catch(e) { print('Error removing item: $e');}
+
+  }
 
   @override
   Widget build(BuildContext context) {
     ReportManager reportManager = ReportManager(widget.userProvider);
-    bool isOwner = widget.user.userId == widget.userProvider.id.toString(); // 댓글작성자와 본인 비교위함
-
-    Future<void> reportComment() async {
-      await reportManager.reportComment(
-        category: widget.comment.comment,   // 댓글 내용
-        reportedUserId: widget.user.userId, // 신고한 유저 아이디
-        reason: widget.comment.targetDoc,   // 버스 코드 (버스정류장아이디-버스번호-버스경로)
-        commentId: widget.comment.createdTime.toString(),     // 댓글 생성 시간 - 댓글 구별용
-      );
-    }
+    String userId = widget.user.userId;
+    bool isOwner = userId == widget.userProvider.id.toString(); // 댓글작성자와 본인 비교위함
 
     return Container(
       padding: EdgeInsets.all(10),
       child: Row(
         children: <Widget>[
           // 유저 프사
-          CircleAvatar( backgroundImage: NetworkImage(widget.user.profileImageUrl),),
+          GestureDetector(
+            onTap: () {
+              if (!isOwner){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        OtherUserProfileScreen(userId: userId),
+                  ),
+                );
+              }
+            },
+            child: CircleAvatar( backgroundImage: NetworkImage(widget.user.profileImageUrl),),
+          ),
           SizedBox(width: 10,),
           // 유저 닉네임, 댓글
           Expanded(
@@ -252,7 +288,6 @@ class _chatState extends State<OneChatWidget> {
               ],
             ),
           ),
-          // 팝업버튼 - 신고, 수정, 삭제(수정삭제는 예정 없음)
           !isOwner ?
           PopupMenuButton<String>(
             shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
@@ -263,7 +298,7 @@ class _chatState extends State<OneChatWidget> {
 
             onSelected: (String value) async {
               if (value == 'report') {
-                await reportComment();
+                await reportComment(reportManager);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('신고가 제출되었습니다'),duration: Duration(milliseconds: 700)),
                 );
@@ -290,14 +325,14 @@ class _chatState extends State<OneChatWidget> {
               if (value == 'edit') {
 
               } else if (value == 'delete') {
-
+                // 일단 커멘트에 모든 정보가 있으니깐?
+                deleteComment();
               }
             },
 
             itemBuilder: (BuildContext context) {
               return <PopupMenuEntry<String>>[
                 PopupMenuItem<String>(
-                  enabled: false,
                   value: 'edit',
                   child: Text('편집'),
                 ),
