@@ -238,8 +238,14 @@ class _chatState extends State<OneChatWidget> {
             color: Colors.white,
             elevation: 3.0,
 
-            onSelected: (String value) {
-              if (value == 'report') { reportComment(); }
+            onSelected: (String value) async {
+              if (value == 'report') { 
+                await reportComment();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('신고가 제출되었습니다'),duration: Duration(milliseconds: 700)),
+                );
+              }
+
             },
 
             itemBuilder: (BuildContext context) {
