@@ -185,7 +185,7 @@ class _BadgeScreenState extends State<BadgeScreen> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: isBadgeOwned ? Colors.blue : Colors.black,
+                  backgroundColor: isBadgeOwned ? Colors.blue : Colors.grey,
                   child: Icon(
                     isBadgeOwned ? badge.icon : Icons.help_outline,
                     size: 40.0,

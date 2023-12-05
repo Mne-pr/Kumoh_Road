@@ -69,10 +69,31 @@ class TaxiScreenUserModel extends UserModel{
     Logger log = Logger(printer: PrettyPrinter());
     try{
       final snapshot = await FirebaseFirestore.instance.collection('users').get();
-      List<TaxiScreenUserModel> userList = snapshot.docs
-          .where((userDoc) => userIdList.contains(userDoc.id))
-          .map((userDoc) => TaxiScreenUserModel.fromUserModel(UserModel.fromDocument(userDoc)))
-          .toList();
+      List<TaxiScreenUserModel> userList = [];
+      for(var id in userIdList){
+        for(var doc in snapshot.docs){
+          if(userIdList.contains(doc.id)){
+            userList.add(TaxiScreenUserModel.fromUserModel(UserModel.fromDocument(doc)));
+          }
+        }
+      }
+      return userList;
+    }on Exception catch(e){
+      log.e(e);
+      return [];
+    }
+  }
+
+  static Future<List<TaxiScreenUserModel>> getCommentUserList(List<String> commentUserIdList) async {
+    Logger log = Logger(printer: PrettyPrinter());
+    try{
+      final snapshot = await FirebaseFirestore.instance.collection('users').get();
+      List<TaxiScreenUserModel> userList = [];
+      for(String id in commentUserIdList){
+        final addUserDoc = snapshot.docs.firstWhere((userDoc) => id == userDoc.id);
+        userList.add(TaxiScreenUserModel.fromUserModel(UserModel.fromDocument(addUserDoc)));
+      }
+
       return userList;
     }on Exception catch(e){
       log.e(e);

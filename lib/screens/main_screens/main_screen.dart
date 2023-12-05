@@ -91,15 +91,6 @@ class _MainScreenState extends State<MainScreen> {
           );
         },
       ),
-      MainScreenButtonModel(
-        icon: Icons.chat,
-        title: '인공지능 채팅',
-        color: Colors.blueGrey,
-        url: '',
-        onTap: () {
-          // AI Chat 화면으로 이동
-        },
-      ),
     ];
   }
 
@@ -372,16 +363,26 @@ class _MainScreenState extends State<MainScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(collectionName)
-      //.where('categoryTime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now())) // Todo UI 구현 이후 추가 예정
           .orderBy('categoryTime', descending: true)
-          .limit(5)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
+        var now = DateTime.now();
+        var nowTotalMinutes = now.hour * 60 + now.minute;
+        var filteredDocs = snapshot.data!.docs.where((doc) {
+          var timeParts = doc["categoryTime"].split(':');
+          var docHour = int.parse(timeParts[0]);
+          var docMinute = int.parse(timeParts[1]);
+          var docTotalMinutes = docHour * 60 + docMinute;
+          return docTotalMinutes >= nowTotalMinutes;
+        }).toList();
+
+        // 필터링된 결과에서 상위 5개 문서만 선택
+        var limitedDocs = filteredDocs.take(5).toList();
         return ListView(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
-          children: snapshot.data!.docs.map((doc) {
+          physics: const NeverScrollableScrollPhysics(),
+          children: limitedDocs.map((doc) {
             TaxiScreenPostModel postInfo = TaxiScreenPostModel(
                 categoryTime: doc["categoryTime"],
                 commentList: doc["commentList"],
@@ -402,8 +403,9 @@ class _MainScreenState extends State<MainScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => PostDetailsScreen(
-                      writerUserInfo: writerInfo, // writerInfo 전달
-                      postInfo: postInfo, // postInfo 전달
+                      writer: writerInfo, // writerInfo 전달
+                      post: postInfo, // postInfo 전달
+                      collectionName: collectionName
                     ),
                   ),
                 );
@@ -510,7 +512,7 @@ class _MainScreenState extends State<MainScreen> {
         for (var doc in snapshot.data!.docs) {
           var data = doc.data();
           if (data is Map<String, dynamic>) {
-            var busList = List.from(data['bus_list'] as List<dynamic> ?? []);
+            var busList = List.from(data['busList'] as List<dynamic> ?? []);
             allBuses.addAll(busList.map((busData) => Bus.fromJson(busData as Map<String, dynamic>)));
           }
         }
