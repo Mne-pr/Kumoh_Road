@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/comment_model.dart';
+import 'package:kumoh_road/providers/user_providers.dart';
+import 'package:kumoh_road/utilities/report_manager.dart';
 
 import '../models/user_model.dart';
 
@@ -11,7 +14,7 @@ class BusChatListWidget extends StatefulWidget {
   final List<Comment>   comments;
   final List<UserModel> commentUsers;
   final bool isLoading;
-  final bool isStudentVerified;
+  final UserProvider userProvider;
 
   const BusChatListWidget({
     required this.onScrollToTop,
@@ -19,7 +22,7 @@ class BusChatListWidget extends StatefulWidget {
     required this.isLoading,
     required this.comments,
     required this.commentUsers,
-    required this.isStudentVerified,
+    required this.userProvider,
     super.key
   });
 
@@ -46,7 +49,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 
     List<Comment> commentList = widget.comments; 
     List<UserModel> userList  = widget.commentUsers;
-    bool verified = widget.isStudentVerified;
+    bool verified = widget.userProvider.isStudentVerified;
 
     // 댓글 추가 로직
     void submitComment() {
@@ -102,7 +105,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       child: Stack(
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                          OneChatWidget( user: user, comment: comment ),
+                          OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, ),
                         ],),);}
 
                   else { // 나머지 줄
@@ -110,7 +113,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       decoration: BoxDecoration( border: Border(
                           top: BorderSide(width: 1.0, color: Colors.grey.shade200),
                           bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                      ), child:   OneChatWidget( user: user, comment: comment ),
+                      ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, ),
                     );}
                 },
               ),
@@ -180,10 +183,12 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 class OneChatWidget extends StatefulWidget {
   final UserModel user;
   final Comment comment;
+  final UserProvider userProvider;
 
   const OneChatWidget({
     required UserModel this.user,
     required Comment this.comment,
+    required UserProvider this.userProvider,
     super.key
   });
 
@@ -192,16 +197,30 @@ class OneChatWidget extends StatefulWidget {
 }
 
 class _chatState extends State<OneChatWidget> {
-
+  final fire = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
+    ReportManager reportManager = ReportManager(widget.userProvider);
+
+    Future<void> reportComment() async {
+      await reportManager.reportComment(
+        category: widget.comment.comment,
+        reportedUserId: widget.user.userId,
+        reason: "지원하지 않음",
+        commentId: widget.comment.code,
+      );
+    }
+
+
     return Container(
       padding: EdgeInsets.all(10),
       child: Row(
         children: <Widget>[
+          // 유저 프사
           CircleAvatar( backgroundImage: NetworkImage(widget.user.profileImageUrl),),
           SizedBox(width: 10,),
+          // 유저 닉네임, 댓글
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +231,37 @@ class _chatState extends State<OneChatWidget> {
               ],
             ),
           ),
-          IconButton(onPressed: () {}, icon: Icon(Icons.more_vert),),
+          // 팝업버튼 - 신고, 수정, 삭제(수정삭제는 예정 없음)
+          PopupMenuButton<String>(
+            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
+            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
+            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
+            color: Colors.white,
+            elevation: 3.0,
+
+            onSelected: (String value) {
+              if (value == 'report') { reportComment(); }
+            },
+
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+              //   PopupMenuItem<String>(
+              //     enabled: false,
+              //     value: 'edit',
+              //     child: Text('편집'),
+              //   ),
+              //   PopupMenuItem<String>(
+              //     value: 'delete',
+              //     child: Text('삭제'),
+              //   ),
+                // 여기에 더 많은 메뉴 항목을 추가할 수 있습니다.
+                PopupMenuItem<String>(
+                  value: 'report',
+                  child: Text('신고', textAlign: TextAlign.end,),
+                ),
+              ];
+            },
+          ),
         ],
       ),
     );

@@ -18,13 +18,6 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
-// 해야할거
-// 댓글 열려 있을 때 마크 클릭하면 사라져야 함
-// 댓글 열려 있을 때 농협을 슬라이드 하던가, 지역이동 버튼을 누르면 사라져야 함
-// 각종 상황에 대한 안내문구 필요
-// 버스 없을때 화면 수정 - 테두리
-// 댓글 로딩할 때 화면 수정 - 테두리
-
 class ButtonData {
   final IconData icon;
   final int nextBusSt;
@@ -138,7 +131,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     DocumentSnapshot commentData = await commentDoc.get();
 
     // 버스에 대한 comments 가져오기
-    commentlist = CommentList.fromDocument(commentData);
+    commentlist = CommentList.fromDocument(commentData,extraData: curBusCode);
 
     // 각 comment에 대한 유저 가져오기
     for (final comment in commentlist.comments) {
@@ -474,7 +467,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 isLoading:     isLoading,
                 comments:      comments,
                 commentUsers:  commentUsers,
-                isStudentVerified: userProvider.isStudentVerified,
+                //isStudentVerified: userProvider.isStudentVerified,
+                userProvider: userProvider,
               )
             ),
 
