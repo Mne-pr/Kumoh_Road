@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:kumoh_road/models/comment_model.dart';
 import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/utilities/report_manager.dart';
@@ -199,9 +200,24 @@ class OneChatWidget extends StatefulWidget {
 class _chatState extends State<OneChatWidget> {
   final fire = FirebaseFirestore.instance;
 
+  String _timeAgo(DateTime dateTime) {
+    final Duration difference = DateTime.now().difference(dateTime);
+    if (difference.inMinutes < 1) {
+      return '방금';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}분 전';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}시간 전';
+    } else {
+      return DateFormat('yyyy-MM-dd').format(dateTime);
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     ReportManager reportManager = ReportManager(widget.userProvider);
+    bool isOwner = widget.user.userId == widget.userProvider.id.toString(); // 댓글작성자와 본인 비교위함
 
     Future<void> reportComment() async {
       await reportManager.reportComment(
@@ -224,13 +240,20 @@ class _chatState extends State<OneChatWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(widget.user.nickname, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),),
+                Row(
+                  children: [
+                    Text(widget.user.nickname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(width: 8),
+                    Text(_timeAgo(widget.comment.createdTime), style: const TextStyle(fontSize: 10, color: Colors.grey)), // 작성일 표시
+                  ],
+                ),
                 SizedBox(height: 5,),
                 Text(widget.comment.comment, style: TextStyle(fontSize: 17),),
               ],
             ),
           ),
           // 팝업버튼 - 신고, 수정, 삭제(수정삭제는 예정 없음)
+          !isOwner ?
           PopupMenuButton<String>(
             shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
             icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
@@ -239,34 +262,54 @@ class _chatState extends State<OneChatWidget> {
             elevation: 3.0,
 
             onSelected: (String value) async {
-              if (value == 'report') { 
+              if (value == 'report') {
                 await reportComment();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('신고가 제출되었습니다'),duration: Duration(milliseconds: 700)),
                 );
               }
-
             },
 
             itemBuilder: (BuildContext context) {
               return <PopupMenuEntry<String>>[
-              //   PopupMenuItem<String>(
-              //     enabled: false,
-              //     value: 'edit',
-              //     child: Text('편집'),
-              //   ),
-              //   PopupMenuItem<String>(
-              //     value: 'delete',
-              //     child: Text('삭제'),
-              //   ),
-                // 여기에 더 많은 메뉴 항목을 추가할 수 있습니다.
                 PopupMenuItem<String>(
                   value: 'report',
                   child: Text('신고', textAlign: TextAlign.end,),
                 ),
               ];
             },
+          ) :
+          PopupMenuButton<String>(
+            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
+            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
+            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
+            color: Colors.white,
+            elevation: 3.0,
+
+            onSelected: (String value) async {
+              if (value == 'edit') {
+
+              } else if (value == 'delete') {
+
+              }
+            },
+
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  enabled: false,
+                  value: 'edit',
+                  child: Text('편집'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Text('삭제'),
+                ),
+              ];
+            },
           ),
+
+
         ],
       ),
     );

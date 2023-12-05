@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/comment_model.dart';
@@ -103,7 +102,7 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
                 // 각 댓글을 표시하는 위젯
                 Comment comment = comments[index];
                 UserModel user = commentUsers[index];
-                return OneChatWidget(user: user, comment: comment);
+                return OneChatWidget(user: user, comment: comment,userProvider: userProvider,);
               },
             ),
           ),
