@@ -28,7 +28,7 @@ class ReportBusChatItem{
     var data = doc.data() as Map<String, dynamic>;
 
     return ReportBusChatItem(
-      chatId: data['content'],
+      chatId: data['reason'],
       writtenAt: data['entityId'],
       commentString: data['category'],
       reportedAt: (data['createdTime'] as Timestamp).toDate(),

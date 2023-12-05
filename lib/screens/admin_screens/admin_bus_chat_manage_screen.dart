@@ -15,7 +15,7 @@ class AdminBusChatManageScreen extends StatefulWidget {
 }
 
 class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
-  late List<ReportBusChatItem> reportList;
+  late List<ReportBusChatItem> reportList = [];
 
 
   Future<void> fetchAllCommentsAndReports() async {
@@ -125,7 +125,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
               ),
               subtitle: Row(
                 children: [
-                  Text('${user.age}세 (${user.gender})'),
+                  Text('${comment.commentString}'),
                   const Spacer(),
                   _buildMannerBar(user.mannerTemperature),
                 ],
