@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/comment_model.dart';
+import 'package:kumoh_road/providers/user_providers.dart';
+import 'package:kumoh_road/utilities/report_manager.dart';
 
 import '../models/user_model.dart';
 
@@ -11,7 +14,7 @@ class BusChatListWidget extends StatefulWidget {
   final List<Comment>   comments;
   final List<UserModel> commentUsers;
   final bool isLoading;
-  final bool isStudentVerified;
+  final UserProvider userProvider;
 
   const BusChatListWidget({
     required this.onScrollToTop,
@@ -19,7 +22,7 @@ class BusChatListWidget extends StatefulWidget {
     required this.isLoading,
     required this.comments,
     required this.commentUsers,
-    required this.isStudentVerified,
+    required this.userProvider,
     super.key
   });
 
@@ -44,29 +47,9 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
   @override
   Widget build(BuildContext context) {
 
-    if (widget.isLoading == true){ // 로딩 중
-      return Container(
-        padding:    EdgeInsets.all(0),
-        decoration: BoxDecoration(
-          color:     Colors.white,
-          border:    Border(
-            top:      BorderSide(width: 2.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),
-            bottom:   BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),
-        ),),
-
-        child: Center(
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height / 2,
-            child:  Center( child: CircularProgressIndicator(),),
-        ),),
-
-      );
-    }
-
     List<Comment> commentList = widget.comments; 
     List<UserModel> userList  = widget.commentUsers;
-    bool verified = widget.isStudentVerified;
-    //bool verified = true;
+    bool verified = widget.userProvider.isStudentVerified;
 
     // 댓글 추가 로직
     void submitComment() {
@@ -94,9 +77,26 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
               displacement: 100000, // 인디케이터 보이지 않도록
               onRefresh:    () async { widget.onScrollToTop();},
 
-              child: ListView.builder(
+              child: (widget.isLoading) ?
+                ListView(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height / 2 - 30,
+                      child: Center( child: CircularProgressIndicator(),),
+                    ),
+                  ],
+                ) : (commentList.isEmpty || userList.isEmpty) ?
+                ListView(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height / 2 - 30,
+                      child: Center(child: Text("채팅이 없습니다", style: TextStyle(fontSize: 20))),
+                    ),
+                  ],
+                ) : ListView.builder(
                 itemCount:   commentList.length,
                 itemBuilder: (context, index) {
+
                   Comment comment = commentList[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
                   UserModel user  = userList[index];
 
@@ -105,17 +105,16 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       child: Stack(
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                          OneChatWidget( user: user, comment: comment ),
-                  ],),);}
+                          OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, ),
+                        ],),);}
 
                   else { // 나머지 줄
                     return Container(
                       decoration: BoxDecoration( border: Border(
-                                    top: BorderSide(width: 1.0, color: Colors.grey.shade200),
-                                    bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                      ), child:   OneChatWidget( user: user, comment: comment ),
-                  );}
-
+                          top: BorderSide(width: 1.0, color: Colors.grey.shade200),
+                          bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
+                      ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, ),
+                    );}
                 },
               ),
             ),
@@ -184,10 +183,12 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 class OneChatWidget extends StatefulWidget {
   final UserModel user;
   final Comment comment;
+  final UserProvider userProvider;
 
   const OneChatWidget({
     required UserModel this.user,
     required Comment this.comment,
+    required UserProvider this.userProvider,
     super.key
   });
 
@@ -196,16 +197,29 @@ class OneChatWidget extends StatefulWidget {
 }
 
 class _chatState extends State<OneChatWidget> {
-
+  final fire = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
+    ReportManager reportManager = ReportManager(widget.userProvider);
+
+    Future<void> reportComment() async {
+      await reportManager.reportComment(
+        category: widget.comment.comment,   // 댓글 내용
+        reportedUserId: widget.user.userId, // 신고한 유저 아이디
+        reason: widget.comment.targetDoc,   // 버스 코드 (버스정류장아이디-버스번호-버스경로)
+        commentId: widget.comment.createdTime.toString(),     // 댓글 생성 시간 - 댓글 구별용
+      );
+    }
+
     return Container(
       padding: EdgeInsets.all(10),
       child: Row(
         children: <Widget>[
+          // 유저 프사
           CircleAvatar( backgroundImage: NetworkImage(widget.user.profileImageUrl),),
           SizedBox(width: 10,),
+          // 유저 닉네임, 댓글
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +230,43 @@ class _chatState extends State<OneChatWidget> {
               ],
             ),
           ),
-          IconButton(onPressed: () {}, icon: Icon(Icons.more_vert),),
+          // 팝업버튼 - 신고, 수정, 삭제(수정삭제는 예정 없음)
+          PopupMenuButton<String>(
+            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
+            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
+            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
+            color: Colors.white,
+            elevation: 3.0,
+
+            onSelected: (String value) async {
+              if (value == 'report') { 
+                await reportComment();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('신고가 제출되었습니다'),duration: Duration(milliseconds: 700)),
+                );
+              }
+
+            },
+
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+              //   PopupMenuItem<String>(
+              //     enabled: false,
+              //     value: 'edit',
+              //     child: Text('편집'),
+              //   ),
+              //   PopupMenuItem<String>(
+              //     value: 'delete',
+              //     child: Text('삭제'),
+              //   ),
+                // 여기에 더 많은 메뉴 항목을 추가할 수 있습니다.
+                PopupMenuItem<String>(
+                  value: 'report',
+                  child: Text('신고', textAlign: TextAlign.end,),
+                ),
+              ];
+            },
+          ),
         ],
       ),
     );

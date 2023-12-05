@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/screens/admin_screens/admin_bus_chat_manage_screen.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_info_screen.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_main_screen.dart';
 
@@ -27,6 +28,8 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
         case 0:
           nextPage = AdminMainScreen();
           break;
+        case 2:
+          nextPage = const AdminBusChatManageScreen();
         case 3:
           nextPage = const AdminUserManageScreen();
           break;
