@@ -44,29 +44,9 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
   @override
   Widget build(BuildContext context) {
 
-    if (widget.isLoading == true){ // 로딩 중
-      return Container(
-        padding:    EdgeInsets.all(0),
-        decoration: BoxDecoration(
-          color:     Colors.white,
-          border:    Border(
-            top:      BorderSide(width: 2.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),
-            bottom:   BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),
-        ),),
-
-        child: Center(
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height / 2,
-            child:  Center( child: CircularProgressIndicator(),),
-        ),),
-
-      );
-    }
-
     List<Comment> commentList = widget.comments; 
     List<UserModel> userList  = widget.commentUsers;
     bool verified = widget.isStudentVerified;
-    //bool verified = true;
 
     // 댓글 추가 로직
     void submitComment() {
@@ -94,9 +74,26 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
               displacement: 100000, // 인디케이터 보이지 않도록
               onRefresh:    () async { widget.onScrollToTop();},
 
-              child: ListView.builder(
+              child: (widget.isLoading) ?
+                ListView(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height / 2 - 30,
+                      child: Center( child: CircularProgressIndicator(),),
+                    ),
+                  ],
+                ) : (commentList.isEmpty || userList.isEmpty) ?
+                ListView(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height / 2 - 30,
+                      child: Center(child: Text("채팅이 없습니다", style: TextStyle(fontSize: 20))),
+                    ),
+                  ],
+                ) : ListView.builder(
                 itemCount:   commentList.length,
                 itemBuilder: (context, index) {
+
                   Comment comment = commentList[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
                   UserModel user  = userList[index];
 
@@ -106,16 +103,15 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
                           OneChatWidget( user: user, comment: comment ),
-                  ],),);}
+                        ],),);}
 
                   else { // 나머지 줄
                     return Container(
                       decoration: BoxDecoration( border: Border(
-                                    top: BorderSide(width: 1.0, color: Colors.grey.shade200),
-                                    bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
+                          top: BorderSide(width: 1.0, color: Colors.grey.shade200),
+                          bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
                       ), child:   OneChatWidget( user: user, comment: comment ),
-                  );}
-
+                    );}
                 },
               ),
             ),

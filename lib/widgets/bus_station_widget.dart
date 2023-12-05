@@ -93,7 +93,10 @@ class _BusListWidgetState extends State<BusListWidget> {
         padding: EdgeInsets.all(0),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(width: 0.5,color: const Color(0xFF3F51B5).withOpacity(0.2),),),
+          border: Border(
+            top: BorderSide(width: 0.5,color: const Color(0xFF3F51B5).withOpacity(0.2),),
+            bottom: BorderSide(width: 0.5,color: const Color(0xFF3F51B5).withOpacity(0.2),),
+          ),
         ),
         child: Center(
           child: SizedBox(
@@ -106,6 +109,7 @@ class _BusListWidgetState extends State<BusListWidget> {
 
     return Stack(
       children: [
+
         Container(
           decoration: BoxDecoration(
             border: Border(
@@ -115,22 +119,24 @@ class _BusListWidgetState extends State<BusListWidget> {
             color: Colors.white,
           ),
           height: MediaQuery.of(context).size.height / 2,
+
           child: RefreshIndicator(
                   color: Colors.white10,
                   displacement: 100000, // 인디케이터 보이지 마라..
                   onRefresh: () async {widget.onScrollToTop();},
+
                   child: ListView.builder(
                       physics: AlwaysScrollableScrollPhysics(),
                       controller: scrollcon,
                       itemCount: (numOfBus == 0) ? 1 : numOfBus + 1,
                       itemBuilder: (context, index) {
-                        if (numOfBus == 0) {
+                        if (numOfBus == 0) { // 최적화인가?
                           return SizedBox(
                             height: MediaQuery.of(context).size.height / 2,
-                            child: Center(child: Text("버스가 없습니다", style: TextStyle(fontSize: 30))),
+                            child: Center(child: Text("버스가 없습니다", style: TextStyle(fontSize: 20))),
                           );
                         }
-                        if (index >= numOfBus) {
+                        if (index >= numOfBus) { // 마지막 줄
                           return Column(children: [
                             Divider(),
                             SizedBox(height: 85,),
