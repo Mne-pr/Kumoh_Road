@@ -208,7 +208,7 @@ class _chatState extends State<OneChatWidget> {
         category: widget.comment.comment,   // 댓글 내용
         reportedUserId: widget.user.userId, // 신고한 유저 아이디
         reason: widget.comment.targetDoc,   // 버스 코드 (버스정류장아이디-버스번호-버스경로)
-        commentId: widget.comment.code,     // 댓글 코드 (댓글아이디-버스생성시간)
+        commentId: widget.comment.createdTime.toString(),     // 댓글 생성 시간 - 댓글 구별용
       );
     }
 
