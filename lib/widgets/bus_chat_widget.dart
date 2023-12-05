@@ -13,6 +13,7 @@ import '../screens/user_info_screens/other_user_info_screen.dart';
 class BusChatListWidget extends StatefulWidget {
   final Function(String) submitComment;
   final VoidCallback onScrollToTop;
+  final VoidCallback updateComment;
   final List<Comment>   comments;
   final List<UserModel> commentUsers;
   final bool isLoading;
@@ -21,6 +22,7 @@ class BusChatListWidget extends StatefulWidget {
   const BusChatListWidget({
     required this.onScrollToTop,
     required this.submitComment,
+    required this.updateComment,
     required this.isLoading,
     required this.comments,
     required this.commentUsers,
@@ -107,7 +109,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       child: Stack(
                         children: [
                           Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                          OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, ),
+                          OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
                         ],),);}
 
                   else { // 나머지 줄
@@ -115,7 +117,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       decoration: BoxDecoration( border: Border(
                           top: BorderSide(width: 1.0, color: Colors.grey.shade200),
                           bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                      ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, ),
+                      ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
                     );}
                 },
               ),
@@ -186,11 +188,13 @@ class OneChatWidget extends StatefulWidget {
   final UserModel user;
   final Comment comment;
   final UserProvider userProvider;
+  final VoidCallback updateComment;
 
   const OneChatWidget({
     required UserModel this.user,
     required Comment this.comment,
     required UserProvider this.userProvider,
+    required VoidCallback this.updateComment,
     super.key
   });
 
@@ -228,20 +232,26 @@ class _chatState extends State<OneChatWidget> {
   Future<void> deleteComment() async {
     final comment = widget.comment;
     final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
-    
+    print('comment의 사정 : ${comment.createdTime}, ${comment.writerId}, ${comment.comment}');
     try {
       DocumentSnapshot doc = await busChatDoc.get();
       if (doc.exists) {
         List<dynamic> items = List.from(doc['comments']);
+
+        for (var item in items) {
+          print('item의 사정 : ${(item['createdTime'] as Timestamp).toDate()}, ${item['writerId']}, ${item['comment']}');
+        }
+
         items.removeWhere((item) => (
-            (item['createdTime'] as Timestamp) == comment.createdTime &&
-            item['writerId'] as String == comment.writerId &&
-            item['comment'] as String == comment.comment
+          (item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
+          item['writerId'] as String == comment.writerId &&
+          item['comment'] as String == comment.comment
         ));
 
         await busChatDoc.update({'comments': items});
       }
     } catch(e) { print('Error removing item: $e');}
+    widget.updateComment();
 
   }
 
@@ -262,8 +272,7 @@ class _chatState extends State<OneChatWidget> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        OtherUserProfileScreen(userId: userId),
+                    builder: (context) => OtherUserProfileScreen(userId: userId),
                   ),
                 );
               }

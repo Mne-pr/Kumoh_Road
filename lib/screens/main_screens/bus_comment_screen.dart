@@ -102,7 +102,7 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
                 // 각 댓글을 표시하는 위젯
                 Comment comment = comments[index];
                 UserModel user = commentUsers[index];
-                return OneChatWidget(user: user, comment: comment,userProvider: userProvider,);
+                return OneChatWidget(user: user, comment: comment,userProvider: userProvider, updateComment: getComments,);
               },
             ),
           ),
