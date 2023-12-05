@@ -58,6 +58,7 @@ dependencies:
   html: ^0.15.4
   shared_preferences: ^2.2.2
   firebase_storage: ^11.5.3
+  geolocator: ^7.0.0
 
 dev_dependencies:
   flutter_test:
