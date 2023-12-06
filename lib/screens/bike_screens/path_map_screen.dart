@@ -44,7 +44,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
     );
   }
 
-  void getMYPosition() async{
+  void getPosition() async{
     LocationPermission permission = await Geolocator.checkPermission();
     if(permission == LocationPermission.denied){
       permission = await Geolocator.requestPermission();
@@ -53,12 +53,16 @@ class _PathMapScreenState extends State<PathMapScreen> {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       double tmp1 = position.latitude;
       double tmp2 = position.longitude;
+      final tmpL = NLatLng(tmp1, tmp2);
+      final movePoint = NCameraUpdate.scrollAndZoomTo(target: tmpL, zoom: 15,);
+      final tmpM = NMarker(id: "MyPosition", position: tmpL, icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      await mapController.updateCamera(movePoint);
+      await mapController.addOverlay(tmpM);
       print("$tmp1 $tmp2");
     }catch(e){
       print(e);
     }
   }
-
   Future<List> getCoordinate(String pointAddress) async {
     http.Response response =
         await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$pointAddress"), headers: nmapID);
@@ -158,7 +162,6 @@ class _PathMapScreenState extends State<PathMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    getMYPosition();
     const basePosition = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
     return Scaffold(
       body: SafeArea(
@@ -187,6 +190,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ),
               onMapReady: (NaverMapController controller) {
                 mapController = controller;
+                getPosition();
               },
             ),
             Positioned(
