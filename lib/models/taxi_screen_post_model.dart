@@ -59,8 +59,8 @@ class TaxiScreenPostModel {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionId)
           .where("categoryTime", isEqualTo: categoryTime)
           .where("createdTime",
-            isGreaterThanOrEqualTo: DateTime(today.year, today.month, today.day),
-            isLessThan: DateTime(today.year, today.month, today.day+1))
+          isGreaterThanOrEqualTo: DateTime(today.year, today.month, today.day),
+          isLessThan: DateTime(today.year, today.month, today.day+1))
           .get();
       List<Map<String, dynamic>> documents = querySnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)

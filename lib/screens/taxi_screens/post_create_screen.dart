@@ -34,13 +34,13 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
       children: [
         InkWell(
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.2,
-            height: MediaQuery.of(context).size.width * 0.2,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(20)
-            ),
-            child: const Center(child: Icon(Icons.camera_alt))
+              width: MediaQuery.of(context).size.width * 0.2,
+              height: MediaQuery.of(context).size.width * 0.2,
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(20)
+              ),
+              child: const Center(child: Icon(Icons.camera_alt))
           ),
           onTap: () async {
             if (await Permission.camera.request().isGranted) {
@@ -52,118 +52,118 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
           },
         ),
         _imagePath != null ?
-          Container(
-            margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.04),
-            width: MediaQuery.of(context).size.width * 0.2,
-            height: MediaQuery.of(context).size.width * 0.2,
-            decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(20)
+        Container(
+          margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.04),
+          width: MediaQuery.of(context).size.width * 0.2,
+          height: MediaQuery.of(context).size.width * 0.2,
+          decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(20)
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.file(
+              File(_imagePath!),
+              fit: BoxFit.cover,
+              width: MediaQuery.of(context).size.width * 0.2,
+              height: MediaQuery.of(context).size.width * 0.2,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.file(
-                File(_imagePath!),
-                fit: BoxFit.cover,
-                width: MediaQuery.of(context).size.width * 0.2,
-                height: MediaQuery.of(context).size.width * 0.2,
-              ),
-            ),
-          ) : Container(),
+          ),
+        ) : Container(),
       ],
     );
   }
 
   Widget formInput(){
     return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Column(
-            children: [
-              Container(
-                margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.01),
-                child: const Text(
-                    "제목",
-                    style: TextStyle(fontWeight: FontWeight.bold)
-                ),
-              ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  hintText: "제목",
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    borderSide: BorderSide(width: 2, color: Colors.black),
+        key: _formKey,
+        child: Column(
+          children: [
+            Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.01),
+                  child: const Text(
+                      "제목",
+                      style: TextStyle(fontWeight: FontWeight.bold)
                   ),
-                  enabledBorder: OutlineInputBorder(
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    hintText: "제목",
+                    focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.grey
-                      )
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                  ),
-                ),
-                onSaved: (value) {
-                  setState(() {
-                    _title = value!;
-                  });
-                },
-                validator: (value) {
-                  if(value == null || value.isEmpty) {
-                    return "제목을 입력해주세요";
-                  }
-                  return null;
-                },
-              )
-            ],
-          ),
-          Column(
-            children: [
-              Container(
-                margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.01),
-                child: const Text(
-                    "내용",
-                    style: TextStyle(fontWeight: FontWeight.bold)
-                ),
-              ),
-              TextFormField(
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  hintText: "내용",
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    borderSide: BorderSide(width: 2, color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(width: 2, color: Colors.black),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                        borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.grey
+                        )
+                    ),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.grey
-                      )
+                    ),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                  onSaved: (value) {
+                    setState(() {
+                      _title = value!;
+                    });
+                  },
+                  validator: (value) {
+                    if(value == null || value.isEmpty) {
+                      return "제목을 입력해주세요";
+                    }
+                    return null;
+                  },
+                )
+              ],
+            ),
+            Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.01),
+                  child: const Text(
+                      "내용",
+                      style: TextStyle(fontWeight: FontWeight.bold)
                   ),
                 ),
-                onSaved: (value) {
-                  setState(() {
-                    _content = value!;
-                  });
-                },
-                validator: (value) {
-                  if(value == null || value.isEmpty) {
-                    return "내용을 입력해주세요";
-                  }
-                  return null;
-                },
-              )
-            ],
-          ),
-        ],
-      )
+                TextFormField(
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    hintText: "내용",
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                      borderSide: BorderSide(width: 2, color: Colors.black),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                        borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.grey
+                        )
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    ),
+                  ),
+                  onSaved: (value) {
+                    setState(() {
+                      _content = value!;
+                    });
+                  },
+                  validator: (value) {
+                    if(value == null || value.isEmpty) {
+                      return "내용을 입력해주세요";
+                    }
+                    return null;
+                  },
+                )
+              ],
+            ),
+          ],
+        )
     );
   }
 
@@ -194,7 +194,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 1,
         centerTitle: true,
-        ),
+      ),
       body: SafeArea(
         child: GestureDetector( // 키보드 외 화면 터치 시 키보드의 포커스를 해제하기 위함
           onTap: () => FocusScope.of(context).unfocus(),

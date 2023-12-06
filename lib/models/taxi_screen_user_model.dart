@@ -20,21 +20,21 @@ class TaxiScreenUserModel extends UserModel{
     required int reportCount,
     bool isStudentVerified = false,
   }) : super(
-    userId: userId,
-    nickname: nickname,
-    profileImageUrl: profileImageUrl,
-    age: age,
-    gender: gender,
-    mannerTemperature: mannerTemperature,
-    mannerList: mannerList,
-    unmannerList: unmannerList,
-    qrCodeUrl: qrCodeUrl,
-    isStudentVerified: isStudentVerified,
-    badgeList: badgeList,
-    commentCount: commentCount,
-    postCount: postCount,
-    postCommentCount: postCommentCount,
-    reportCount: reportCount
+      userId: userId,
+      nickname: nickname,
+      profileImageUrl: profileImageUrl,
+      age: age,
+      gender: gender,
+      mannerTemperature: mannerTemperature,
+      mannerList: mannerList,
+      unmannerList: unmannerList,
+      qrCodeUrl: qrCodeUrl,
+      isStudentVerified: isStudentVerified,
+      badgeList: badgeList,
+      commentCount: commentCount,
+      postCount: postCount,
+      postCommentCount: postCommentCount,
+      reportCount: reportCount
   );
 
   factory TaxiScreenUserModel.fromUserModel(UserModel userModel) {
