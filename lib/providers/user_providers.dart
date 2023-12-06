@@ -219,7 +219,7 @@ class UserProvider with ChangeNotifier {
   }
 
   // 사용자 정보 업데이트 메서드
-  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url, bool? isStudentVerified, List<int>? badgeList, int? postCount, int? commentCount, int? reportCount}) async {
+  Future<void> updateUserInfo({int? age, String? gender, String? email, String? profileImageUrl, String? nickname, String? url, bool? isStudentVerified, List<int>? badgeList, int? postCount, int? postCommentCount,int? commentCount, int? reportCount}) async {
     if (_id != null) {
       var userDocument = FirebaseFirestore.instance.collection('users').doc(_id.toString());
       var updateData = <String, dynamic>{};
@@ -249,6 +249,9 @@ class UserProvider with ChangeNotifier {
       }
       if (postCount != null) {
         updateData['postCount'] = postCount;
+      }
+      if (postCommentCount != null){
+        updateData['postCommentCount'] = postCommentCount;
       }
       if (commentCount != null) {
         updateData['commentCount'] = commentCount;
