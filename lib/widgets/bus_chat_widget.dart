@@ -99,7 +99,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                   children: [
                     SizedBox(
                       height: MediaQuery.of(context).size.height / 2 - 30,
-                      child: Center(child: Text("채팅이 없습니다", style: TextStyle(fontSize: 20))),
+                      child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
                     ),
                   ],
                 ) : GestureDetector(
