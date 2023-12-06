@@ -18,13 +18,6 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
-// 해야할거
-// 댓글 열려 있을 때 마크 클릭하면 사라져야 함
-// 댓글 열려 있을 때 농협을 슬라이드 하던가, 지역이동 버튼을 누르면 사라져야 함
-// 각종 상황에 대한 안내문구 필요
-// 버스 없을때 화면 수정 - 테두리
-// 댓글 로딩할 때 화면 수정 - 테두리
-
 class ButtonData {
   final IconData icon;
   final int nextBusSt;
@@ -138,7 +131,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     DocumentSnapshot commentData = await commentDoc.get();
 
     // 버스에 대한 comments 가져오기
-    commentlist = CommentList.fromDocument(commentData);
+    commentlist = CommentList.fromDocument(commentData,extraData: curBusCode);
 
     // 각 comment에 대한 유저 가져오기
     for (final comment in commentlist.comments) {
@@ -322,9 +315,25 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     }
 
 
+    // 댓글을 슬라이드할 때 이벤트 처리 함수
+    Future<void> commentsBoxSlide() async {
+      if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
+        if (commentAnicon.isDismissed) {
+          await commentAnicon.forward(); // 댓글 들고오기
+          await getComments();
+          setState(() {isCommentWidgetOpen = true;});
+        }
+        else if (commentAnicon.isCompleted) {
+          await commentAnicon.reverse();
+          setState(() {isCommentWidgetOpen = false;});
+        }
+      }
+    }
+
     // 버스 업데이트 버튼 클릭 시 이벤트 처리 함수
     Future<void> updateBusStop(int busStop) async {
       setState(() { curBusStop = busStop; });
+      (isCommentWidgetOpen) ? commentsBoxSlide() : null;
       busStopMarks[busStop].setIcon(NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
 
       for (int i = 0; i < 5; i++){
@@ -360,21 +369,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
     }
 
-
-    // 댓글을 슬라이드할 때 이벤트 처리 함수
-    Future<void> commentsBoxSlide() async {
-      if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
-        if (commentAnicon.isDismissed) {
-          await commentAnicon.forward(); // 댓글 들고오기
-          await getComments();
-          setState(() {isCommentWidgetOpen = true;});
-        }
-        else if (commentAnicon.isCompleted) {
-          await commentAnicon.reverse();
-          setState(() {isCommentWidgetOpen = false;});
-        }
-      }
-    }
 
     // 버스리스트에서 댓글 활성화버튼 이벤트 처리
     Future<void> callComments(String busCode) async {
@@ -430,7 +424,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 // 1.1.2.2 각 마커를 클릭했을 때의 이벤트 지정
                 for (int i = 0; i < 5; i++){
                   con.addOverlay(busStopMarks[i]);
-                  busStopMarks[i].setOnTapListener((overlay) async { await busStopMarks[i].openInfoWindow(busStopW[i]); await updateBusStop(i); });
+                  busStopMarks[i].setOnTapListener((overlay) async { (isCommentWidgetOpen) ? commentsBoxSlide() : null; await busStopMarks[i].openInfoWindow(busStopW[i]); await updateBusStop(i); });
                 }
                 // 1.1.2.3 구미역 버튼 클릭
                 await busStopMarks[0].performClick();
@@ -470,10 +464,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               child: BusChatListWidget(
                 onScrollToTop: commentsBoxSlide,
                 submitComment: submitComment,
+                updateComment: getComments,
                 isLoading:     isLoading,
                 comments:      comments,
                 commentUsers:  commentUsers,
-                isStudentVerified: userProvider.isStudentVerified,
+                userProvider: userProvider,
               )
             ),
 

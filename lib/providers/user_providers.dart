@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/comment_model.dart';
+
 class UserProvider with ChangeNotifier {
   User? _user;
   int? _id;
@@ -289,7 +291,7 @@ class UserProvider with ChangeNotifier {
             .doc(_id.toString())
             .delete();
 
-        // 사용자가 작성한 신고를 삭제
+        // 사용자가 작성한 신고 삭제
         QuerySnapshot reportsSnapshot = await FirebaseFirestore.instance
             .collection('reports')
             .where('reporterUserId', isEqualTo: _id.toString())
@@ -297,6 +299,21 @@ class UserProvider with ChangeNotifier {
 
         for (var doc in reportsSnapshot.docs) {
           await doc.reference.delete();
+        }
+
+        // 사용자가 작성한 버스 댓글 삭제
+        QuerySnapshot busChatSnapshot = await FirebaseFirestore.instance
+            .collection('bus_chat')
+            .get();
+
+        for (var doc in busChatSnapshot.docs) {
+          List<dynamic> comments = doc.get('comments');
+          List<dynamic> updatedComments = comments.where((commentJson) {
+            Comment comment = Comment.fromJson(commentJson);
+            return comment.writerId != _id.toString();
+          }).toList();
+
+          await doc.reference.update({'comments': updatedComments});
         }
       }
     } catch (error) {
@@ -308,6 +325,7 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
 
   // 로컬 사용자 데이터 초기화
   void _resetLocalUserData() {
