@@ -195,54 +195,57 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     double screenHeight     = MediaQuery.of(context).size.height;
 
     // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
-    Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
+    Future<void> compareSources(BusList busListFromApi, final nodeId) async {
       final stationDoc = fire.collection('bus_station_info').doc(nodeId);
-      List<String> busCodesFromFire, busCodesFromApi;
-      BusList curBuslist;
+      BusList buslistFromFire, newBusListToFire = BusList(buses: []);
 
-      // 파베의 bus_list에서 버스코드 리스트를 가져옴 - 예외처리 되어있음
+      // 파베에 저장되어있는 bus_list 가져옴
       DocumentSnapshot station = await stationDoc.get();
-      curBuslist = BusList.fromDocument(station);
-      busCodesFromFire = curBuslist.buses.map((bus) => bus.code).toList();
-      // 각 버스의 도착지 결정해야
+      buslistFromFire = BusList.fromDocument(station);
 
-      // api의 bus_list에서 버스코드 리스트를 가져옴
-      busCodesFromApi = busListFromApi.map((bus) => bus.code).toList();
+      // 각 버스의 도착지 결정해야 - 마지막에..
+      print('도착지는요? - 미안합니다..');
 
-      // 두 코드 리스트에서 공통된 버스 찾음
-      Set<String> commonCodes = busCodesFromFire.toSet().intersection(busCodesFromApi.toSet());
-
-      // 두 코드 리스트에서 공통된 버스 무시
-      busCodesFromFire.removeWhere((name) => commonCodes.contains(name)); // 파베에서 제거해야 할 버스들만 남음
-      busCodesFromApi.removeWhere((name) => commonCodes.contains(name));  // 파베에 추가해야 할 버스들만 남음
-
-      // 버스 목록에서 지나간 버스 제거, 파베에서 삭제
-      for (String code in busCodesFromFire) {
-        curBuslist.buses.removeWhere((bus) => bus.code == code);
-        try{ await fire.collection('bus_chat').doc(code).delete(); }
-          catch(e) { print('deleting chat list error : ${e.toString()}');}
+      // 두 코드 리스트에서 공통된(기존) 버스 찾아 추가 - 정보 업데이트
+      for (var fireBus in buslistFromFire.buses) {
+        for (var apiBus in busListFromApi.buses) {
+          if (fireBus == apiBus) { 
+            fireBus.arrprevstationcnt = apiBus.arrprevstationcnt;
+            fireBus.arrtime = apiBus.arrtime;
+            newBusListToFire.buses.add(fireBus);
+            break;
+          }
+        }
       }
 
-      // 새 버스를 추가, 기존 버스 업데이트
-      for (Bus bus in busListFromApi) {
+      // 두 코드 리스트에서 공통된 버스 무시
+      for (var sameBus in newBusListToFire.buses) {
+        busListFromApi.buses.removeWhere((apiBus)   => apiBus == sameBus); // 파베에서 추가해야 할 버스들만 남음
+        buslistFromFire.buses.removeWhere((fireBus) => fireBus == sameBus);// 파베에서 제거해야 할 버스들만 남음
+      }
 
-        if (busCodesFromApi.contains(bus.code)) { // 새로운 버스인 경우 - 추가
-          curBuslist.buses.add(bus);
-          // 파베에 버스 채팅리스트 생성
-          try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': []});}
-            catch(e) { print('adding chat list error : ${e.toString()}');}
+      // (지나간 버스 newBusListToFire에 추가하지 않음 == 파베에서 버스 삭제), 지나간 버스 댓글은 복제하고 문서이름만 다르게
+      for (Bus bus in buslistFromFire.buses) {
+        try {
+          DateTime now = DateTime.now(); // 새 문서의 이름에 사용될
+          DocumentSnapshot chat = await fire.collection('bus_chat').doc(bus.code).get(); // 원본 댓글리스트 가져와
+          if (chat.exists) {
+            final Map<String, dynamic> chatData = chat.data() as Map<String,dynamic>;    // 데이터 추출해
+            fire.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
+            fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);         // 추출한 데이터를 새로운 이름의 문서로 추가
+          }
+        } catch(e) {print('passed bus chat document update error : ${e}');}
+      }
 
-        }
-        else { // 기존 버스인 경우 - 업데이트
-          Bus busToUpdate = curBuslist.buses.firstWhere((mapBus) => mapBus.code == bus.code);
-          busToUpdate.arrprevstationcnt = bus.arrprevstationcnt;
-          busToUpdate.arrtime = bus.arrtime;
-        }
-
+      // // 새 버스는 그냥 추가, 채팅 문서 추가
+      for (Bus bus in busListFromApi.buses) {
+        newBusListToFire.buses.add(bus);
+        try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': []});}
+          catch(e) { print('adding new bus chat list error : ${e.toString()}');}
       }
 
       // 수정한 목록을 파베에 업데이트
-      await stationDoc.update({'busList': curBuslist.getArrayFormat()});
+      await stationDoc.update({'busList': newBusListToFire.getArrayFormat()});
       return;
     }
 
@@ -257,7 +260,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         if (res.statusCode == 200) { // 파베에 업뎃시켜
           try{
             buslist = BusList.fromJson(decodeRes);
-            await compareSources(buslist.buses, nodeId);
+            await compareSources(buslist, nodeId);
           } catch(e) {buslist = BusList.fromJson({}); throw Exception(e);}
           return (buslist);
         }
@@ -309,9 +312,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       BusList buslist = await fetchBusInfo(busStopInfos[curBusStop].code);
 
       setState(() { busList = buslist.buses; isLoading = false;});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('버스리스트 업데이트'),duration: Duration(milliseconds: 700)),
-      );
     }
 
 
@@ -451,10 +451,17 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               child: BusStationWidget(onClick: busStationBoxSlide, busStation: busStopInfos[curBusStop], isTop: isBusWidgetTop,),
             ),
 
-            // 1.4 위치 변경 버튼 위젯
+            // 1.4.1 위치 변경 버튼 위젯
             Positioned(
               bottom: chBtnAni.value,
               right: MediaQuery.of(context).size.width * 0.05,
+              child: buttons[curButton],
+            ),
+
+            // 1.4.2 제자리 돌아오는 버튼 위젯 - 내부 안함
+            Positioned(
+              bottom: chBtnAni.value,
+              right: MediaQuery.of(context).size.width * 0.2,
               child: buttons[curButton],
             ),
 
