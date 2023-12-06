@@ -36,6 +36,16 @@ class Bus{
     required this.code,
   });
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this,other)) return true;
+
+    return other is Bus && other.code == code;
+  }
+
+  @override
+  int get hashCode => code.hashCode;
+
   factory Bus.fromJson(Map<String, dynamic> json) {
     return Bus(
       arrprevstationcnt: json['arrprevstationcnt'],
@@ -60,6 +70,9 @@ class BusList {
   List<Map<String, dynamic>> getArrayFormat() {
     List<Map<String, dynamic>> target = [];
 
+    // buses 리스트를 arrtime 기준으로 정렬
+    buses.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
+
     for (Bus bus in buses) {
       target.add({
         'arrprevstationcnt': bus.arrprevstationcnt, // 남은 정류장 수
@@ -77,7 +90,7 @@ class BusList {
     return target;
   }
 
-  factory BusList.fromJson(final json) {
+  factory BusList.fromJson(final json, {bool passed=false}) {
     List<Bus> buslist = [];
 
     try {
@@ -106,7 +119,7 @@ class BusList {
     return BusList(buses: buslist);
   }
 
-  factory BusList.fromDocument(DocumentSnapshot doc){
+  factory BusList.fromDocument(DocumentSnapshot doc, {bool passed=false}){
     List<Map<String,dynamic>> tempBusList = [];
     List<Bus> buslist = [];
     List<dynamic> field;

@@ -130,6 +130,11 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
                   _buildMannerBar(user.mannerTemperature),
                 ],
               ),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('기능 미구현입니다..'),duration: Duration(milliseconds: 700)),
+                );
+              },
               // onTap: () {
               //   Navigator.push(
               //     context,
