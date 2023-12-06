@@ -464,10 +464,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               child: BusChatListWidget(
                 onScrollToTop: commentsBoxSlide,
                 submitComment: submitComment,
+                updateComment: getComments,
                 isLoading:     isLoading,
                 comments:      comments,
                 commentUsers:  commentUsers,
-                //isStudentVerified: userProvider.isStudentVerified,
                 userProvider: userProvider,
               )
             ),
