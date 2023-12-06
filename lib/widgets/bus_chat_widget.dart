@@ -295,7 +295,6 @@ class _chatState extends State<OneChatWidget> {
           if ((item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
               item['writerId'] as String == comment.writerId &&
               item['comment'] as String == comment.comment) {
-            print('찾음!!');
             item['comment'] = text;
             break;
           }
@@ -304,6 +303,9 @@ class _chatState extends State<OneChatWidget> {
       }
     } catch(e) { print('Error removing item: $e');}
     widget.updateComment();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('수정 완료!'),duration: Duration(milliseconds: 700)),
+    );
   }
 
   @override
@@ -435,6 +437,9 @@ class _chatState extends State<OneChatWidget> {
               else if (value == 'delete') {
                 // 일단 커멘트에 모든 정보가 있으니깐?
                 deleteComment();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('삭제 완료!'),duration: Duration(milliseconds: 700)),
+                );
               }
             },
 

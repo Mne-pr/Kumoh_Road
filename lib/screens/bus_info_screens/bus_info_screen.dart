@@ -309,6 +309,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       BusList buslist = await fetchBusInfo(busStopInfos[curBusStop].code);
 
       setState(() { busList = buslist.buses; isLoading = false;});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('버스리스트 업데이트'),duration: Duration(milliseconds: 700)),
+      );
     }
 
 
