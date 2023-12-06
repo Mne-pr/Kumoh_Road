@@ -224,15 +224,25 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         buslistFromFire.buses.removeWhere((fireBus) => fireBus == sameBus);// 파베에서 제거해야 할 버스들만 남음
       }
 
-      // (지나간 버스 newBusListToFire에 추가하지 않음 == 파베에서 버스 삭제), 지나간 버스 댓글은 복제하고 문서이름만 다르게
+      // (지나간 버스 newBusListToFire에 추가하지 않음 == 파베에서 버스 삭제), 지나간 채팅 복제하고 문서이름만 다르게
       for (Bus bus in buslistFromFire.buses) {
         try {
           DateTime now = DateTime.now(); // 새 문서의 이름에 사용될
           DocumentSnapshot chat = await fire.collection('bus_chat').doc(bus.code).get(); // 원본 댓글리스트 가져와
           if (chat.exists) {
             final Map<String, dynamic> chatData = chat.data() as Map<String,dynamic>;    // 데이터 추출해
+
+            // report에 해당 버스의 댓글이 있다면 reason 수정
+            final reportDoc = FirebaseFirestore.instance.collection('reports');
+            final mustBeModify = await reportDoc.where('reason', isEqualTo: bus.code).get();
+            for (var doc in mustBeModify.docs) {
+              await reportDoc.doc(doc.id).update({'reason': '${now}-${bus.code}'});
+            }
+
             fire.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
-            fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);         // 추출한 데이터를 새로운 이름의 문서로 추가
+            if ((chatData['comments'] as List<dynamic>).isNotEmpty) {                    // 추출한 데이터가 내용 없으면 건너뛰어
+              fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);       // 추출한 데이터를 새로운 이름의 문서로 추가
+            }
           }
         } catch(e) {print('passed bus chat document update error : ${e}');}
       }

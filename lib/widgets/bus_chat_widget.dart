@@ -67,6 +67,12 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
       try {FocusScope.of(context).unfocus();} catch(e) {} // 키보드 비활성화
     }
 
+    // 댓글 읽어오기 로직
+    Future<void> getComments() async {
+      await widget.updateComment;
+      setState(() { isChatModifying = false;});
+    }
+
     return Container(
       margin:     EdgeInsets.zero,
       decoration: BoxDecoration(
@@ -116,7 +122,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         child: Stack(
                           children: [
                             Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment, tellModifying: modifyingChat),
+                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: getComments, tellModifying: modifyingChat),
                           ],),);}
 
                     else { // 나머지 줄
@@ -124,7 +130,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         decoration: BoxDecoration( border: Border(
                             top: BorderSide(width: 1.0, color: Colors.grey.shade200),
                             bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment, tellModifying: modifyingChat),
+                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: getComments, tellModifying: modifyingChat),
                       );}
                   },
                 ),
