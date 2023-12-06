@@ -48,7 +48,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 지도 컨트롤러
   late NaverMapController con;
-  
+  bool isMapMoved = false;
+
   // 지도의 마크와 마크 위에 띄울 위젯
   final busStopMarks = [
     NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역",),
@@ -173,7 +174,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
-          setState(() { curButton = data.nextBusSt; });
+          setState(() { isMapMoved = false; curButton = data.nextBusSt; });
         },
       )
     ).toList();
@@ -241,8 +242,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             }
 
             fire.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
-            if ((chatData['comments'] as List<dynamic>).isNotEmpty) {                    // 추출한 데이터가 내용 없으면 건너뛰어
-              fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);       // 추출한 데이터를 새로운 이름의 문서로 추가
+            if ((chatData['comments'] as List<dynamic>).isNotEmpty) {
+              fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);       // 추출한 데이터(댓글)가 존재하면 새로운 이름의 문서로 추가
             }
           }
         } catch(e) {print('passed bus chat document update error : ${e}');}
@@ -440,6 +441,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 // 1.1.2.3 구미역 버튼 클릭
                 await busStopMarks[0].performClick();
               },
+              onCameraChange: (reason, animated) => {
+                if(reason== NCameraUpdateReason.gesture) {setState((){ isMapMoved=true;})}
+              },
             ),
 
             // 1.2 버스 리스트 위젯
@@ -469,11 +473,22 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               child: buttons[curButton],
             ),
 
-            // 1.4.2 제자리 돌아오는 버튼 위젯 - 내부 안함
+            // 1.4.2 제자리 돌아오는 버튼 위젯 - 움직일 때만 활성화되어야 하는데..
             Positioned(
+
               bottom: chBtnAni.value,
               right: MediaQuery.of(context).size.width * 0.2,
-              child: buttons[curButton],
+              child: OutlineCircleButton(
+                child: Icon(Icons.undo_outlined, color: Colors.white), radius: 50.0, borderSize: 0.5,
+                foregroundColor: (isMapMoved) ? const Color(0xFF3F51B5) : Colors.white, borderColor: Colors.white,
+                onTap: () {
+                  if(isMapMoved) {
+                    final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
+                    buttons[toCurLocationButtonIndex].onTap();
+                  }
+                },
+
+              ),
             ),
 
             // 1.5 댓글 위젯
