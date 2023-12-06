@@ -215,7 +215,12 @@ class _BusListWidgetState extends State<BusListWidget> {
             radius: 50.0,borderSize: 0.5,
             foregroundColor: isRefreshing ? Colors.transparent : const Color(0xFF3F51B5),
             borderColor: Colors.white,
-            onTap: () async { await widget.onRefresh();},
+            onTap: () async {
+              await widget.onRefresh();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('버스목록 업데이트'),duration: Duration(milliseconds: 700)),
+              );
+            },
           ),
         ),
       ],
