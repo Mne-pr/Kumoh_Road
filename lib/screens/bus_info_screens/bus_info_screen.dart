@@ -122,18 +122,15 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Future<void> getComments() async {
     setState(() { isLoading = true;});
 
-    //final commentDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020'); // 개발용
     final commentDoc =     fire.collection('bus_chat').doc(curBusCode);
     final userCollection = fire.collection('users');
-    CommentList commentlist;
-    List<UserModel> tempUsers = [];
-
-    DocumentSnapshot commentData = await commentDoc.get();
 
     // 버스에 대한 comments 가져오기
-    commentlist = CommentList.fromDocument(commentData,extraData: curBusCode);
+    DocumentSnapshot commentData = await commentDoc.get();
+    CommentList commentlist = CommentList.fromDocument(commentData,extraData: curBusCode);
 
     // 각 comment에 대한 유저 가져오기
+    List<UserModel> tempUsers = [];
     for (final comment in commentlist.comments) {
       try {
         final users = await userCollection.doc(comment.writerId).get();
