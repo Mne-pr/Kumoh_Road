@@ -78,7 +78,6 @@ class BusListWidget extends StatefulWidget {
   @override
   State<BusListWidget> createState() => _BusListWidgetState();
 }
-
 class _BusListWidgetState extends State<BusListWidget> {
   late ScrollController scrollcon = ScrollController();
   bool isRefreshing = false;
@@ -147,61 +146,65 @@ class _BusListWidgetState extends State<BusListWidget> {
                         final urgentColor = ((bus.arrtime / 60).toInt() >= 5)
                             ? const Color(0xFF3F51B5) : Colors.red;
                         final busColor = (bus.routetp == '일반버스')
-                            ? Color(0xff05d686) : Colors.purple;
-                        return Column(
-                          children: [
-                            (index == 0)
-                                ? SizedBox(width: 0,)
-                                : Divider(thickness: 1.0,height: 1.0,),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            SizedBox(height: 8),
-                                            Icon(Icons.directions_bus,color: busColor, size: 25),
-                                            SizedBox(width: 15),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  SizedBox(height: 2),
-                                                  Text(
-                                                    '${bus.routeno}',
-                                                    style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
-                                                  SizedBox(height: 10),
-                                                  Text(
-                                                    '남은 정류장 : ${bus.arrprevstationcnt}',
-                                                    style: TextStyle(fontSize: 12,color: Colors.grey),
-                                                  ),
-                                                  SizedBox(height: 6),
-                                                  Text(
-                                                    '${(bus.arrtime / 60).toInt()}분 ${bus.arrtime % 60}초 후 도착',
-                                                    style: TextStyle(fontSize: 14,color: urgentColor),
-                                                  ),
-                                                ],
+                            ? Color(0xff05d686) : Colors.purple;  //
+                        return GestureDetector(
+                          onTap: () {widget.onCommentsCall(bus.code);},
+                          behavior: HitTestBehavior.opaque,
+                          child:  Column(
+                            children: [
+                              (index == 0)
+                                  ? SizedBox(width: 0,)
+                                  : Divider(thickness: 1.0,height: 1.0,),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              SizedBox(height: 8),
+                                              Icon(Icons.directions_bus,color: busColor, size: 25),
+                                              SizedBox(width: 15),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    SizedBox(height: 2),
+                                                    Text(
+                                                      '${bus.routeno}',
+                                                      style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
+                                                    SizedBox(height: 10),
+                                                    Text(
+                                                      '남은 정류장 : ${bus.arrprevstationcnt}',
+                                                      style: TextStyle(fontSize: 12,color: Colors.grey),
+                                                    ),
+                                                    SizedBox(height: 6),
+                                                    Text(
+                                                      '${(bus.arrtime / 60).toInt()}분 ${bus.arrtime % 60}초 후 도착',
+                                                      style: TextStyle(fontSize: 14,color: urgentColor),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                IconButton(
-                                  onPressed: () { widget.onCommentsCall(bus.code); print('버스코드 전달 ${bus.code}');},
-                                  icon: Icon(Icons.comment_outlined), //Icons.arrow_circle_up_outlined
-                                  color: const Color(0xFF3F51B5),
-                                ),
-                                SizedBox(width: 18,),
-                              ],
-                            ),
-                          ],
+                                  IconButton(
+                                    onPressed: () { widget.onCommentsCall(bus.code);},
+                                    icon: Icon(Icons.comment_outlined), //Icons.arrow_circle_up_outlined
+                                    color: const Color(0xFF3F51B5),
+                                  ),
+                                  SizedBox(width: 18,),
+                                ],
+                              ),
+                            ],
+                          ),
                         );
                       }
                   ),

@@ -216,7 +216,6 @@ class OneChatWidget extends StatefulWidget {
   @override
   State<OneChatWidget> createState() => _chatState();
 }
-
 class _chatState extends State<OneChatWidget> {
   final TextEditingController commentCon = TextEditingController();
   final fire = FirebaseFirestore.instance;
