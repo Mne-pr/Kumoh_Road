@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_providers.dart';
@@ -34,10 +35,26 @@ class _QRCodeRegistrationScreenState extends State<QRCodeRegistrationScreen> {
       for (var barcode in barcodeCapture.barcodes) {
         if (barcode.format == BarcodeFormat.qrCode && barcode.rawValue != null) {
           String qrCodeUrl = barcode.rawValue!;
-          Provider.of<UserProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
+          if (qrCodeUrl.contains('kakaopay')) {
+            Provider.of<UserProvider>(context, listen: false).updateUserInfo(url: qrCodeUrl);
+            showToast('QR코드 등록이 완료되었습니다!');
+          } else {
+            showToast('카카오 QR 코드를 입력해주세요.');
+          }
         }
       }
     });
+  }
+
+  void showToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.grey,
+      fontSize: 16.0,
+      textColor: Colors.black,
+      toastLength: Toast.LENGTH_SHORT,
+    );
   }
 
   @override
