@@ -36,6 +36,16 @@ class Bus{
     required this.code,
   });
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this,other)) return true;
+
+    return other is Bus && other.code == code;
+  }
+
+  @override
+  int get hashCode => code.hashCode;
+
   factory Bus.fromJson(Map<String, dynamic> json) {
     return Bus(
       arrprevstationcnt: json['arrprevstationcnt'],
