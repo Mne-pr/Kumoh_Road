@@ -36,10 +36,15 @@ class BusChatListWidget extends StatefulWidget {
 class _BusChatListWidgetState extends State<BusChatListWidget> {
   final TextEditingController commentCon = TextEditingController();
   bool isNoChat = true;
+  bool isChatModifying = false;
 
   // 현재 채팅창이 공백인지 아닌지
   void onTxtChange() {
     setState(() { isNoChat = commentCon.text.isEmpty;});
+  }
+
+  void modifyingChat() {
+    setState(() { isChatModifying = true;});
   }
 
   @override
@@ -51,7 +56,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
   @override
   Widget build(BuildContext context) {
 
-    List<Comment> commentList = widget.comments; 
+    List<Comment> commentList = widget.comments;
     List<UserModel> userList  = widget.commentUsers;
     bool verified = widget.userProvider.isStudentVerified;
 
@@ -75,7 +80,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 
           Container( // 댓글 출력 창
             decoration: BoxDecoration( color: Colors.white,),
-            height:     MediaQuery.of(context).size.height / 2 - 60,
+            height:     MediaQuery.of(context).size.height / 2 - ((!isChatModifying) ? 60 : 0),
 
             child: RefreshIndicator(
               displacement: 100000, // 인디케이터 보이지 않도록
@@ -98,7 +103,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                     ),
                   ],
                 ) : GestureDetector(
-                onTap: () {FocusScope.of(context).unfocus();},
+                onTap: () {setState(() { isChatModifying = false;}); FocusScope.of(context).unfocus();},
                 child: ListView.builder(
                   itemCount:   commentList.length,
                   itemBuilder: (context, index) {
@@ -111,7 +116,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         child: Stack(
                           children: [
                             Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
+                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment, tellModifying: modifyingChat),
                           ],),);}
 
                     else { // 나머지 줄
@@ -119,7 +124,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         decoration: BoxDecoration( border: Border(
                             top: BorderSide(width: 1.0, color: Colors.grey.shade200),
                             bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
+                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment, tellModifying: modifyingChat),
                       );}
                   },
                 ),
@@ -127,7 +132,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
             ),
           ),
 
-
+          (isChatModifying) ? SizedBox(width: 0,) :
           Container( // 댓글 입력 창
             decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(width: 1.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),) ),
             height:     60,
@@ -154,7 +159,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                               : Color(0xFF3F51B5).withOpacity(0.1)
                       ),
                       onSubmitted: (String text) { if (!isNoChat) submitComment(); },
-                  ),),
+                    ),),
 
                   SizedBox(width: 5,),
 
@@ -167,7 +172,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       child: Padding(
                         padding: EdgeInsets.all(9.0),
                         child:   Icon(Icons.send, color: isNoChat ? Colors.grey : const Color(0xFF3F51B5)),
-                  ),),),
+                      ),),),
 
                 ],
               ),
@@ -193,12 +198,14 @@ class OneChatWidget extends StatefulWidget {
   final Comment comment;
   final UserProvider userProvider;
   final VoidCallback updateComment;
+  final VoidCallback? tellModifying;
 
   const OneChatWidget({
     required UserModel this.user,
     required Comment this.comment,
     required UserProvider this.userProvider,
     required VoidCallback this.updateComment,
+    this.tellModifying,
     super.key
   });
 
@@ -262,9 +269,9 @@ class _chatState extends State<OneChatWidget> {
         List<dynamic> items = List.from(doc['comments']);
 
         items.removeWhere((item) => (
-          (item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
-          item['writerId'] as String == comment.writerId &&
-          item['comment'] as String == comment.comment
+            (item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
+                item['writerId'] as String == comment.writerId &&
+                item['comment'] as String == comment.comment
         ));
 
         await busChatDoc.update({'comments': items});
@@ -273,7 +280,7 @@ class _chatState extends State<OneChatWidget> {
     widget.updateComment();
 
   }
-  
+
   // 댓글 수정
   Future<void> updateComment(String text) async {
     final comment = widget.comment;
@@ -378,7 +385,7 @@ class _chatState extends State<OneChatWidget> {
                       FocusScope.of(context).unfocus();
                       setState(() { modifying = false;});
                       if (!isNoChat) {updateComment(text);}
-                      },
+                    },
                   ),
                 ),
 
@@ -421,6 +428,7 @@ class _chatState extends State<OneChatWidget> {
             onSelected: (String value) async {
               if (value == 'edit') {
                 setState(() {
+                  if (widget.tellModifying != null) { widget.tellModifying!();}
                   modifying = true;
                 });
               }

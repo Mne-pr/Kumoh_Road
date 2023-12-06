@@ -468,7 +468,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 isLoading:     isLoading,
                 comments:      comments,
                 commentUsers:  commentUsers,
-                //isStudentVerified: userProvider.isStudentVerified,
                 userProvider: userProvider,
               )
             ),
