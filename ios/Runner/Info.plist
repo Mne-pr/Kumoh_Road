@@ -59,5 +59,9 @@
     <string>사진 라이브러리 사용에 필요합니다.</string>
     <key>UILaunchStoryboardName</key>
 	<string>링크로 이동 사용에 필요합니다.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs access to location when open.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>This app needs access to location when in the background.</string>
 </dict>
 </plist>
