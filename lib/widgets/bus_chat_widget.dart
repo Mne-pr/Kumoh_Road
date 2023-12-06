@@ -38,14 +38,14 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
   bool isNoChat = true;
 
   // 현재 채팅창이 공백인지 아닌지
-  void handleTxtChange() {
+  void onTxtChange() {
     setState(() { isNoChat = commentCon.text.isEmpty;});
   }
 
   @override
   void initState() {
     super.initState();
-    commentCon.addListener(handleTxtChange);
+    commentCon.addListener(onTxtChange);
   }
 
   @override
@@ -97,29 +97,32 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                       child: Center(child: Text("채팅이 없습니다", style: TextStyle(fontSize: 20))),
                     ),
                   ],
-                ) : ListView.builder(
-                itemCount:   commentList.length,
-                itemBuilder: (context, index) {
+                ) : GestureDetector(
+                onTap: () {FocusScope.of(context).unfocus();},
+                child: ListView.builder(
+                  itemCount:   commentList.length,
+                  itemBuilder: (context, index) {
 
-                  Comment comment = commentList[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
-                  UserModel user  = userList[index];
+                    Comment comment = commentList[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
+                    UserModel user  = userList[index];
 
-                  if (index == 0) { // 첫째 줄
-                    return Container(
-                      child: Stack(
-                        children: [
-                          Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                          OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
-                        ],),);}
+                    if (index == 0) { // 첫째 줄
+                      return Container(
+                        child: Stack(
+                          children: [
+                            Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
+                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
+                          ],),);}
 
-                  else { // 나머지 줄
-                    return Container(
-                      decoration: BoxDecoration( border: Border(
-                          top: BorderSide(width: 1.0, color: Colors.grey.shade200),
-                          bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                      ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
-                    );}
-                },
+                    else { // 나머지 줄
+                      return Container(
+                        decoration: BoxDecoration( border: Border(
+                            top: BorderSide(width: 1.0, color: Colors.grey.shade200),
+                            bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
+                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment,),
+                      );}
+                  },
+                ),
               ),
             ),
           ),
@@ -177,6 +180,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 
   @override
   void dispose() {
+    commentCon.removeListener(onTxtChange);
     commentCon.dispose();
     super.dispose();
   }
@@ -203,8 +207,27 @@ class OneChatWidget extends StatefulWidget {
 }
 
 class _chatState extends State<OneChatWidget> {
+  final TextEditingController commentCon = TextEditingController();
   final fire = FirebaseFirestore.instance;
+  final FocusNode focusNode = FocusNode();
+  late ReportManager reportManager;
+  bool modifying = false;
+  bool isNoChat = false;
+  late String userId;
+  bool isOwner = false;
 
+  void onTxtChange() {
+    setState(() { isNoChat = commentCon.text.isEmpty;});
+  }
+
+  void onFocusChange() {
+    if (!focusNode.hasFocus) {
+      print('감지는 했는지');
+      setState(() { modifying = false;});
+    }
+  }
+
+  // 작성된 시간 측정
   String _timeAgo(DateTime dateTime) {
     final Duration difference = DateTime.now().difference(dateTime);
     if (difference.inMinutes < 1) {
@@ -228,19 +251,15 @@ class _chatState extends State<OneChatWidget> {
     );
   }
 
-  // 댓글 삭제 - 미확인
+  // 댓글 삭제
   Future<void> deleteComment() async {
     final comment = widget.comment;
     final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
-    print('comment의 사정 : ${comment.createdTime}, ${comment.writerId}, ${comment.comment}');
+
     try {
       DocumentSnapshot doc = await busChatDoc.get();
       if (doc.exists) {
         List<dynamic> items = List.from(doc['comments']);
-
-        for (var item in items) {
-          print('item의 사정 : ${(item['createdTime'] as Timestamp).toDate()}, ${item['writerId']}, ${item['comment']}');
-        }
 
         items.removeWhere((item) => (
           (item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
@@ -254,12 +273,60 @@ class _chatState extends State<OneChatWidget> {
     widget.updateComment();
 
   }
+  
+  // 댓글 수정
+  Future<void> updateComment(String text) async {
+    final comment = widget.comment;
+    final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
+
+    try {
+      DocumentSnapshot doc = await busChatDoc.get();
+      if (doc.exists) {
+        List<dynamic> items = List.from(doc['comments']);
+
+        for (var item in items) {
+          if ((item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
+              item['writerId'] as String == comment.writerId &&
+              item['comment'] as String == comment.comment) {
+            print('찾음!!');
+            item['comment'] = text;
+            break;
+          }
+        }
+        await busChatDoc.update({'comments': items});
+      }
+    } catch(e) { print('Error removing item: $e');}
+    widget.updateComment();
+  }
+
+  @override
+  void dispose(){
+    commentCon.removeListener(onTxtChange);
+    focusNode.removeListener(onFocusChange);
+    commentCon.dispose(); focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    commentCon.text = widget.comment.comment;
+    commentCon.selection = TextSelection.collapsed(offset: commentCon.text.length);
+    reportManager = ReportManager(widget.userProvider);
+    userId = widget.user.userId;
+    isOwner = userId == widget.userProvider.id.toString();
+    commentCon.addListener(onTxtChange);
+    focusNode.addListener(onFocusChange);
+  }
 
   @override
   Widget build(BuildContext context) {
-    ReportManager reportManager = ReportManager(widget.userProvider);
-    String userId = widget.user.userId;
-    bool isOwner = userId == widget.userProvider.id.toString(); // 댓글작성자와 본인 비교위함
+
+    if (modifying){
+      Future.delayed(Duration(milliseconds: 100), () {
+        focusNode.requestFocus();
+      });
+    }
 
     return Container(
       padding: EdgeInsets.all(10),
@@ -293,7 +360,28 @@ class _chatState extends State<OneChatWidget> {
                   ],
                 ),
                 SizedBox(height: 5,),
-                Text(widget.comment.comment, style: TextStyle(fontSize: 17),),
+                (!modifying) ?
+                Text(widget.comment.comment, style: TextStyle(fontSize: 17),) :
+                SizedBox( // 된듯
+                  height: 60,
+                  child: TextField(
+                    focusNode: focusNode,
+                    controller:  commentCon,
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    decoration:  InputDecoration(
+                      filled: true,
+                      hintText: '수정할 댓글 입력',
+                      hintStyle: isNoChat ? TextStyle(color: const Color(0xFF3F51B5)) : TextStyle(color: Color(0xFF3F51B5).withOpacity(0.1)),
+                      fillColor: isNoChat ? const Color(0xFF3F51B5).withOpacity(0.1) : const Color(0xFF3F51B5).withOpacity(0.6),
+                    ),
+                    onSubmitted: (String text) {
+                      FocusScope.of(context).unfocus();
+                      setState(() { modifying = false;});
+                      if (!isNoChat) {updateComment(text);}
+                      },
+                  ),
+                ),
+
               ],
             ),
           ),
@@ -332,8 +420,11 @@ class _chatState extends State<OneChatWidget> {
 
             onSelected: (String value) async {
               if (value == 'edit') {
-
-              } else if (value == 'delete') {
+                setState(() {
+                  modifying = true;
+                });
+              }
+              else if (value == 'delete') {
                 // 일단 커멘트에 모든 정보가 있으니깐?
                 deleteComment();
               }
