@@ -121,7 +121,7 @@ class _TranslateAddressScreen extends State<TranslateAddressScreen> {
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.all(5),
-                          backgroundColor: const Color(0xff05d686),
+                          backgroundColor: const Color(0xFF3F51B5),
                           foregroundColor: Colors.white,
                           textStyle: const TextStyle(
                             fontSize: 18,
