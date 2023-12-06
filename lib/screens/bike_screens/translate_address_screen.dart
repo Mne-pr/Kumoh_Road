@@ -12,32 +12,58 @@ class TranslateAddressScreen extends StatefulWidget {
   _TranslateAddressScreen createState() => _TranslateAddressScreen();
 }
 
-class AddressData{
+class AddressData {
   String addressName;
   String address;
+
   AddressData(this.addressName, this.address);
 }
 
 class _TranslateAddressScreen extends State<TranslateAddressScreen> {
+  String key = 'devU01TX0FVVEgyMDIzMTIwNTEzMDAxNzExNDMzNDg=';
   final addressText = TextEditingController();
-  final addressList = <AddressData>[AddressData('구미역', '경북 구미시 구미중앙로 76'), AddressData('구미종합터미널', '경북 구미시 송원동로 72'), AddressData('금오공과대학교(양호동)', '경북 구미시 대학로 61')];
+  List<AddressData> addressList = <AddressData>[
+    AddressData('구미역', '경북 구미시 구미중앙로 76'),
+    AddressData('구미종합터미널', '경북 구미시 송원동로 72'),
+    AddressData('금오공과대학교(양호동)', '경북 구미시 대학로 61')
+
+  ];
   double marginSize = 10;
 
-  Widget buildListTile(AddressData data){
+  Widget buildListTile(AddressData data) {
     return ListTile(
       title: Text(data.addressName),
       subtitle: Text(data.address),
       trailing: TextButton(
         child: const Text("선택"),
-        onPressed: (){
+        onPressed: () {
           Navigator.pop(context, data.address);
         },
       ),
     );
   }
 
+  void asd(String buildingName) async {
+    http.Response response = await http.get(Uri.parse(
+        "http://www.juso.go.kr/addrlink/addrLinkApi.do?currentPage=1&countPerPage=10&keyword=$buildingName&confmKey=devU01TX0FVVEgyMDIzMTIwNTE1NTE0OTExNDMzNTM=&resultType=json"));
+    String jsonData = utf8.decode(response.bodyBytes);
+    int count = int.parse(jsonDecode(jsonData)["results"]["common"]["totalCount"]);
+    setState(() {
+      addressList = [];
+      for(int i = 0; i < count && i < 10; i++){
+        String tmp1 = jsonDecode(jsonData)["results"]["juso"][i]["bdNm"];
+        if(tmp1 == ""){
+          continue;
+        }
+        String tmp2 = jsonDecode(jsonData)["results"]["juso"][i]["roadAddrPart1"];
+        addressList.add(AddressData(tmp1, tmp2));
+        print("$tmp1 $tmp2");
+      }
+    });
+  }
+
   @override
-  void dispose(){
+  void dispose() {
     addressText.dispose();
     super.dispose();
   }
@@ -90,12 +116,12 @@ class _TranslateAddressScreen extends State<TranslateAddressScreen> {
                       width: (MediaQuery.of(context).size.width - marginSize * 2),
                       height: 35,
                       child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context, addressText.text);
+                        onPressed: () => {
+                          asd(addressText.text),
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.all(5),
-                          backgroundColor: const Color(0xff05d686),
+                          backgroundColor: const Color(0xFF3F51B5),
                           foregroundColor: Colors.white,
                           textStyle: const TextStyle(
                             fontSize: 18,

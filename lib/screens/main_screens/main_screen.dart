@@ -11,6 +11,7 @@ import '../../widgets/bottom_navigation_bar.dart';
 import '../taxi_screens/post_details_screen.dart';
 import '../user_info_screens/other_user_info_screen.dart';
 import 'announcement_detail_screen.dart';
+import 'bus_comment_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -33,15 +34,19 @@ class _MainScreenState extends State<MainScreen> {
       label: Text(model.title, style: const TextStyle(color: Colors.black)),
       onPressed: () => model.onTap(),
       style: ElevatedButton.styleFrom(
-        primary: Colors.white, // 배경색
-        onPrimary: Colors.black, // 전경색(텍스트 및 아이콘 색상)
-        elevation: 3, // 그림자 깊이
+        primary: Colors.white,
+        // 배경색
+        onPrimary: Colors.black,
+        // 전경색(텍스트 및 아이콘 색상)
+        elevation: 3,
+        // 그림자 깊이
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50.0),
           side: BorderSide(color: Colors.grey), // 테두리 추가
         ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        textStyle: const TextStyle(fontSize: 12), // 텍스트 크기 조정
+        textStyle: const TextStyle(fontSize: 12),
+        // 텍스트 크기 조정
         shadowColor: Colors.grey.withOpacity(0.5), // 그림자 색상
       ),
     );
@@ -91,15 +96,6 @@ class _MainScreenState extends State<MainScreen> {
           );
         },
       ),
-      MainScreenButtonModel(
-        icon: Icons.chat,
-        title: '인공지능 채팅',
-        color: Colors.blueGrey,
-        url: '',
-        onTap: () {
-          // AI Chat 화면으로 이동
-        },
-      ),
     ];
   }
 
@@ -116,7 +112,8 @@ class _MainScreenState extends State<MainScreen> {
               '구미역에서 모집중인 합승',
               Icons.train,
               trainPostsIsExpanded,
-                  () => setState(() => trainPostsIsExpanded = !trainPostsIsExpanded)
+                  () =>
+                  setState(() => trainPostsIsExpanded = !trainPostsIsExpanded)
           ),
           buildRideSharingSection(
               'express_bus_posts',
@@ -130,14 +127,17 @@ class _MainScreenState extends State<MainScreen> {
               '금오공과대학교에서 모집중인 합승',
               Icons.school,
               schoolPostsIsExpanded,
-                  () => setState(() => schoolPostsIsExpanded = !schoolPostsIsExpanded)
+                  () =>
+                  setState(() => schoolPostsIsExpanded = !schoolPostsIsExpanded)
           ),
           buildBusSection(
               'bus_station_info',
               '댓글을 기다리는 버스', // 섹션 제목
               Icons.comment_outlined, // 버스 아이콘
               busListIsExpanded, // 확장 상태를 추적하는 변수
-                  () => setState(() => busListIsExpanded = !busListIsExpanded) // 확장 상태 토글
+                  () =>
+                  setState(() =>
+                  busListIsExpanded = !busListIsExpanded) // 확장 상태 토글
           ),
           ListTile(
             leading: const Icon(Icons.person),
@@ -147,7 +147,7 @@ class _MainScreenState extends State<MainScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      const OtherUserProfileScreen(userId: '3153999885'),
+                  const OtherUserProfileScreen(userId: '3153999885'),
                 ),
               );
             },
@@ -170,7 +170,8 @@ class _MainScreenState extends State<MainScreen> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               return Padding(
-                padding: EdgeInsets.only(top:10, bottom: 3,left: index == 0 ? 10 : 0, right: 10),
+                padding: EdgeInsets.only(
+                    top: 10, bottom: 3, left: index == 0 ? 10 : 0, right: 10),
                 child: _buildUserInteractionButton(items[index]),
               );
             },
@@ -185,7 +186,8 @@ class _MainScreenState extends State<MainScreen> {
       duration: const Duration(milliseconds: 500),
       curve: Curves.fastOutSlowIn,
       margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      padding: const EdgeInsets.only(
+          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey),
@@ -217,11 +219,13 @@ class _MainScreenState extends State<MainScreen> {
               IconButton(
                 icon: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
+                  transitionBuilder: (Widget child,
+                      Animation<double> animation) {
                     return ScaleTransition(scale: animation, child: child);
                   },
                   child: Icon(
-                    announcementIsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    announcementIsExpanded ? Icons.keyboard_arrow_up : Icons
+                        .keyboard_arrow_down,
                     key: ValueKey<bool>(announcementIsExpanded),
                     size: 24,
                   ),
@@ -237,7 +241,9 @@ class _MainScreenState extends State<MainScreen> {
           AnimatedCrossFade(
             firstChild: const SizedBox(height: 0),
             secondChild: buildAnnouncements(),
-            crossFadeState: announcementIsExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: announcementIsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 500),
           ),
         ],
@@ -285,7 +291,8 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   child: ListTile(
                     leading: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.grey[400],
@@ -310,12 +317,15 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget buildRideSharingSection(String collectionName, String title, IconData iconData, bool isExpanded, VoidCallback toggleExpansion) {
+  Widget buildRideSharingSection(String collectionName, String title,
+      IconData iconData, bool isExpanded, VoidCallback toggleExpansion) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 500), // 속도를 빠르게 조정
+      duration: const Duration(milliseconds: 500),
+      // 속도를 빠르게 조정
       curve: Curves.fastOutSlowIn,
       margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      padding: const EdgeInsets.only(
+          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey),
@@ -344,11 +354,13 @@ class _MainScreenState extends State<MainScreen> {
               IconButton(
                 icon: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
+                  transitionBuilder: (Widget child,
+                      Animation<double> animation) {
                     return ScaleTransition(scale: animation, child: child);
                   },
                   child: Icon(
-                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    isExpanded ? Icons.keyboard_arrow_up : Icons
+                        .keyboard_arrow_down,
                     key: ValueKey<bool>(isExpanded),
                     size: 24,
                   ),
@@ -360,7 +372,9 @@ class _MainScreenState extends State<MainScreen> {
           AnimatedCrossFade(
             firstChild: const SizedBox(height: 0), // 축소된 상태일 때의 위젯
             secondChild: buildPostsList(collectionName), // 확장된 상태일 때의 위젯
-            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 500),
           ),
         ],
@@ -372,16 +386,26 @@ class _MainScreenState extends State<MainScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(collectionName)
-      //.where('categoryTime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now())) // Todo UI 구현 이후 추가 예정
           .orderBy('categoryTime', descending: true)
-          .limit(5)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
+        var now = DateTime.now();
+        var nowTotalMinutes = now.hour * 60 + now.minute;
+        var filteredDocs = snapshot.data!.docs.where((doc) {
+          var timeParts = doc["categoryTime"].split(':');
+          var docHour = int.parse(timeParts[0]);
+          var docMinute = int.parse(timeParts[1]);
+          var docTotalMinutes = docHour * 60 + docMinute;
+          return docTotalMinutes >= nowTotalMinutes;
+        }).toList();
+
+        // 필터링된 결과에서 상위 5개 문서만 선택
+        var limitedDocs = filteredDocs.take(5).toList();
         return ListView(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(), // 중첩 스크롤 방지
-          children: snapshot.data!.docs.map((doc) {
+          physics: const NeverScrollableScrollPhysics(),
+          children: limitedDocs.map((doc) {
             TaxiScreenPostModel postInfo = TaxiScreenPostModel(
                 categoryTime: doc["categoryTime"],
                 commentList: doc["commentList"],
@@ -397,15 +421,17 @@ class _MainScreenState extends State<MainScreen> {
 
             return InkWell(
               onTap: () async {
-                TaxiScreenUserModel writerInfo = await TaxiScreenUserModel.getUserById(postInfo.writerId);
+                TaxiScreenUserModel writerInfo = await TaxiScreenUserModel
+                    .getUserById(postInfo.writerId);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PostDetailsScreen(
-                      writer: writerInfo, // writerInfo 전달
-                      post: postInfo, // postInfo 전달
-                      collectionName: collectionName
-                    ),
+                    builder: (context) =>
+                        PostDetailsScreen(
+                            writer: writerInfo, // writerInfo 전달
+                            post: postInfo, // postInfo 전달
+                            collectionName: collectionName
+                        ),
                   ),
                 );
               },
@@ -417,7 +443,8 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 child: ListTile(
                   leading: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: Colors.grey[400],
@@ -441,12 +468,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget buildBusSection(String collectionName, String title, IconData iconData, bool isExpanded, VoidCallback toggleExpansion) {
+  Widget buildBusSection(String collectionName, String title, IconData iconData,
+      bool isExpanded, VoidCallback toggleExpansion) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
       curve: Curves.fastOutSlowIn,
       margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      padding: const EdgeInsets.only(
+          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey),
@@ -475,11 +504,13 @@ class _MainScreenState extends State<MainScreen> {
               IconButton(
                 icon: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
+                  transitionBuilder: (Widget child,
+                      Animation<double> animation) {
                     return ScaleTransition(scale: animation, child: child);
                   },
                   child: Icon(
-                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    isExpanded ? Icons.keyboard_arrow_up : Icons
+                        .keyboard_arrow_down,
                     key: ValueKey<bool>(isExpanded),
                     size: 24,
                   ),
@@ -491,19 +522,19 @@ class _MainScreenState extends State<MainScreen> {
           AnimatedCrossFade(
             firstChild: const SizedBox(height: 0),
             secondChild: buildBusList(collectionName),
-            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 500),
           ),
         ],
       ),
     );
   }
-  
+
   Widget buildBusList(String collectionName) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection(collectionName)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection(collectionName).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
         List<Bus> allBuses = [];
@@ -511,15 +542,13 @@ class _MainScreenState extends State<MainScreen> {
         for (var doc in snapshot.data!.docs) {
           var data = doc.data();
           if (data is Map<String, dynamic>) {
-            var busList = List.from(data['bus_list'] as List<dynamic> ?? []);
-            allBuses.addAll(busList.map((busData) => Bus.fromJson(busData as Map<String, dynamic>)));
+            var busList = List.from(data['busList'] as List<dynamic> ?? []);
+            allBuses.addAll(busList.map((busData) =>
+                Bus.fromJson(busData as Map<String, dynamic>)));
           }
         }
 
-        // 버스 리스트를 arrtime으로 정렬
         allBuses.sort((a, b) => a.arrtime.compareTo(b.arrtime));
-
-        // 가장 빨리 오는 버스 5대만 선택
         allBuses = allBuses.take(4).toList();
 
         return ListView.builder(
@@ -528,33 +557,41 @@ class _MainScreenState extends State<MainScreen> {
           itemCount: allBuses.length,
           itemBuilder: (context, index) {
             Bus busInfo = allBuses[index];
-
-            // 초를 분으로 변환 (60초 미만은 1분으로 표시)
             int minutes = (busInfo.arrtime / 60).ceil();
             String timeDisplay = "${minutes}분전";
 
-            return Card(
-              elevation: 3,
-              margin: const EdgeInsets.all(2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.grey[400],
-                  ),
-                  child: Text(
-                    timeDisplay, // 도착 예정 시간 (분으로 표시)
-                    style: const TextStyle(color: Colors.white),
-                  ),
+            return InkWell(
+              onTap: () {
+                // BusCommentsScreen으로 이동
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) =>
+                      BusCommentsScreen(code: busInfo.code),
+                ));
+              },
+              child: Card(
+                elevation: 3,
+                margin: const EdgeInsets.all(2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                title: Text(
-                  '${busInfo.nodenm}: ${busInfo.routeno}', // 버스 번호
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey[400],
+                    ),
+                    child: Text(
+                      timeDisplay,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  title: Text(
+                    '${busInfo.nodenm}: ${busInfo.routeno}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             );

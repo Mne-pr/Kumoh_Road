@@ -7,6 +7,7 @@ import '../../widgets/bottom_navigation_bar.dart';
 import 'translate_address_screen.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import "package:http/http.dart" as http;
+import "package:geolocator/geolocator.dart";
 
 class PathMapScreen extends StatefulWidget {
   const PathMapScreen({Key? key}) : super(key: key);
@@ -43,6 +44,25 @@ class _PathMapScreenState extends State<PathMapScreen> {
     );
   }
 
+  void getPosition() async{
+    LocationPermission permission = await Geolocator.checkPermission();
+    if(permission == LocationPermission.denied){
+      permission = await Geolocator.requestPermission();
+    }
+    try{
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      double tmp1 = position.latitude;
+      double tmp2 = position.longitude;
+      final tmpL = NLatLng(tmp1, tmp2);
+      final movePoint = NCameraUpdate.scrollAndZoomTo(target: tmpL, zoom: 15,);
+      final tmpM = NMarker(id: "MyPosition", position: tmpL, icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      await mapController.updateCamera(movePoint);
+      await mapController.addOverlay(tmpM);
+      print("$tmp1 $tmp2");
+    }catch(e){
+      print(e);
+    }
+  }
   Future<List> getCoordinate(String pointAddress) async {
     http.Response response =
         await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$pointAddress"), headers: nmapID);
@@ -84,8 +104,8 @@ class _PathMapScreenState extends State<PathMapScreen> {
       target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2 - 0.01, (coordinateList[0][4] + coordinateList[1][4]) / 2),
       zoom: 11.5,
     );
-    markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]));
-    markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]));
+    markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]), icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+    markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]), icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
     List<dynamic> tempList = await getPath();
     List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => const NLatLng(0.0, 0.0));
     for (int i = 0; i < tempList.length; i++) {
@@ -170,6 +190,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ),
               onMapReady: (NaverMapController controller) {
                 mapController = controller;
+                getPosition();
               },
             ),
             Positioned(
@@ -266,7 +287,7 @@ class _PathMapScreenState extends State<PathMapScreen> {
                           },
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.all(5),
-                            backgroundColor: const Color(0xff05d686),
+                            backgroundColor: const Color(0xFF3F51B5),
                             foregroundColor: Colors.white,
                             textStyle: const TextStyle(
                               fontSize: 18,

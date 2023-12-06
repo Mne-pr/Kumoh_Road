@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/announcement_model.dart';
+import '../../models/comment_model.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../main_screens/announcement_detail_screen.dart';
 import 'admin_add_announcement_screan.dart';
@@ -56,6 +57,38 @@ class _BarChartSample7State extends State<AdminMainScreen> {
     };
   }
 
+  Future<Map<String, int>> getBusChatCounts() async {
+    var now = DateTime.now();
+    var todayStart = DateTime(now.year, now.month, now.day);
+    var yesterdayStart = todayStart.subtract(const Duration(days: 1));
+
+    var snapshots = await FirebaseFirestore.instance
+        .collection('bus_chat')
+        .get();
+
+    int todayCount = 0;
+    int yesterdayCount = 0;
+
+    for (var doc in snapshots.docs) {
+      List<dynamic> comments = doc.get('comments');
+      for (var commentJson in comments) {
+        Comment comment = Comment.fromJson(commentJson);
+        if (comment.createdTime.isAfter(todayStart)) {
+          todayCount++;
+        } else if (comment.createdTime.isAfter(yesterdayStart)) {
+          yesterdayCount++;
+        }
+      }
+    }
+
+    return {
+      "today": todayCount,
+      "yesterday": yesterdayCount
+    };
+  }
+
+
+
   Future<Map<String, Map<String, int>>> getReportCounts() async {
     var now = DateTime.now();
     var todayStart = DateTime(now.year, now.month, now.day);
@@ -92,7 +125,7 @@ class _BarChartSample7State extends State<AdminMainScreen> {
     var expressBusPosts = await getDocumentCounts('express_bus_posts');
     var schoolPosts = await getDocumentCounts('school_posts');
     var trainPosts = await getDocumentCounts('train_posts');
-    var comments = await getDocumentCounts('bus_chat');
+    var comments = await getBusChatCounts();
     var users = await getDocumentCounts('users');
     var reports = await getReportCounts();
 
@@ -100,20 +133,16 @@ class _BarChartSample7State extends State<AdminMainScreen> {
       dataList = [
         {
           "color": Colors.blue,
-          "today": expressBusPosts['today']! +
-              schoolPosts['today']! +
-              trainPosts['today']!,
-          "yesterday": expressBusPosts['yesterday']! +
-              schoolPosts['yesterday']! +
-              trainPosts['yesterday']!,
-          "label": "게시글 수",
+          "today": expressBusPosts['today']! + schoolPosts['today']! + trainPosts['today']!,
+          "yesterday": expressBusPosts['yesterday']! + schoolPosts['yesterday']! + trainPosts['yesterday']!,
+          "label": "택시 게시글 수",
           "icon": Icons.local_taxi
         },
         {
           "color": Colors.blue,
           "today": comments['today']!,
           "yesterday": comments['yesterday']!,
-          "label": "댓글 수",
+          "label": "버스 댓글 수",
           "icon": Icons.directions_bus
         },
         {
@@ -302,7 +331,13 @@ class _BarChartSample7State extends State<AdminMainScreen> {
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        touchedGroupIndex = index;
+                        if (touchedGroupIndex == index) {
+                          // 이미 선택된 인덱스를 다시 선택한 경우, 비활성화
+                          touchedGroupIndex = -1;
+                        } else {
+                          // 새 인덱스를 선택한 경우, 활성화
+                          touchedGroupIndex = index;
+                        }
                       });
                     },
                     child: AnimatedContainer(
