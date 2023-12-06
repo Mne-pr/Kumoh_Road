@@ -218,7 +218,7 @@ class _BusListWidgetState extends State<BusListWidget> {
             onTap: () async {
               await widget.onRefresh();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('버스목록 업데이트'),duration: Duration(milliseconds: 700)),
+                const SnackBar(content: Text('업데이트됨'),duration: Duration(milliseconds: 700)),
               );
             },
           ),

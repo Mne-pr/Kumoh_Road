@@ -69,8 +69,8 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 
     // 댓글 읽어오기 로직
     Future<void> getComments() async {
-      await widget.updateComment;
       setState(() { isChatModifying = false;});
+      widget.updateComment;
     }
 
     return Container(

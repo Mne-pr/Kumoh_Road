@@ -195,7 +195,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     double screenHeight     = MediaQuery.of(context).size.height;
 
     // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
-    Future<void> compareSources(BusList busListFromApi, final nodeId) async {
+    Future<BusList> compareSources(BusList busListFromApi, final nodeId) async {
       final stationDoc = fire.collection('bus_station_info').doc(nodeId);
       BusList buslistFromFire, newBusListToFire = BusList(buses: []);
 
@@ -231,6 +231,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           DocumentSnapshot chat = await fire.collection('bus_chat').doc(bus.code).get(); // 원본 댓글리스트 가져와
           if (chat.exists) {
             final Map<String, dynamic> chatData = chat.data() as Map<String,dynamic>;    // 데이터 추출해
+            chatData['passed'] = true;
 
             // report에 해당 버스의 댓글이 있다면 reason 수정
             final reportDoc = FirebaseFirestore.instance.collection('reports');
@@ -250,29 +251,29 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       // // 새 버스는 그냥 추가, 채팅 문서 추가
       for (Bus bus in busListFromApi.buses) {
         newBusListToFire.buses.add(bus);
-        try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': []});}
+        try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': [], 'passed': false});}
           catch(e) { print('adding new bus chat list error : ${e.toString()}');}
       }
 
-      // 수정한 목록을 파베에 업데이트
+      // 수정한 목록을 파베,입력에 업데이트
       await stationDoc.update({'busList': newBusListToFire.getArrayFormat()});
-      return;
+      return newBusListToFire;
     }
 
     // 버스리스트를 api에서 가져오는 함수
     Future<BusList> getBusListFromApi(final nodeId) async {
       try {
         final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
-        BusList buslist;
+        BusList buslist, newBusList;
 
         final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
 
         if (res.statusCode == 200) { // 파베에 업뎃시켜
           try{
             buslist = BusList.fromJson(decodeRes);
-            await compareSources(buslist, nodeId);
-          } catch(e) {buslist = BusList.fromJson({}); throw Exception(e);}
-          return (buslist);
+            newBusList = await compareSources(buslist, nodeId);
+          } catch(e) {newBusList = BusList.fromJson({}); throw Exception(e);}
+          return (newBusList);
         }
         else { throw Exception('Failed to load buses info');}
 
