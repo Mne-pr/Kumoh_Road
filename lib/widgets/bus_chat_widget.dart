@@ -269,8 +269,23 @@ class _chatState extends State<OneChatWidget> {
     try {
       DocumentSnapshot doc = await busChatDoc.get();
       if (doc.exists) {
-        List<dynamic> items = List.from(doc['comments']);
+        List<dynamic> items = List.from(doc['comments']); // 당연히 하나 있겠지
 
+        // 지우기 전에 reports에 해당 댓글 있는지 찾아봐
+        QuerySnapshot targetInReport = await fire.collection('reports')
+            .where('category',isEqualTo: comment.comment)
+            .where('entityId',isEqualTo: comment.createdTime)
+            .where('reportedUserId',isEqualTo:comment.writerId)
+            .get();
+
+        // reports에 신고가 들어온 댓글이면 마찬가지로 지워버려
+        if (targetInReport.docs.isNotEmpty) {
+          for (DocumentSnapshot reportDoc in targetInReport.docs) {
+            await fire.collection('reports').doc(reportDoc.id).delete();
+          }
+        }
+
+        // 마지막으로 댓글 지워
         items.removeWhere((item) => (
             (item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
                 item['writerId'] as String == comment.writerId &&
