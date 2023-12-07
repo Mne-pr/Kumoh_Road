@@ -168,19 +168,16 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
                 alignment: Alignment.bottomRight,
                 scale: 1.4,
                 child: CupertinoSwitch(
-                  activeColor: Colors.grey,
-                  trackColor: const Color(0xFF3F51B5),
-                  value: !isCurrent,
+                  activeColor: const Color(0xFF3F51B5),
+                  trackColor: Colors.grey,
+                  value: isCurrent,
                   onChanged: (value) {
+                    if (value) { fetchCurCommentReports(); }
+                    else { fetchPastCommentReports(); }
                     setState(() {
-                      isCurrent = !value;
+                      isCurrent = value;
                       isLoading = true; // 스위치를 토글할 때 로딩 상태를 true로 설정
                     });
-                    if (value) {
-                      fetchCurCommentReports();
-                    } else {
-                      fetchPastCommentReports();
-                    }
                   },
                 ),
               ),
