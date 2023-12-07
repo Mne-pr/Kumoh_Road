@@ -263,23 +263,43 @@ class _chatState extends State<OneChatWidget> {
 
   // 댓글 삭제
   Future<void> deleteComment() async {
+    // 댓글, 리포트 처리 방식 다르게 처리하는 이유
+    // 댓글은 문서의 리스트 안에, 리포트는 문서 자체로 저장되어 있기 때문
     final comment = widget.comment;
     final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
 
     try {
       DocumentSnapshot doc = await busChatDoc.get();
       if (doc.exists) {
-        List<dynamic> items = List.from(doc['comments']);
+        List<dynamic> items = List.from(doc['comments']); // 당연히 하나 있겠지
 
+        // 지우기 전에 reports에 해당 댓글 있는지 찾아봐
+        QuerySnapshot targetInReport = await fire.collection('reports')
+            .where('category',isEqualTo: comment.comment)
+            .where('entityId',isEqualTo: comment.createdTime.toString())
+            .where('reportedUserId',isEqualTo:comment.writerId)
+            .get();
+
+        // reports에 신고가 들어온 댓글이었다면 관련 리포트 지워버려
+        if (targetInReport.docs.isNotEmpty) {
+          for (DocumentSnapshot reportDoc in targetInReport.docs) {
+            await fire.collection('reports').doc(reportDoc.id).delete();
+          }
+        }
+
+        // 마지막으로 댓글 지워
         items.removeWhere((item) => (
             (item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
                 item['writerId'] as String == comment.writerId &&
                 item['comment'] as String == comment.comment
         ));
 
+        // 지운 댓글 반영해
         await busChatDoc.update({'comments': items});
       }
     } catch(e) { print('Error removing item: $e');}
+    
+    // 마무리
     widget.updateComment();
 
   }
@@ -293,8 +313,23 @@ class _chatState extends State<OneChatWidget> {
     try {
       DocumentSnapshot doc = await busChatDoc.get();
       if (doc.exists) {
-        List<dynamic> items = List.from(doc['comments']);
+        List<dynamic> items = List.from(doc['comments']);// 당연히 하나 있겠지
 
+        // 지우기 전에 reports에 해당 댓글 있는지 찾아봐
+        QuerySnapshot targetInReport = await fire.collection('reports')
+            .where('category',isEqualTo: comment.comment)
+            .where('entityId',isEqualTo: comment.createdTime.toString())
+            .where('reportedUserId',isEqualTo:comment.writerId)
+            .get();
+        
+        // 있으면 바로 반영하기 - category만 수정하면 되겠는데
+        if (targetInReport.docs.isNotEmpty) {
+          for (DocumentSnapshot reportDoc in targetInReport.docs) {
+            await fire.collection('reports').doc(reportDoc.id).update({'category': text});
+          }
+        }
+        
+        // 해당 댓글의 정보 수정함
         for (var item in items) {
           if ((item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
               item['writerId'] as String == comment.writerId &&
@@ -303,9 +338,13 @@ class _chatState extends State<OneChatWidget> {
             break;
           }
         }
+        
+        // 수정한 댓글 반영함
         await busChatDoc.update({'comments': items});
       }
     } catch(e) { print('Error removing item: $e');}
+    
+    // 마무리 
     widget.updateComment();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('수정 완료!'),duration: Duration(milliseconds: 700)),
