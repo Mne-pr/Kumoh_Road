@@ -100,6 +100,14 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
               itemCount: (isCurrent) ? curReportList.length : pastReportList.length,
               itemBuilder: (context, index) {
                 final commentReportedItem = (isCurrent) ? curReportList[index] : pastReportList[index];
+                if ((isCurrent && index==curReportList.length-1) || (!isCurrent && index==pastReportList.length-1)) {
+                  return Column(
+                    children: [
+                      buildCommentTile(commentReportedItem),
+                      SizedBox(height: 80,),
+                    ],
+                  );
+                }
                 return buildCommentTile(commentReportedItem);
               },
             ),
@@ -155,72 +163,88 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
           ),
         ],
       ),
-      child: ListTile(
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminUserManageDetailScreen(user: comment.userModel,reportDetails: {},), // 임시임
-              ),
-            );
+
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15.0),
+
+        child: Dismissible(
+          key: Key('${comment.chatId}-${comment.writtenAt}'),
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child:Icon(Icons.clear, color: Colors.white),// Text('무시'),
+          ),
+          secondaryBackground: Container(
+            color: Colors.blue,
+            alignment: Alignment.centerRight,
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text('블라인드')//Icon(Icons.archive, color: Colors.white),
+          ),
+          onDismissed: (direction) {
+            if (direction == DismissDirection.endToStart) { // 왼쪽으로
+              print("Swiped left - perform your delete action here");
+
+            } else { // 오른쪽으로
+              print("Swiped right - perform your archive action here");
+
+            }
+
+            setState(() {
+
+            });
           },
-          child: CircleAvatar( backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    comment.userModel.nickname,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
+          child: ListTile(
+            leading: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdminUserManageDetailScreen(user: comment.userModel,reportDetails: {},), // 임시임
                   ),
-                  const SizedBox(width: 8),
-                  ReportCountWidget(comment.reportCounts), // 신고 횟수를 이름 바로 옆으로 이동
-                ],
-              ),
+                );
+              },
+              child: CircleAvatar( backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
             ),
-            Text(
-              '${comment.userModel.mannerTemperature}°C',
-              style: TextStyle(
-                fontSize: 16,
-                color: _getTemperatureColor(comment.userModel.mannerTemperature),
-                fontWeight: FontWeight.bold,
-              ),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        comment.userModel.nickname,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 8),
+                      ReportCountWidget(comment.reportCounts), // 신고 횟수를 이름 바로 옆으로 이동
+                    ],
+                  ),
+                ),
+                Text(
+                  '${comment.userModel.mannerTemperature}°C',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: _getTemperatureColor(comment.userModel.mannerTemperature),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                _getTemperatureEmoji(comment.userModel.mannerTemperature),
+              ],
             ),
-            const SizedBox(width: 4),
-            _getTemperatureEmoji(comment.userModel.mannerTemperature),
-          ],
+            subtitle: Row(
+              children: [
+                Text('${comment.commentString}'),
+                const Spacer(),
+                _buildMannerBar(comment.userModel.mannerTemperature),
+              ],
+            ),
+            onTap: () {},
+          ),
         ),
-        subtitle: Row(
-          children: [
-            Text('${comment.commentString}'),
-            const Spacer(),
-            _buildMannerBar(comment.userModel.mannerTemperature),
-          ],
-        ),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('기능 미구현입니다..'),duration: Duration(milliseconds: 700)),
-          );
-        },
-        // onTap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => AdminUserManageDetailScreen(
-        //         user: user,
-        //         reportDetails: reportDetails[user.userId] ?? {},
-        //       ),
-        //     ),
-        //   ).then((_) {
-        //     // 다시 이 화면으로 돌아왔을 때 사용자 목록과 신고 상태를 새로고침
-        //     _fetchAllUsersAndReports();
-        //   });
-        // },
       ),
+
     );
   }
 
