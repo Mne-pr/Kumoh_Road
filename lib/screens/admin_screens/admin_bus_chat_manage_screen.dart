@@ -6,6 +6,7 @@ import 'package:kumoh_road/screens/admin_screens/admin_user_manage_detail_screen
 import '../../models/report_bus_chat.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../../widgets/report_count_widget.dart';
+import 'admin_user_info_screen.dart';
 
 class AdminBusChatManageScreen extends StatefulWidget {
   const AdminBusChatManageScreen({super.key});
@@ -161,7 +162,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AdminUserManageDetailScreen(user: comment.userModel,reportDetails: {},), // 임시임
+                builder: (context) => AdminUserInfoScreen(userId: comment.userModel.userId), // 임시임
               ),
             );
           },
