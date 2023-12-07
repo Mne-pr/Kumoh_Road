@@ -81,8 +81,9 @@ class _UserInfoSectionState extends State<UserInfoSection> {
                     return;
                   }
                   // 내 프로필 눌렀을 경우, 아무 반응 없도록
-                  UserProvider currUser = Provider.of<UserProvider>(context);
-                  if(currUser.id.toString() == currUser.id.toString()) {
+                  UserProvider currUser = Provider.of<UserProvider>(context, listen: false);
+                  if(currUser.id.toString() == thisPostUserId) {
+                    log.i("내 프로필 클릭함");
                     return;
                   }
 
