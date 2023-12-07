@@ -251,7 +251,7 @@ class _chatState extends State<OneChatWidget> {
     }
   }
 
-  // 댓글 등록
+  // 댓글 신고
   Future<void> reportComment(ReportManager manager) async {
     await manager.reportComment(
       category: widget.comment.comment,   // 댓글 내용

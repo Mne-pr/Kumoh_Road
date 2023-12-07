@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/report_bus_chat.dart';
-import '../../models/user_model.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
 import '../../widgets/report_count_widget.dart';
 
@@ -15,49 +14,122 @@ class AdminBusChatManageScreen extends StatefulWidget {
 }
 
 class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
-  late List<ReportBusChatItem> reportList = [];
+  late List<ReportBusChatItem> curReportList  = [];
+  late List<ReportBusChatItem> pastReportList = [];
+  bool isCurrent = true;
+  bool isLoading = true;
 
+  // 현재 리포트만
+  Future<void> fetchCurCommentReports() async {
+    setState(() { isLoading = true;});
 
-  Future<void> fetchAllCommentsAndReports() async {
-    // 버스 댓글 리포트 가져오기
-    var reportsSnapshot = await FirebaseFirestore.instance
-        .collection('reports')
-        .where('entityType', isEqualTo: "comment")
-        .where('isHandledByAdmin', isEqualTo: false)
-        .get();
+    final reportsSnapshot; // 버스 댓글 리포트 가져오기
+    try {
+      reportsSnapshot = await FirebaseFirestore.instance
+          .collection('reports')
+          .where('entityType', isEqualTo: "comment")
+          .where('isHandledByAdmin', isEqualTo: false)
+          .where('reason', isNotEqualTo: "passedBus")
+          .get();
 
-    // 해당 채팅에 대한 분석 리스트(각 채팅 별 정보, 신고횟수, 신고자들 저장되어있음) 생성
-    ReportBusChatAnalyzeList analyzedList = await ReportBusChatAnalyzeList.fromCollection(reportsSnapshot);
+      // 해당 채팅에 대한 분석 리스트(각 채팅 별 정보, 신고횟수, 신고자들 저장되어있음) 생성
+      ReportBusChatAnalyzeList analyzedList = await ReportBusChatAnalyzeList.fromCollection(reportsSnapshot);
 
-    // 저장
-    setState(() { reportList = analyzedList.list; });
+      // 저장
+      setState(() { curReportList = analyzedList.list; });
+    }
+    catch(e) {
+      print('get reports of bus_chat error : ${e}');
+      setState(() { curReportList = [];});
+    }
+    setState(() { isLoading = false;});
+  }
+
+  // 과거 리포트만
+  Future<void> fetchPastCommentReports() async {
+    setState(() { isLoading = true;});
+    final reportsSnapshot; // 버스 댓글 리포트 가져오기
+    try {
+      reportsSnapshot = await FirebaseFirestore.instance
+          .collection('reports')
+          .where('entityType', isEqualTo: "comment")
+          .where('isHandledByAdmin', isEqualTo: false)
+          .where('reason', isEqualTo: "passedBus")
+          .get();
+
+      // 해당 채팅에 대한 분석 리스트(각 채팅 별 정보, 신고횟수, 신고자들 저장되어있음) 생성
+      ReportBusChatAnalyzeList analyzedList = await ReportBusChatAnalyzeList.fromCollection(reportsSnapshot);
+
+      // 저장
+      setState(() { pastReportList = analyzedList.list; });
+    }
+    catch(e) {
+      print('get reports of bus_chat error : ${e}');
+      setState(() { pastReportList = [];});
+    }
+    setState(() { isLoading = false;});
   }
 
   @override
   void initState() {
     super.initState();
-    fetchAllCommentsAndReports();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {fetchCurCommentReports(); setState(() { isLoading = true;});});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('버스 댓글 신고 관리', style: TextStyle(color: Colors.black)),
+        title: Text((isCurrent) ? '버스 댓글 신고 관리 - 유효한 댓글' : '버스 댓글 신고 관리 - 만료된 댓글', style: TextStyle(color: Colors.black)),
         centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 1,
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView.builder(
-          itemCount: reportList.length,
-          itemBuilder: (context, index) {
-            final commentReportedItem = reportList[index];
-            return buildCommentTile(commentReportedItem);
-          },
-        ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: (isLoading) ?
+            Center(
+              child: Center( child: CircularProgressIndicator(),),
+            ) :
+            ListView.builder(
+              itemCount: (isCurrent) ? curReportList.length : pastReportList.length,
+              itemBuilder: (context, index) {
+                final commentReportedItem = (isCurrent) ? curReportList[index] : pastReportList[index];
+                return buildCommentTile(commentReportedItem);
+              },
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              margin: EdgeInsets.all(10.0),
+              child: Transform.scale(
+                alignment: Alignment.bottomRight,
+                scale: 1.4,
+                child: CupertinoSwitch(
+                  activeColor: Colors.grey,
+                  trackColor: const Color(0xFF3F51B5),
+                  value: !isCurrent,
+                  onChanged: (value) {
+                    setState(() {
+                      isCurrent = !value;
+                      isLoading = true; // 스위치를 토글할 때 로딩 상태를 true로 설정
+                    });
+                    if (value) {
+                      fetchCurCommentReports();
+                    } else {
+                      fetchPastCommentReports();
+                    }
+                  },
+                ),
+              ),
+            )
+          ),
+        ],
       ),
       bottomNavigationBar: const AdminCustomBottomNavigationBar(
         selectedIndex: 2,
@@ -67,92 +139,80 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
 
   Widget buildCommentTile(ReportBusChatItem comment) {
 
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(comment.targetId).get(),
-      builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(); // 로딩 중일 때 표시할 위젯
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}'); // 에러 발생시 표시할 위젯
-        } else {
-          final UserModel user = UserModel.fromDocument(snapshot.data!);
-          return Container(
-            margin:  const EdgeInsets.only(bottom: 3.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(15.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 1,
-                  blurRadius: 7,
-                  offset: const Offset(0, 3), // Changes position of shadow
-                ),
-              ],
-            ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundImage: NetworkImage(user.profileImageUrl),
-                radius: 28, // 아바타 크기 증가
-              ),
-              title: Row(
+    return Container(
+      margin:  const EdgeInsets.only(bottom: 3.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(15.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: const Offset(0, 3), // Changes position of shadow
+          ),
+        ],
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: NetworkImage(comment.userModel.profileImageUrl),
+          radius: 28, // 아바타 크기 증가
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Row(
                 children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Text(
-                          user.nickname,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 8),
-                        ReportCountWidget(comment.reportCounts), // 신고 횟수를 이름 바로 옆으로 이동
-                      ],
-                    ),
-                  ),
                   Text(
-                    '${user.mannerTemperature}°C',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _getTemperatureColor(user.mannerTemperature),
-                      fontWeight: FontWeight.bold,
-                    ),
+                    comment.userModel.nickname,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 4),
-                  _getTemperatureEmoji(user.mannerTemperature),
+                  const SizedBox(width: 8),
+                  ReportCountWidget(comment.reportCounts), // 신고 횟수를 이름 바로 옆으로 이동
                 ],
               ),
-              subtitle: Row(
-                children: [
-                  Text('${comment.commentString}'),
-                  const Spacer(),
-                  _buildMannerBar(user.mannerTemperature),
-                ],
-              ),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('기능 미구현입니다..'),duration: Duration(milliseconds: 700)),
-                );
-              },
-              // onTap: () {
-              //   Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //       builder: (context) => AdminUserManageDetailScreen(
-              //         user: user,
-              //         reportDetails: reportDetails[user.userId] ?? {},
-              //       ),
-              //     ),
-              //   ).then((_) {
-              //     // 다시 이 화면으로 돌아왔을 때 사용자 목록과 신고 상태를 새로고침
-              //     _fetchAllUsersAndReports();
-              //   });
-              // },
             ),
+            Text(
+              '${comment.userModel.mannerTemperature}°C',
+              style: TextStyle(
+                fontSize: 16,
+                color: _getTemperatureColor(comment.userModel.mannerTemperature),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 4),
+            _getTemperatureEmoji(comment.userModel.mannerTemperature),
+          ],
+        ),
+        subtitle: Row(
+          children: [
+            Text('${comment.commentString}'),
+            const Spacer(),
+            _buildMannerBar(comment.userModel.mannerTemperature),
+          ],
+        ),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('기능 미구현입니다..'),duration: Duration(milliseconds: 700)),
           );
-        }
-      },
+        },
+        // onTap: () {
+        //   Navigator.push(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => AdminUserManageDetailScreen(
+        //         user: user,
+        //         reportDetails: reportDetails[user.userId] ?? {},
+        //       ),
+        //     ),
+        //   ).then((_) {
+        //     // 다시 이 화면으로 돌아왔을 때 사용자 목록과 신고 상태를 새로고침
+        //     _fetchAllUsersAndReports();
+        //   });
+        // },
+      ),
     );
   }
 
