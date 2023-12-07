@@ -234,11 +234,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             final Map<String, dynamic> chatData = chat.data() as Map<String,dynamic>;    // 데이터 추출해
             chatData['passed'] = true;
 
-            // report에 해당 버스의 댓글이 있다면 reason 수정
+            // report에 해당 버스의 댓글이 있다면 entityId(모든정보), reason(버스지나감) 으로 수정
             final reportDoc = FirebaseFirestore.instance.collection('reports');
             final mustBeModify = await reportDoc.where('reason', isEqualTo: bus.code).get();
             for (var doc in mustBeModify.docs) {
-              await reportDoc.doc(doc.id).update({'reason': '${now}-${bus.code}'});
+              final commentTime = doc.get('entityId') as String;
+              await reportDoc.doc(doc.id).update({'entityId': '${commentTime}-${now}-${bus.code}'});
+              await reportDoc.doc(doc.id).update({'reason': 'passedBus'});
             }
 
             fire.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
