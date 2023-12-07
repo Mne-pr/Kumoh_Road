@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/providers/user_providers.dart';
+import 'package:provider/provider.dart';
+
+import '../screens/taxi_screens/post_create_screen.dart';
+import '../screens/user_info_screens/other_user_info_screen.dart';
 /**
  * 여러 화면에서 편하게 사용자 정보를 보여줄 수 있도록한다.
  * 파이어베이스 또는 userProvider 모두 사용할 수 있도록 변수를 통해 받아올 수 있도록 함.
@@ -56,14 +62,44 @@ class _UserInfoSectionState extends State<UserInfoSection> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundImage: backgroundImage,
-                onBackgroundImageError: (_, __) {
-                  setState(() {
-                    backgroundImage = const AssetImage('assets/images/default_avatar.png');
-                  });
+              GestureDetector(
+                onTap: () async {
+                  String thisPostUserId = '';
+                  try {
+                    FirebaseFirestore firestore = FirebaseFirestore.instance;
+                    CollectionReference collection = firestore.collection('users');
+                    QuerySnapshot querySnapshot = await collection
+                        .where('nickname', isEqualTo: widget.nickname)
+                        .get();
+                    var doc = querySnapshot.docs.first;
+                    thisPostUserId = doc.id;
+                  } on Exception catch (e) {
+                    log.e(e);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('해당 사용자정보 로딩 실패')),
+                    );
+                    return;
+                  }
+                  // 내 프로필 눌렀을 경우, 아무 반응 없도록
+                  UserProvider currUser = Provider.of<UserProvider>(context, listen: false);
+                  if(currUser.id.toString() == thisPostUserId) {
+                    log.i("내 프로필 클릭함");
+                    return;
+                  }
+
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => OtherUserProfileScreen(userId: thisPostUserId),
+                  ));
                 },
+                child: CircleAvatar(
+                  radius: 32,
+                  backgroundImage: backgroundImage,
+                  onBackgroundImageError: (_, __) {
+                    setState(() {
+                      backgroundImage = const AssetImage('assets/images/default_avatar.png');
+                    });
+                  },
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(

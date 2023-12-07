@@ -5,12 +5,20 @@ import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
 import 'package:kumoh_road/screens/taxi_screens/post_create_screen.dart';
 import 'package:kumoh_road/screens/taxi_screens/post_details_screen.dart';
+import 'package:kumoh_road/screens/taxi_screens/post_report_screen.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_providers.dart';
 import '../../widgets/bottom_navigation_bar.dart';
 import '../../widgets/loding_indicator_widget.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
+Logger log = Logger(printer: PrettyPrinter());
+late UserProvider currUser;
+late double deviceWidth;
+late double deviceHeight;
+late double deviceFontSize;
+late Color mainColor;
 
 const Map<String, String> converter = {
   '금오공과대학교': 'school_posts',
@@ -28,12 +36,15 @@ class TaxiScreen extends StatefulWidget {
 class _TaxiScreenState extends State<TaxiScreen> {
   String _selectedStartInfo = "금오공과대학교";
   String? _selectedTime;
-  late UserProvider userProvider;
 
   @override
   Widget build(BuildContext context) {
-    final log = Logger(printer: PrettyPrinter());
-    userProvider = Provider.of<UserProvider>(context);
+    currUser = Provider.of<UserProvider>(context, listen: false);
+    deviceWidth = MediaQuery.of(context).size.width;
+    deviceHeight = MediaQuery.of(context).size.height;
+    deviceFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
+    mainColor = Theme.of(context).primaryColor;
+
     final List<String> startList = ['금오공과대학교', '구미종합터미널', '구미역'];
     bool isChoicedKumoh = (_selectedStartInfo == "금오공과대학교");
 
@@ -48,20 +59,20 @@ class _TaxiScreenState extends State<TaxiScreen> {
                 isChoicedKumoh
                     ? _buildSchoolInfo(context)
                     : FutureBuilder(
-                        future: _buildTrainOrBusArrivalInfo(context),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return snapshot.data ??
-                                const Center(child: Text('게시글이 없습니다'));
-                          } else if (snapshot.hasError) {
-                            log.e(snapshot.error);
-                            log.e(snapshot.stackTrace);
-                            return const Text("도착정보 로딩 실패");
-                          } else {
-                            return const CircularProgressIndicator();
-                          }
-                        },
-                      ),
+                  future: _buildTrainOrBusArrivalInfo(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return snapshot.data ??
+                          const Center(child: Text('게시글이 없습니다'));
+                    } else if (snapshot.hasError) {
+                      log.e(snapshot.error);
+                      log.e(snapshot.stackTrace);
+                      return const Text("도착정보 로딩 실패");
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
+                  },
+                ),
               ],
             ),
             const Divider(),
@@ -93,27 +104,29 @@ class _TaxiScreenState extends State<TaxiScreen> {
 
   Widget writingButton(BuildContext context) {
     return FloatingActionButton.extended(
-        onPressed: () { validateWritingPermission(); },
+        onPressed: () {
+          validateWritingPermission();
+        },
         icon: const Icon(Icons.add),
         label: Text(
           "글쓰기",
           style: TextStyle(
-              fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.2),
+              fontSize: deviceFontSize * 1.2),
         ),
         backgroundColor:
-            userProvider.isStudentVerified && userProvider.qrCodeUrl != null
-                ? Theme.of(context).primaryColor
-                : Colors.grey);
+        currUser.isStudentVerified && currUser.qrCodeUrl != null
+            ? mainColor
+            : Colors.grey);
   }
 
-  void validateWritingPermission(){
-    if(! userProvider.isStudentVerified){
+  void validateWritingPermission() {
+    if (!currUser.isStudentVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('학생인증을 해주세요')),
       );
       return;
     }
-    if(userProvider.qrCodeUrl == null){
+    if (currUser.qrCodeUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('QR등록을 해주세요')),
       );
@@ -130,11 +143,11 @@ class _TaxiScreenState extends State<TaxiScreen> {
 
   Widget _buildStartInfo(BuildContext context, List<String> startList) {
     return Padding(
-      padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.04),
+      padding: EdgeInsets.only(left: deviceWidth * 0.04),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           style: TextStyle(
-              fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 1.1,
+              fontSize: deviceFontSize * 1.1,
               fontWeight: FontWeight.bold,
               color: Colors.black),
           value: _selectedStartInfo,
@@ -155,9 +168,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
   }
 
   Widget _buildSchoolInfo(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-
     // DB의 기존 게시글 가져오기
     DateTime now = DateTime.now();
     List<int> timeList = [now.hour];
@@ -170,16 +180,16 @@ class _TaxiScreenState extends State<TaxiScreen> {
     }
 
     List<String> showTimeList =
-        timeList.map((e) => e < 10 ? "0$e:00" : "$e:00").toList();
+    timeList.map((e) => e < 10 ? "0$e:00" : "$e:00").toList();
     if (!showTimeList.contains(_selectedTime)) {
       _selectedTime = showTimeList[0];
     }
     return Padding(
-      padding: EdgeInsets.only(left: screenWidth * 0.02),
+      padding: EdgeInsets.only(left: deviceWidth * 0.02),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           style: TextStyle(
-              fontSize: defaultFontSize,
+              fontSize: deviceFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black),
           value: _selectedTime,
@@ -200,12 +210,9 @@ class _TaxiScreenState extends State<TaxiScreen> {
   }
 
   Future<Widget> _buildTrainOrBusArrivalInfo(BuildContext context) async {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double defaultFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-
     bool isChoicedGumiStation = _selectedStartInfo == "구미역";
     final String collectionId =
-        isChoicedGumiStation ? "train_arrival_info" : "exbus_arrival_info";
+    isChoicedGumiStation ? "train_arrival_info" : "exbus_arrival_info";
 
     List<ArriveInfo> arriveInfoList = [];
 
@@ -229,7 +236,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 3,
-        fontSize: defaultFontSize,
       );
       // api에서 오늘 도착정보 가져오기
       if (isChoicedGumiStation) {
@@ -241,7 +247,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
       // 기존의 도착 정보 삭제
       final WriteBatch batch = firestore.batch();
       final QuerySnapshot querySnapshot =
-          await firestore.collection(collectionId).get();
+      await firestore.collection(collectionId).get();
       for (QueryDocumentSnapshot document in querySnapshot.docs) {
         batch.delete(document.reference);
       }
@@ -250,11 +256,11 @@ class _TaxiScreenState extends State<TaxiScreen> {
               .map((e) => '${e.arriveDateTime.hour}:${e.arriveDateTime.minute}')
               .toSet()
               .map((e) {
-        List<String> timeParts = e.split(':');
-        DateTime aTime = DateTime(now.year, now.month, now.day,
-            int.parse(timeParts[0]), int.parse(timeParts[1]));
-        return ArriveInfo(arriveDateTime: aTime);
-      }).toList();
+            List<String> timeParts = e.split(':');
+            DateTime aTime = DateTime(now.year, now.month, now.day,
+                int.parse(timeParts[0]), int.parse(timeParts[1]));
+            return ArriveInfo(arriveDateTime: aTime);
+          }).toList();
       // 오늘 도착 정보를 DB에 저장
       for (int i = 0; i < putArriveInfoList.length; i++) {
         ArriveInfo arriveInfo = putArriveInfoList[i];
@@ -306,11 +312,10 @@ class _TaxiScreenState extends State<TaxiScreen> {
     }
 
     return Padding(
-      padding: EdgeInsets.only(left: screenWidth * 0.02),
+      padding: EdgeInsets.only(left: deviceWidth * 0.02),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          style: TextStyle(
-              fontSize: defaultFontSize,
+          style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.black),
           value: _selectedTime,
@@ -340,14 +345,29 @@ class _TaxiScreenState extends State<TaxiScreen> {
       collectionName = "train_posts";
     }
     // 현재 출발지, 현재 categoryTime, 오늘 날짜인 문서만 필터링
-    List<TaxiScreenPostModel> postList =
-        await TaxiScreenPostModel.getAllPostByCollectionAndDateTime(
-            collectionName, _selectedTime!, DateTime.now());
-    return _buildPosts(context, postList);
+    List<TaxiScreenPostModel> postList = await TaxiScreenPostModel.getAllPostByCollectionAndDateTime(collectionName, _selectedTime!, DateTime.now());
+
+    return _buildPosts(context, postList, collectionName);
   }
 
-  Future<Widget> _buildPosts(
-      BuildContext context, List<TaxiScreenPostModel> postList) async {
+  PopupMenuItem<String> reportMenuItem(String reportedUserId, String reportedUserName, String collectionName, DateTime createdTime) {
+    return PopupMenuItem<String>(
+      onTap: () {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) =>
+                PostReportScreen(
+                  reportedUserId: reportedUserId,
+                  reportedUserName: reportedUserName,
+                  collectionName: collectionName,
+                  createdTime: createdTime,
+                ),)
+        );
+      },
+      child: const Text("신고하기"),
+    );
+  }
+
+  Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList, String collectionName) async {
     // 선택한 시간의 등록된 게시물이 없을 시
     if (postList.isEmpty) {
       return const Center(
@@ -355,26 +375,30 @@ class _TaxiScreenState extends State<TaxiScreen> {
       );
     }
     // 모든 작성자 정보를 읽어오기
-    List<String> userIdList = postList.map((e) => e.writerId).toList();
-    List<TaxiScreenUserModel> writerList =
-        await TaxiScreenUserModel.getUserList(userIdList);
+    List<TaxiScreenPostModel> sortedPostList = postList;
+    sortedPostList.sort((a, b) => b.createdTime.compareTo(a.createdTime));
+    List<String> userIdList = sortedPostList.map((e) => e.writerId).toList();
+    List<TaxiScreenUserModel> writerList = await TaxiScreenUserModel.getUserList(userIdList);
+
     return Expanded(
-      child: ListView.builder(
-        itemCount: postList.length,
+      child: ListView.separated(
+        itemCount: sortedPostList.length,
         itemBuilder: (context, int index) {
-          return Column(
-            children: [
-              GestureDetector(
+          double imageSize = deviceWidth * 0.3;
+          bool isWriter = sortedPostList[index].writerId == currUser.id.toString();
+
+          return sortedPostList[index].visible
+            ? GestureDetector(
                 onTap: () async {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => PostDetailsScreen(
+                      builder: (context) =>
+                          PostDetailsScreen(
                             writer: writerList[index],
-                            post: postList[index],
+                            post: sortedPostList[index],
                             collectionName:
                             converter[_selectedStartInfo]!,
                           )
-                      // PostDetailsScreen(writer: writerList[index], post: postList[index], collectionId: converter[_selectedStartInfo]!,)
-                      ));
+                  ));
 
                   // 조회수 1 증가
                   final FirebaseFirestore firestore =
@@ -391,117 +415,126 @@ class _TaxiScreenState extends State<TaxiScreen> {
                         .update({'viewCount': FieldValue.increment(1)});
                   }
                 },
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      child: Hero(
-                        tag: index,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color:
-                                  Colors.grey, // Change border color as needed
-                              width: 0.1, // Change border width as needed
-                            ),
-                          ),
-                          child: postList[index].imageUrl.isEmpty
-                              ? Image.asset(
-                                  'assets/images/default_avatar.png',
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.network(
-                                  postList[index].imageUrl,
-                                  frameBuilder: (context, child, frame,
-                                      wasSynchronouslyLoaded) {
-                                    return child;
-                                  },
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) {
-                                      return child;
-                                    } else {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                  },
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
+                child: Container(
+                  height: deviceWidth * 0.4,
+                  // 여백 터치해도 탭 인식 되기 위함
+                  decoration: const BoxDecoration(
+                      border: Border.fromBorderSide(BorderSide.none)
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        child: sortedPostList[index].imageUrl.isEmpty
+                            ? Image.asset(
+                          'assets/images/default_avatar.png',
+                          width: imageSize,
+                          height: imageSize,
+                          fit: BoxFit.cover,
+                        )
+                            : Image.network(
+                          sortedPostList[index].imageUrl,
+                          frameBuilder: (context, child, frame,
+                              wasSynchronouslyLoaded) {
+                            return child;
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) {
+                              return child;
+                            } else {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                          },
+                          width: imageSize,
+                          height: imageSize,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.only(left: 20, top: 2),
-                        height: 100,
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              postList[index].title,
-                              style: TextStyle(
-                                fontSize: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge!
-                                        .fontSize! *
-                                    1.2,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.clip,
+                            // 제목, 버튼
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    sortedPostList[index].title,
+                                    style: TextStyle(
+                                      fontSize: deviceFontSize * 1.2,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  isWriter
+                                    ? Container()
+                                    : PopupMenuButton<String>(
+                                      icon: Transform.scale(
+                                          scale: 0.8,
+                                          child: const Icon(Icons.more_vert)
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10)),
+                                      itemBuilder: (context) {
+                                        TaxiScreenUserModel currWriter = writerList[index];
+
+                                        return [
+                                          reportMenuItem(currWriter.userId, currWriter.nickname, collectionName, sortedPostList[index].createdTime)
+                                        ];
+                                      }
+                                     ),
+                                ]
                             ),
+                            // 이름, 성별, 생성시간
                             Row(
                               children: [
                                 Text(
-                                  "${writerList[index].nickname}(${writerList[index].gender}) ",
+                                  "${writerList[index].nickname}(${writerList[index]
+                                      .gender}) ",
                                   style: const TextStyle(color: Colors.grey),
                                 ),
                                 Text(
-                                  "${DateTime.now().difference(postList[index].createdTime).inMinutes}분전",
+                                  "${DateTime
+                                      .now()
+                                      .difference(sortedPostList[index].createdTime)
+                                      .inMinutes}분전",
                                   style: const TextStyle(color: Colors.grey),
                                 )
                               ],
                             ),
+                            // 참여인원
                             Text(
-                              "${postList[index].memberList.length + 1}/4",
+                              "${sortedPostList[index].memberList.length + 1}/4",
                               style: TextStyle(
-                                  fontSize: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge!
-                                          .fontSize! *
-                                      1.1,
-                                  color: Theme.of(context).primaryColor),
+                                  fontSize: deviceFontSize * 1.1,
+                                  color: mainColor),
                             ),
+                            // 댓글수
                             Row(
                               children: [
                                 const Spacer(),
-                                // Row의 나머지 공간을 채워 아이콘을 오른쪽으로 밀어냄
-                                const Icon(Icons.comment_outlined,
-                                    color: Colors.grey),
-                                // 사용하고자 하는 아이콘으로 변경
-                                Text("${postList[index].commentList.length}"),
-                                // 실제 댓글 수를 나타내는 필드로 변경
+                                Transform.scale(
+                                  scale: 0.8,
+                                  child: const Icon(Icons.comment_outlined,
+                                      color: Colors.grey),
+                                ),
+                                Text("${sortedPostList[index].commentList.length}"),
                               ],
                             ),
+                            const Spacer()
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Divider(
-                color: Colors.grey,
-                thickness: 0.1,
-                height: 1,
-              ),
-            ],
-          );
+               )
+            : Container();
         },
+        separatorBuilder: (BuildContext context, int index) {
+          return sortedPostList[index].visible ? const Divider() : Container();
+        }
       ),
     );
   }
