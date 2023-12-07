@@ -276,7 +276,7 @@ class _chatState extends State<OneChatWidget> {
         // 지우기 전에 reports에 해당 댓글 있는지 찾아봐
         QuerySnapshot targetInReport = await fire.collection('reports')
             .where('category',isEqualTo: comment.comment)
-            .where('entityId',isEqualTo: comment.createdTime)
+            .where('entityId',isEqualTo: comment.createdTime.toString())
             .where('reportedUserId',isEqualTo:comment.writerId)
             .get();
 
@@ -318,14 +318,14 @@ class _chatState extends State<OneChatWidget> {
         // 지우기 전에 reports에 해당 댓글 있는지 찾아봐
         QuerySnapshot targetInReport = await fire.collection('reports')
             .where('category',isEqualTo: comment.comment)
-            .where('entityId',isEqualTo: comment.createdTime)
+            .where('entityId',isEqualTo: comment.createdTime.toString())
             .where('reportedUserId',isEqualTo:comment.writerId)
             .get();
         
         // 있으면 바로 반영하기 - category만 수정하면 되겠는데
         if (targetInReport.docs.isNotEmpty) {
           for (DocumentSnapshot reportDoc in targetInReport.docs) {
-            await fire.collection('reports').doc(reportDoc.id).update({'category': comment.comment});
+            await fire.collection('reports').doc(reportDoc.id).update({'category': text});
           }
         }
         
