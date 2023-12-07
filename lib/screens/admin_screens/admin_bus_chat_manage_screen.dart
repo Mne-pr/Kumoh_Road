@@ -91,18 +91,28 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
 
   Future<void> acceptReport(ReportBusChatItem comment) async {
     // 해당 글에 블라인드 처리(bus_chat, cur 댓글에 한해서!)
-    if (isCurrent) {
-      DocumentSnapshot chatDoc = await busChat.doc(comment.chatId).get();
-      List<Map<String,dynamic>> comments = chatDoc.get('comments');
+    try {
+      if (isCurrent) {
+        DocumentSnapshot chatDoc = await busChat.doc(comment.chatId).get();
+        List<dynamic> commentsDynamic = chatDoc.get('comments');
+        List<Map<String, dynamic>> comments = commentsDynamic.map((e) => e as Map<String, dynamic>).toList();
 
-      for (var com in comments) {
-        if (com['comment'] == comment.commentString
-         && com['createdTime'] == comment.writtenAt
-         && com['writerId'] == comment.targetId) {
-          com['enable'] = false;
+        for (var com in comments) {
+          print("${com['comment']} == ${comment.commentString}");
+          print("${(com['createdTime'] as Timestamp).toDate()} == ${comment.writtenAt}");
+          print("${com['writerId']} == ${comment.targetId}");
+
+          if (com['comment'] == comment.commentString
+              && (com['createdTime'] as Timestamp).toDate().toString() == comment.writtenAt
+              && com['writerId'] == comment.targetId) {
+            print('건졌다..');
+            com['enable'] = false;
+          }
         }
+        await busChat.doc(comment.chatId).update({'comments': comments});
       }
-      await busChat.doc(comment.chatId).update({'comments': comments});
+    } catch(e) {
+      print('acceptReport error: $e');
     }
 
     // 처리완료
