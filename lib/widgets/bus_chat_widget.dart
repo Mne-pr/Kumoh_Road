@@ -285,7 +285,8 @@ class _chatState extends State<OneChatWidget> {
   }
 
   // 댓글 수정
-  Future<void> updateComment(String text) async {
+  Future<void> updateComment() async {
+    final text = commentCon.text;
     final comment = widget.comment;
     final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
 
@@ -388,7 +389,7 @@ class _chatState extends State<OneChatWidget> {
                     onSubmitted: (String text) {
                       FocusScope.of(context).unfocus();
                       setState(() { modifying = false;});
-                      if (!isNoChat) {updateComment(text);}
+                      if (!isNoChat) {updateComment();}
                     },
                   ),
                 ),
@@ -396,32 +397,18 @@ class _chatState extends State<OneChatWidget> {
               ],
             ),
           ),
-          !isOwner ?
-          PopupMenuButton<String>(
-            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
-            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
-            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
-            color: Colors.white,
-            elevation: 3.0,
-
-            onSelected: (String value) async {
-              if (value == 'report') {
-                await reportComment(reportManager);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('신고가 제출되었습니다'),duration: Duration(milliseconds: 700)),
-                );
-              }
-            },
-
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'report',
-                  child: Text('신고', textAlign: TextAlign.end,),
-                ),
-              ];
-            },
-          ) :
+          (modifying) ?
+          Material( // 버튼이 피드백 대처를 위한 공간 마련
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () { if(!isNoChat) updateComment();},
+              borderRadius: BorderRadius.circular(24), // 클릭 피드백 동그라미
+              splashColor:  Color(0xff05d686), // 물결 효과 색상 설정
+              child: Padding(
+                padding: EdgeInsets.all(9.0),
+                child:   Icon(Icons.send, color: isNoChat ? Colors.grey : const Color(0xFF3F51B5)),
+          ),),):
+          (isOwner ?
           PopupMenuButton<String>(
             shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
             icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
@@ -457,6 +444,32 @@ class _chatState extends State<OneChatWidget> {
                 ),
               ];
             },
+          ) :
+          PopupMenuButton<String>(
+            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
+            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
+            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
+            color: Colors.white,
+            elevation: 3.0,
+
+            onSelected: (String value) async {
+              if (value == 'report') {
+                await reportComment(reportManager);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('신고가 제출되었습니다'),duration: Duration(milliseconds: 700)),
+                );
+              }
+            },
+
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'report',
+                  child: Text('신고', textAlign: TextAlign.end,),
+                ),
+              ];
+            },
+          )
           ),
 
 
