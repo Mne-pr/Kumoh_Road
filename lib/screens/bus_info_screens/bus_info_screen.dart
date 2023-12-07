@@ -48,7 +48,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 지도 컨트롤러
   late NaverMapController con;
-  
+  bool isMapMoved = false;
+
   // 지도의 마크와 마크 위에 띄울 위젯
   final busStopMarks = [
     NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역",),
@@ -173,7 +174,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             cameras[cameraMap[nextBusSt]+1].setAnimation(animation: myFly, duration: myDuration);
             await con.updateCamera(cameras[cameraMap[nextBusSt]+1]);
           }
-          setState(() { curButton = data.nextBusSt; });
+          setState(() { isMapMoved = false; curButton = data.nextBusSt; });
         },
       )
     ).toList();
@@ -195,71 +196,88 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     double screenHeight     = MediaQuery.of(context).size.height;
 
     // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
-    Future<void> compareSources(List<Bus> busListFromApi, final nodeId) async {
+    Future<BusList> compareSources(BusList busListFromApi, final nodeId) async {
       final stationDoc = fire.collection('bus_station_info').doc(nodeId);
-      List<String> busCodesFromFire, busCodesFromApi;
-      BusList curBuslist;
+      BusList buslistFromFire, newBusListToFire = BusList(buses: []);
 
-      // 파베의 bus_list에서 버스코드 리스트를 가져옴 - 예외처리 되어있음
+      // 파베에 저장되어있는 bus_list 가져옴
       DocumentSnapshot station = await stationDoc.get();
-      curBuslist = BusList.fromDocument(station);
-      busCodesFromFire = curBuslist.buses.map((bus) => bus.code).toList();
-      // 각 버스의 도착지 결정해야
+      buslistFromFire = BusList.fromDocument(station);
 
-      // api의 bus_list에서 버스코드 리스트를 가져옴
-      busCodesFromApi = busListFromApi.map((bus) => bus.code).toList();
+      // 각 버스의 도착지 결정해야 - 마지막에..
+      print('도착지는요? - 미안합니다..');
 
-      // 두 코드 리스트에서 공통된 버스 찾음
-      Set<String> commonCodes = busCodesFromFire.toSet().intersection(busCodesFromApi.toSet());
+      // 두 코드 리스트에서 공통된(기존) 버스 찾아 추가 - 정보 업데이트
+      for (var fireBus in buslistFromFire.buses) {
+        for (var apiBus in busListFromApi.buses) {
+          if (fireBus == apiBus) { 
+            fireBus.arrprevstationcnt = apiBus.arrprevstationcnt;
+            fireBus.arrtime = apiBus.arrtime;
+            newBusListToFire.buses.add(fireBus);
+            break;
+          }
+        }
+      }
 
       // 두 코드 리스트에서 공통된 버스 무시
-      busCodesFromFire.removeWhere((name) => commonCodes.contains(name)); // 파베에서 제거해야 할 버스들만 남음
-      busCodesFromApi.removeWhere((name) => commonCodes.contains(name));  // 파베에 추가해야 할 버스들만 남음
-
-      // 버스 목록에서 지나간 버스 제거, 파베에서 삭제
-      for (String code in busCodesFromFire) {
-        curBuslist.buses.removeWhere((bus) => bus.code == code);
-        try{ await fire.collection('bus_chat').doc(code).delete(); }
-          catch(e) { print('deleting chat list error : ${e.toString()}');}
+      for (var sameBus in newBusListToFire.buses) {
+        busListFromApi.buses.removeWhere((apiBus)   => apiBus == sameBus); // 파베에서 추가해야 할 버스들만 남음
+        buslistFromFire.buses.removeWhere((fireBus) => fireBus == sameBus);// 파베에서 제거해야 할 버스들만 남음
       }
 
-      // 새 버스를 추가, 기존 버스 업데이트
-      for (Bus bus in busListFromApi) {
+      // (지나간 버스 newBusListToFire에 추가하지 않음 == 파베에서 버스 삭제), 지나간 채팅 복제하고 문서이름만 다르게
+      for (Bus bus in buslistFromFire.buses) {
+        try {
+          DateTime now = DateTime.now(); // 새 문서의 이름에 사용될
+          DocumentSnapshot chat = await fire.collection('bus_chat').doc(bus.code).get(); // 원본 댓글리스트 가져와
+          if (chat.exists) {
+            final Map<String, dynamic> chatData = chat.data() as Map<String,dynamic>;    // 데이터 추출해
+            chatData['passed'] = true;
 
-        if (busCodesFromApi.contains(bus.code)) { // 새로운 버스인 경우 - 추가
-          curBuslist.buses.add(bus);
-          // 파베에 버스 채팅리스트 생성
-          try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': []});}
-            catch(e) { print('adding chat list error : ${e.toString()}');}
+            // report에 해당 버스의 댓글이 있다면 entityId(모든정보), reason(버스지나감) 으로 수정, 
+            // 왜 진작 reason을 nopass, pass로 하지 않았냐? => 지금 상황에서 해당 버스의 신고댓글들 찾기 편하려고
+            final reportDoc = FirebaseFirestore.instance.collection('reports');
+            final mustBeModify = await reportDoc.where('reason', isEqualTo: bus.code).get();
+            for (var doc in mustBeModify.docs) {
+              final commentTime = doc.get('entityId') as String;
+              await reportDoc.doc(doc.id).update({'entityId': '${commentTime}-${now}-${bus.code}'});
+              await reportDoc.doc(doc.id).update({'reason': 'passedBus'});
+            }
 
-        }
-        else { // 기존 버스인 경우 - 업데이트
-          Bus busToUpdate = curBuslist.buses.firstWhere((mapBus) => mapBus.code == bus.code);
-          busToUpdate.arrprevstationcnt = bus.arrprevstationcnt;
-          busToUpdate.arrtime = bus.arrtime;
-        }
-
+            fire.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
+            if ((chatData['comments'] as List<dynamic>).isNotEmpty) {
+              fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);       // 추출한 데이터(댓글)가 존재하면 새로운 이름의 문서로 추가
+            }
+          }
+        } catch(e) {print('passed bus chat document update error : ${e}');}
       }
 
-      // 수정한 목록을 파베에 업데이트
-      await stationDoc.update({'busList': curBuslist.getArrayFormat()});
-      return;
+      // // 새 버스는 그냥 추가, 채팅 문서 추가
+      for (Bus bus in busListFromApi.buses) {
+        newBusListToFire.buses.add(bus);
+        try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': [], 'passed': false});}
+          catch(e) { print('adding new bus chat list error : ${e.toString()}');}
+      }
+
+      // 수정한 목록을 파베,입력에 업데이트
+      await stationDoc.update({'busList': newBusListToFire.getArrayFormat()});
+      return newBusListToFire;
     }
 
     // 버스리스트를 api에서 가져오는 함수
     Future<BusList> getBusListFromApi(final nodeId) async {
       try {
         final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
-        BusList buslist;
+        BusList buslist, newBusList;
 
         final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
 
         if (res.statusCode == 200) { // 파베에 업뎃시켜
           try{
             buslist = BusList.fromJson(decodeRes);
-            await compareSources(buslist.buses, nodeId);
-          } catch(e) {buslist = BusList.fromJson({}); throw Exception(e);}
-          return (buslist);
+            newBusList = await compareSources(buslist, nodeId);
+          } catch(e) {newBusList = BusList.fromJson({}); throw Exception(e);}
+          return (newBusList);
         }
         else { throw Exception('Failed to load buses info');}
 
@@ -426,6 +444,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 // 1.1.2.3 구미역 버튼 클릭
                 await busStopMarks[0].performClick();
               },
+              onCameraChange: (reason, animated) => {
+                if(reason== NCameraUpdateReason.gesture) {setState((){ isMapMoved=true;})}
+              },
             ),
 
             // 1.2 버스 리스트 위젯
@@ -448,11 +469,29 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               child: BusStationWidget(onClick: busStationBoxSlide, busStation: busStopInfos[curBusStop], isTop: isBusWidgetTop,),
             ),
 
-            // 1.4 위치 변경 버튼 위젯
+            // 1.4.1 위치 변경 버튼 위젯
             Positioned(
               bottom: chBtnAni.value,
               right: MediaQuery.of(context).size.width * 0.05,
               child: buttons[curButton],
+            ),
+
+            // 1.4.2 제자리 돌아오는 버튼 위젯 - 움직일 때만 활성화되어야 하는데..
+            Positioned(
+
+              bottom: chBtnAni.value,
+              right: MediaQuery.of(context).size.width * 0.2,
+              child: OutlineCircleButton(
+                child: Icon(Icons.undo_outlined, color: Colors.white), radius: 50.0, borderSize: 0.5,
+                foregroundColor: (isMapMoved) ? const Color(0xFF3F51B5) : Colors.white, borderColor: Colors.white,
+                onTap: () {
+                  if(isMapMoved) {
+                    final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
+                    buttons[toCurLocationButtonIndex].onTap();
+                  }
+                },
+
+              ),
             ),
 
             // 1.5 댓글 위젯

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kumoh_road/models/user_model.dart';
 
 class ReportBusChatItem{
   final String chatId; // 댓글 찾을 때 사용
@@ -7,6 +8,7 @@ class ReportBusChatItem{
   final DateTime reportedAt; // 출력?용
   final String reporter;
   final String targetId;
+  final UserModel userModel;
   late int reportCounts = 1;
   late List<String> reporters = [];
 
@@ -14,6 +16,7 @@ class ReportBusChatItem{
     required this.chatId,
     required this.writtenAt,
     required this.commentString,
+    required this.userModel,
     required this.reporter,
     required this.reportedAt,
     required this.targetId,
@@ -24,8 +27,14 @@ class ReportBusChatItem{
     reportCounts += 1;
   }
 
-  factory ReportBusChatItem.fromDocument(DocumentSnapshot doc) {
+  static Future<ReportBusChatItem> fromDocument(DocumentSnapshot doc) async {
     var data = doc.data() as Map<String, dynamic>;
+
+    final userDoc = await FirebaseFirestore
+        .instance.collection('users')
+        .doc(data['reportedUserId'])
+        .get();
+    UserModel userModel = UserModel.fromDocument(userDoc);
 
     return ReportBusChatItem(
       chatId: data['reason'],
@@ -34,6 +43,7 @@ class ReportBusChatItem{
       reportedAt: (data['createdTime'] as Timestamp).toDate(),
       targetId: data['reportedUserId'],
       reporter: data['reporterUserId'],
+      userModel: userModel,
     );
   }
 

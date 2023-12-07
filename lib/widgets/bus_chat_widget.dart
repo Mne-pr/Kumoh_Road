@@ -67,6 +67,12 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
       try {FocusScope.of(context).unfocus();} catch(e) {} // 키보드 비활성화
     }
 
+    // 댓글 읽어오기 로직
+    void getComments() {
+      setState(() { isChatModifying = false;});
+      widget.updateComment();
+    }
+
     return Container(
       margin:     EdgeInsets.zero,
       decoration: BoxDecoration(
@@ -99,7 +105,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                   children: [
                     SizedBox(
                       height: MediaQuery.of(context).size.height / 2 - 30,
-                      child: Center(child: Text("채팅이 없습니다", style: TextStyle(fontSize: 20))),
+                      child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
                     ),
                   ],
                 ) : GestureDetector(
@@ -116,7 +122,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         child: Stack(
                           children: [
                             Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
-                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment, tellModifying: modifyingChat),
+                            OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: getComments, tellModifying: modifyingChat),
                           ],),);}
 
                     else { // 나머지 줄
@@ -124,7 +130,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                         decoration: BoxDecoration( border: Border(
                             top: BorderSide(width: 1.0, color: Colors.grey.shade200),
                             bottom: (index == commentList.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: widget.updateComment, tellModifying: modifyingChat),
+                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: widget.userProvider, updateComment: getComments, tellModifying: modifyingChat),
                       );}
                   },
                 ),
@@ -147,16 +153,14 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
                     child: TextField(
                       controller:  commentCon,
                       enabled: verified,
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       decoration:  InputDecoration(
-                          filled: true,
-                          hintText: verified ? '댓글 입력' : '댓글을 작성하려면 학생인증이 필요합니다',
-                          hintStyle: verified
-                              ? (isNoChat ? TextStyle(color: const Color(0xFF3F51B5)) : TextStyle(color: Color(0xFF3F51B5).withOpacity(0.1)))
-                              : TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-                          fillColor: verified
-                              ? (isNoChat ? const Color(0xFF3F51B5).withOpacity(0.1) : const Color(0xFF3F51B5).withOpacity(0.6))
-                              : Color(0xFF3F51B5).withOpacity(0.1)
+                        filled: true,
+                        hintText: verified ? '버스 정보를 공유해주세요!' : '댓글을 작성하려면 학생인증이 필요합니다',
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                        hintStyle: verified
+                            ? (isNoChat ? TextStyle(color: Colors.grey) : TextStyle(color: Colors.black))
+                            : TextStyle(color: Colors.grey),
                       ),
                       onSubmitted: (String text) { if (!isNoChat) submitComment(); },
                     ),),
@@ -212,7 +216,6 @@ class OneChatWidget extends StatefulWidget {
   @override
   State<OneChatWidget> createState() => _chatState();
 }
-
 class _chatState extends State<OneChatWidget> {
   final TextEditingController commentCon = TextEditingController();
   final fire = FirebaseFirestore.instance;
@@ -229,7 +232,7 @@ class _chatState extends State<OneChatWidget> {
 
   void onFocusChange() {
     if (!focusNode.hasFocus) {
-      print('감지는 했는지');
+      commentCon.text = widget.comment.comment;
       setState(() { modifying = false;});
     }
   }
@@ -248,7 +251,7 @@ class _chatState extends State<OneChatWidget> {
     }
   }
 
-  // 댓글 등록
+  // 댓글 신고
   Future<void> reportComment(ReportManager manager) async {
     await manager.reportComment(
       category: widget.comment.comment,   // 댓글 내용
@@ -282,7 +285,8 @@ class _chatState extends State<OneChatWidget> {
   }
 
   // 댓글 수정
-  Future<void> updateComment(String text) async {
+  Future<void> updateComment() async {
+    final text = commentCon.text;
     final comment = widget.comment;
     final busChatDoc = fire.collection('bus_chat').doc(comment.targetDoc);
 
@@ -295,7 +299,6 @@ class _chatState extends State<OneChatWidget> {
           if ((item['createdTime'] as Timestamp).toDate() == comment.createdTime &&
               item['writerId'] as String == comment.writerId &&
               item['comment'] as String == comment.comment) {
-            print('찾음!!');
             item['comment'] = text;
             break;
           }
@@ -304,6 +307,9 @@ class _chatState extends State<OneChatWidget> {
       }
     } catch(e) { print('Error removing item: $e');}
     widget.updateComment();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('수정 완료!'),duration: Duration(milliseconds: 700)),
+    );
   }
 
   @override
@@ -369,22 +375,21 @@ class _chatState extends State<OneChatWidget> {
                 SizedBox(height: 5,),
                 (!modifying) ?
                 Text(widget.comment.comment, style: TextStyle(fontSize: 17),) :
-                SizedBox( // 된듯
+                SizedBox(
                   height: 60,
                   child: TextField(
                     focusNode: focusNode,
                     controller:  commentCon,
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     decoration:  InputDecoration(
                       filled: true,
                       hintText: '수정할 댓글 입력',
-                      hintStyle: isNoChat ? TextStyle(color: const Color(0xFF3F51B5)) : TextStyle(color: Color(0xFF3F51B5).withOpacity(0.1)),
-                      fillColor: isNoChat ? const Color(0xFF3F51B5).withOpacity(0.1) : const Color(0xFF3F51B5).withOpacity(0.6),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                      hintStyle: isNoChat ? TextStyle(color: Colors.black) : TextStyle(color: Colors.grey),
                     ),
                     onSubmitted: (String text) {
                       FocusScope.of(context).unfocus();
                       setState(() { modifying = false;});
-                      if (!isNoChat) {updateComment(text);}
+                      if (!isNoChat) {updateComment();}
                     },
                   ),
                 ),
@@ -392,7 +397,54 @@ class _chatState extends State<OneChatWidget> {
               ],
             ),
           ),
-          !isOwner ?
+          (modifying) ?
+          Material( // 버튼이 피드백 대처를 위한 공간 마련
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () { if(!isNoChat) updateComment();},
+              borderRadius: BorderRadius.circular(24), // 클릭 피드백 동그라미
+              splashColor:  Color(0xff05d686), // 물결 효과 색상 설정
+              child: Padding(
+                padding: EdgeInsets.all(9.0),
+                child:   Icon(Icons.send, color: isNoChat ? Colors.grey : const Color(0xFF3F51B5)),
+          ),),):
+          (isOwner ?
+          PopupMenuButton<String>(
+            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
+            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
+            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
+            color: Colors.white,
+            elevation: 3.0,
+
+            onSelected: (String value) async {
+              if (value == 'edit') {
+                setState(() {
+                  if (widget.tellModifying != null) { widget.tellModifying!();}
+                  modifying = true;
+                });
+              }
+              else if (value == 'delete') {
+                // 일단 커멘트에 모든 정보가 있으니깐?
+                deleteComment();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('삭제 완료!'),duration: Duration(milliseconds: 700)),
+                );
+              }
+            },
+
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Text('편집'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Text('삭제'),
+                ),
+              ];
+            },
+          ) :
           PopupMenuButton<String>(
             shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
             icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
@@ -417,39 +469,7 @@ class _chatState extends State<OneChatWidget> {
                 ),
               ];
             },
-          ) :
-          PopupMenuButton<String>(
-            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(15.0),),
-            icon: Icon(Icons.more_vert, color: Color(0xFF3F51B5),),
-            shadowColor: Color(0xFF3F51B5).withOpacity(0.3),
-            color: Colors.white,
-            elevation: 3.0,
-
-            onSelected: (String value) async {
-              if (value == 'edit') {
-                setState(() {
-                  if (widget.tellModifying != null) { widget.tellModifying!();}
-                  modifying = true;
-                });
-              }
-              else if (value == 'delete') {
-                // 일단 커멘트에 모든 정보가 있으니깐?
-                deleteComment();
-              }
-            },
-
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'edit',
-                  child: Text('편집'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Text('삭제'),
-                ),
-              ];
-            },
+          )
           ),
 
 
