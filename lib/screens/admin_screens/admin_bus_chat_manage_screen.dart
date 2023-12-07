@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kumoh_road/screens/admin_screens/admin_user_manage_detail_screen.dart';
 
 import '../../models/report_bus_chat.dart';
 import '../../widgets/admin_bottom_navigation_bar.dart';
@@ -155,9 +156,16 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
         ],
       ),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundImage: NetworkImage(comment.userModel.profileImageUrl),
-          radius: 28, // 아바타 크기 증가
+        leading: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminUserManageDetailScreen(user: comment.userModel,reportDetails: {},), // 임시임
+              ),
+            );
+          },
+          child: CircleAvatar( backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
         ),
         title: Row(
           children: [
