@@ -4,61 +4,6 @@ import 'package:flutter/material.dart';
 import '../models/bus_station_model.dart';
 import 'outline_circle_button.dart';
 
-// 버스정류장 위젯
-class BusStationWidget extends StatelessWidget {
-  final VoidCallback onClick; // 클릭 이벤트를 위한 콜백
-  final BusSt busStation;
-  final bool isTop;
-
-  const BusStationWidget(
-      {Key? key,
-      required this.onClick,
-      required this.busStation,
-      required this.isTop})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onVerticalDragUpdate: (details) {
-        if (isTop == false && details.delta.dy < 0) { onClick(); }
-        if (isTop == true && details.delta.dy > 0)  { onClick(); }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
-          boxShadow: [ BoxShadow(color: const Color(0xFF3F51B5).withOpacity(0.15), spreadRadius: 0, blurRadius: 10, offset: Offset(0, -5)),],
-        ),
-        child: Column(
-          children: [
-            SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(width: 20),
-                Icon(Icons.location_on, color: const Color(0xFF3F51B5), size: 25),
-                SizedBox(width: 5),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(busStation.mainText, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
-                      SizedBox(height: 14),
-                      Text(busStation.subText,style: TextStyle(fontSize: 12, color: CupertinoColors.inactiveGray),),
-                      Text('${busStation.id}',style: TextStyle(fontSize: 12, color: CupertinoColors.inactiveGray),),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 5),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // 버스 목록 위젯
 class BusListWidget extends StatefulWidget {
   final List<Bus> busList;

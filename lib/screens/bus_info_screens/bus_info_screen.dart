@@ -18,47 +18,26 @@ import 'package:http/http.dart' as http;
 import '../../widgets/bus_chat_widget.dart';
 import '../../widgets/bus_station_widget.dart';
 
-class ButtonData {
-  final IconData icon;
-  final int nextBusSt;
-  final int clickMark;
-  ButtonData(this.icon, this.nextBusSt, this.clickMark);
-}
-
-
 class BusInfoScreen extends StatefulWidget {
   const BusInfoScreen({super.key});
 
   @override
   State<BusInfoScreen> createState() => _BusInfoScreenState();
 }
-
 class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateMixin {
 
   // 로딩 상태
   late bool   isLoading      = true;
   late double loadingOpacity = 1.0;
-  
-  // api 호출주소
-  final apiAddr = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
-  final serKey  = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
 
-  // 파이어베이스
-  final fire = FirebaseFirestore.instance;
+  // 자신의 정보
   late UserProvider userProvider;
 
   // 지도 컨트롤러
   late NaverMapController con;
   bool isMapMoved = false;
 
-  // 지도의 마크와 마크 위에 띄울 위젯
-  final busStopMarks = [
-    NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역",),
-    NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협",),
-    NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점",),
-    NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)",),
-    NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널",),
-  ];
+  // 사용할 버스정류장 위젯..?
   late final busStopW;
   
   // 위치 이동 버튼과 상태
@@ -73,29 +52,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late Animation<double> chBtnHeightAni;
   late Animation<double> chBusListSizeAni;
   late Animation<double> chCommentSizeAni;
-
-  // 두 지역(구미역, 금오공대)에 대한 화면 포지션 정의
-  static const gumiPos     = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
-  static const gumiSPos    = NCameraPosition(target: NLatLng(36.12567222, 128.3313162), zoom: 15.2, bearing: 0, tilt: 0);
-  static const kumohPos    = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
-  static const kumohSPos   = NCameraPosition(target: NLatLng(36.13420749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
-  static const terminalPos = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
-  static const terminalSPos= NCameraPosition(target: NLatLng(36.12002942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
-  
-  // 지역 이동할 때 사용
-  final cameras = [
-    NCameraUpdate.scrollAndZoomTo(target: gumiPos.target,   zoom: gumiPos.zoom),  // 구미역
-    NCameraUpdate.scrollAndZoomTo(target: gumiSPos.target,  zoom: gumiSPos.zoom), // 구미역 축소
-    NCameraUpdate.scrollAndZoomTo(target: kumohPos.target,  zoom: kumohPos.zoom), // 금오공대
-    NCameraUpdate.scrollAndZoomTo(target: kumohSPos.target, zoom: kumohSPos.zoom),// 금오공대 축소
-    NCameraUpdate.scrollAndZoomTo(target: terminalPos.target,  zoom: terminalPos.zoom), // 종합터미널
-    NCameraUpdate.scrollAndZoomTo(target: terminalSPos.target, zoom: terminalSPos.zoom) // 종합터미널 축소
-  ];
-  final cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
-
-  // 자주 사용할 거 같은
-  NCameraAnimation myFly = NCameraAnimation.fly;
-  Duration myDuration    = Duration(milliseconds: 200);
 
   // 버스정류장 위젯 애니메이션 감지
   bool isBusWidgetTop      = false;
@@ -118,19 +74,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late List<UserModel> commentUsers = [];
   late bool isValidUser = false;
 
-  List<ButtonData> buttonData = [
-    ButtonData(Icons.school_outlined,                1, 2),
-    ButtonData(Icons.directions_bus_filled_outlined, 2, 4),
-    ButtonData(Icons.tram_outlined,                  0, 0),
-  ];
-
   // 화면 너비, 높이
   late Orientation orientation;
   late double      screenHeight;
 
   // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
   Future<BusList> compareSources(BusList busListFromApi, final nodeId) async {
-    final stationDoc = fire.collection('bus_station_info').doc(nodeId);
+    final stationDoc = FIRE.collection('bus_station_info').doc(nodeId);
     BusList buslistFromFire, newBusListToFire = BusList(buses: []);
 
     // 파베에 저장되어있는 bus_list 가져옴
@@ -162,7 +112,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     for (Bus bus in buslistFromFire.buses) {
       try {
         DateTime now = DateTime.now(); // 새 문서의 이름에 사용될
-        DocumentSnapshot chat = await fire.collection('bus_chat').doc(bus.code).get(); // 원본 댓글리스트 가져와
+        DocumentSnapshot chat = await FIRE.collection('bus_chat').doc(bus.code).get(); // 원본 댓글리스트 가져와
         if (chat.exists) {
           final Map<String, dynamic> chatData = chat.data() as Map<String,dynamic>;    // 데이터 추출해
           chatData['passed'] = true;
@@ -177,9 +127,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             await reportDoc.doc(doc.id).update({'reason': 'passedBus'});
           }
 
-          fire.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
+          FIRE.collection('bus_chat').doc(bus.code).delete();                          // 원본 댓글리스트 삭제해
           if ((chatData['comments'] as List<dynamic>).isNotEmpty) {
-            fire.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);       // 추출한 데이터(댓글)가 존재하면 새로운 이름의 문서로 추가
+            FIRE.collection('bus_chat').doc('${now}-${bus.code}').set(chatData);       // 추출한 데이터(댓글)가 존재하면 새로운 이름의 문서로 추가
           }
         }
       } catch(e) {print('passed bus chat document update error : ${e}');}
@@ -188,7 +138,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     // // 새 버스는 그냥 추가, 채팅 문서 추가
     for (Bus bus in busListFromApi.buses) {
       newBusListToFire.buses.add(bus);
-      try{ await fire.collection('bus_chat').doc(bus.code).set({'comments': [], 'passed': false});}
+      try{ await FIRE.collection('bus_chat').doc(bus.code).set({'comments': [], 'passed': false});}
       catch(e) { print('adding new bus chat list error : ${e.toString()}');}
     }
 
@@ -200,7 +150,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // 버스리스트를 api에서 가져오는 함수
   Future<BusList> getBusListFromApi(final nodeId) async {
     try {
-      final res = await http.get(Uri.parse('${apiAddr}?serviceKey=${serKey}&_type=json&cityCode=37050&nodeId=${nodeId}'));
+      final res = await http.get(Uri.parse('${BUS_API_ADDR}?serviceKey=${BUS_API_SERVICE_KEY}&_type=json&cityCode=37050&nodeId=${nodeId}'));
       BusList buslist, newBusList;
 
       final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
@@ -219,7 +169,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 정류장의 정보 가져오는 함수
   Future<BusList> fetchBusInfo(final nodeId) async {
-    final stationDoc = fire.collection('bus_station_info').doc(nodeId);
+    final stationDoc = FIRE.collection('bus_station_info').doc(nodeId);
     DocumentSnapshot station = await stationDoc.get();
     BusList buslist;
 
@@ -326,8 +276,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Future<void> getComments() async {
     setState(() { isLoading = true;});
 
-    final commentDoc =     fire.collection('bus_chat').doc(curBusCode);
-    final userCollection = fire.collection('users');
+    final commentDoc =     FIRE.collection('bus_chat').doc(curBusCode);
+    final userCollection = FIRE.collection('users');
 
     // 버스에 대한 comments 가져오기
     DocumentSnapshot commentData = await commentDoc.get();
@@ -350,7 +300,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   void submitComment(String comment) async {
 
     // 댓글 문서 가져오기
-    final chatDoc = fire.collection('bus_chat').doc(curBusCode);
+    final chatDoc = FIRE.collection('bus_chat').doc(curBusCode);
     //final chatDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
 
     // 문서의 comments 필드에 추가
@@ -373,7 +323,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // 애니메이션 초기설정
   void reAnimation() {
     chBtnHeightAni   = Tween(begin: 0.0, end: screenHeight * 0.50).animate(busStAnicon)  ..addListener(() {setState(() {});});
-    chBusListSizeAni = Tween(begin: 0.0, end: screenHeight * 0.50).animate(busStAnicon)  ..addListener(() {setState(() {});});
+    chBusListSizeAni = Tween(begin: 2.5, end: screenHeight * 0.50).animate(busStAnicon)  ..addListener(() {setState(() {});});
     chCommentSizeAni = Tween(begin: 0.0, end: screenHeight * 0.50).animate(commentAnicon)..addListener(() {setState(() {});});
   }
 
@@ -381,10 +331,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   void initState() {
     super.initState();
 
-    buttons = buttonData.map((data) =>
+    buttons = BUTTON_DATA.map((data) =>
         OutlineCircleButton(
-          child: Icon(data.icon, color: Colors.white), radius: 50.0, borderSize: 0.5,
-          foregroundColor: const Color(0xFF3F51B5), borderColor: Colors.white,
+          child: Icon(data.icon, color: white), radius: 50.0, borderSize: 0.5,
+          foregroundColor: mainColor, borderColor: white,
           onTap: () async {
             await busStopMarks[data.clickMark].performClick();
             final nextBusSt = data.nextBusSt;
@@ -410,6 +360,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   }
 
   @override
+  void dispose() {
+    busStAnicon.dispose(); super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     userProvider = Provider.of<UserProvider>(context)..startListeningToUserChanges();
     orientation  = MediaQuery.of(context).orientation;
@@ -417,115 +372,233 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     reAnimation();
 
     return Scaffold(
-
-      // 1. 버튼과 지도, 하단바 겹쳐 표시하기 위해 Stack 사용함
       body: SafeArea(
         child: Stack(
           children: [
-            // 1.1 네이버맵을 가장 아래쪽(z)에 배치
-            NaverMap(
-              // 1.1.1 맵 초기화 옵션 지정
-              options: const NaverMapViewOptions(
-                minZoom: 12, maxZoom: 18, pickTolerance: 8, locale: Locale('kr'), mapType: NMapType.basic, liteModeEnable: true,
-                initialCameraPosition: gumiPos, activeLayerGroups: [NLayerGroup.building, NLayerGroup.mountain, NLayerGroup.transit],
-                rotationGesturesEnable: false, scrollGesturesEnable: true, tiltGesturesEnable: false, stopGesturesEnable: false, scaleBarEnable: false, logoClickEnable: false,
-              ),
-              // 1.1.2맵과 관련된 로직 정의
-              onMapReady: (NaverMapController controller) async {
-                // 1.1.2.1 맵 컨트롤러 등록
-                con = controller;
-                // 1.1.2.2 각 마커를 클릭했을 때의 이벤트 지정
-                for (int i = 0; i < 5; i++){
-                  con.addOverlay(busStopMarks[i]);
-                  busStopMarks[i].setOnTapListener((overlay) async { (isCommentWidgetOpen) ? commentsBoxSlide() : null; await busStopMarks[i].openInfoWindow(busStopW[i]); await updateBusStop(i); });
-                }
-                // 1.1.2.3 구미역 버튼 클릭
-                await busStopMarks[0].performClick();
-              },
-              onCameraChange: (reason, animated) => {
-                if(reason== NCameraUpdateReason.gesture) {setState((){ isMapMoved=true;})}
-              },
-            ),
+            buildNaverMapWidget(),
 
-            // 핵심
             Positioned(
               bottom: 0, left: 0, right: 0,
-              child: buildCombinedBusWidget(userProvider),
-            ),
+              child: Column(
+                children: [
+                  BusStationWidget(),
 
-            // 1.4.1 위치 변경 버튼 위젯 - 다 저 안에 넣어야 할 판
-            Positioned(
-              bottom: chBtnHeightAni.value,
-              right: MediaQuery.of(context).size.width * 0.05,
-              child: buttons[curButton],
-            ),
+                  Container(
+                    height: chBusListSizeAni.value - chCommentSizeAni.value,
+                    child: BusListWidget(
+                      busList: busList,
+                      isLoading: isLoading,
+                      onRefresh: updateBusListBox,
+                      onScrollToTop: busStationBoxSlide,
+                      onCommentsCall: callComments,
+                    ),
+                  ),
 
-            // 1.4.2 제자리 돌아오는 버튼 위젯 - 다 저 안에 넣어야 할 판임
-            Positioned(
-              bottom: chBtnHeightAni.value,
-              right: MediaQuery.of(context).size.width * 0.2,
-              child: OutlineCircleButton(
-                child: Icon(Icons.undo_outlined, color: Colors.white), radius: 50.0, borderSize: 0.5,
-                foregroundColor: (isMapMoved) ? const Color(0xFF3F51B5) : Colors.white, borderColor: Colors.white,
-                onTap: () {
-                  if(isMapMoved) {
-                    final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
-                    buttons[toCurLocationButtonIndex].onTap();
-                  }
-                },
+                  Container(
+                    height: chCommentSizeAni.value,
+                    child: BusChatListWidget(
+                      onScrollToTop: commentsBoxSlide,
+                      submitComment: submitComment,
+                      updateComment: getComments,
+                      isLoading:     isLoading,
+                      comments:      comments,
+                      commentUsers:  commentUsers,
+                      userProvider: userProvider,
+                    ),
+                  ),
 
+                  CustomBottomNavigationBar(selectedIndex: 2,),
+                ],
               ),
             ),
 
-            // 1.6 첫 로딩 위젯
             LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1100,),
           ],
         ),
       ),
     );
-
   }
 
-  Widget buildCombinedBusWidget(UserProvider userProvider) {
-    return Column(
-      children: [
-        BusStationWidget(
-          onClick: busStationBoxSlide,
-          busStation: busStopInfos[curBusStop],
-          isTop: isBusWidgetTop,
-        ),
+  Widget buildNaverMapWidget() {
+    return NaverMap(
+      options: const NaverMapViewOptions(
+        minZoom: 12, maxZoom: 18,
+        pickTolerance: 8,
+        locale: Locale('kr'),
+        mapType: NMapType.basic, liteModeEnable: true,
+        initialCameraPosition: GUMI_POS,
+        activeLayerGroups: [NLayerGroup.building, NLayerGroup.mountain, NLayerGroup.transit],
 
-        Container(
-          height: chBusListSizeAni.value - chCommentSizeAni.value,
-          child: BusListWidget(
-            busList: busList,
-            isLoading: isLoading,
-            onRefresh: updateBusListBox,
-            onScrollToTop: busStationBoxSlide,
-            onCommentsCall: callComments,
-          ),
-        ),
+        scaleBarEnable: false,
+        logoClickEnable: false,
+        tiltGesturesEnable: false,
+        stopGesturesEnable: false,
+        scrollGesturesEnable: true,
+        rotationGesturesEnable: false,
+      ),
 
-        Container(
-          height: chCommentSizeAni.value,
-          child: BusChatListWidget(
-            onScrollToTop: commentsBoxSlide,
-            submitComment: submitComment,
-            updateComment: getComments,
-            isLoading:     isLoading,
-            comments:      comments,
-            commentUsers:  commentUsers,
-            userProvider: userProvider,
-          ),
-        ),
+      onMapReady: (NaverMapController controller) async {
+        con = controller;
 
-        CustomBottomNavigationBar(selectedIndex: 2,),
-      ],
+        for (int i = 0; i < 5; i++){
+          con.addOverlay(busStopMarks[i]);
+          busStopMarks[i].setOnTapListener((overlay) async {
+            (isCommentWidgetOpen) ? commentsBoxSlide() : null;
+            await busStopMarks[i].openInfoWindow(busStopW[i]);
+            await updateBusStop(i);
+          });
+        }
+
+        await busStopMarks[0].performClick();
+      },
+
+      onCameraChange: (reason, animated) => {
+        if(reason== NCameraUpdateReason.gesture) {
+          setState((){ isMapMoved=true;})
+        }
+      },
+
     );
   }
 
-  @override
-  void dispose() {
-    busStAnicon.dispose(); super.dispose();
+  Widget BusStationWidget () {
+    final station = busStopInfos[curBusStop];
+
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        if (isBusWidgetTop == false && details.delta.dy < 0) { busStationBoxSlide(); }
+        if (isBusWidgetTop == true  && details.delta.dy > 0) { busStationBoxSlide(); }
+      },
+
+      child: Container(
+        decoration: BoxDecoration(
+          color: white, borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
+          boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.15), spreadRadius: 0, blurRadius: 10, offset: Offset(0, -5)),],
+        ),
+
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                SizedBox(height: 20),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SizedBox(width: 20),
+                    Icon(Icons.location_on, color: mainColor, size: 25),
+                    SizedBox(width: 5),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(station.mainText, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
+                          SizedBox(height: 14),
+                          Text(station.subText,  style: TextStyle(fontSize: 12, color: Colors.grey),),
+                          Text('${station.id}',  style: TextStyle(fontSize: 12, color: Colors.grey),),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 15),
+              ],
+            ),
+
+            Positioned(
+              top: 0, bottom: 0,
+              right: MediaQuery.of(context).size.width * 0.05,
+              child: Center( child: buttons[curButton],),
+            ),
+
+            isMapMoved ? Positioned(
+              top: 0, bottom: 0,
+              right: MediaQuery.of(context).size.width * 0.2,
+              child: Center(
+                child: OutlineCircleButton(
+                  child: Icon(Icons.undo_outlined, color: white), radius: 50.0, borderSize: 0.5,
+                  foregroundColor: mainColor, borderColor: white,
+                  onTap: () {
+                    final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
+                    buttons[toCurLocationButtonIndex].onTap();
+                  },
+                ),
+              ),
+            ) : Container(),
+
+          ],
+        )
+
+
+      ),
+    );
+
   }
+
 }
+
+
+// -----------------------------   전역변수   --------------------------------
+
+
+// 각 버튼에 들어갈 정보 저장
+class ButtonData {
+  final IconData icon;
+  final int nextBusSt;
+  final int clickMark;
+  ButtonData(this.nextBusSt, this.clickMark, this.icon);
+}
+List<ButtonData> BUTTON_DATA = [
+  ButtonData(1, 2, Icons.school_outlined               ),
+  ButtonData(2, 4, Icons.directions_bus_filled_outlined),
+  ButtonData(0, 0, Icons.tram_outlined                 ),
+];
+
+
+// 파이어베이스 - 명령어 단축용
+final FIRE = FirebaseFirestore.instance;
+
+
+// 공공데이터 - api 호출주소
+const BUS_API_ADDR        = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
+const BUS_API_SERVICE_KEY = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
+
+
+// 네이버맵 - 정류장 위치
+const GUMI_POS     = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
+const KUMOH_POS    = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
+const TERMINAL_POS = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
+
+// 네이버맵 - 버스리스트 활성화 시 정류장 위치
+const GUMI_S_POS    = NCameraPosition(target: NLatLng(36.12567222, 128.3313162), zoom: 15.2, bearing: 0, tilt: 0);
+const TERMINAL_S_POS= NCameraPosition(target: NLatLng(36.12002942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
+const KUMOH_S_POS   = NCameraPosition(target: NLatLng(36.13420749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
+
+// 네이버맵 - 각 버스정류장 위치에 따른 마커
+final busStopMarks = [
+  NMarker(position: NLatLng(36.12963461, 128.3293215), id: "구미역",),
+  NMarker(position: NLatLng(36.12802335, 128.3331997), id: "농협",),
+  NMarker(position: NLatLng(36.14317057, 128.3943957), id: "금오공대종점",),
+  NMarker(position: NLatLng(36.13948442, 128.3967393), id: "금오공대입구(옥계중학교방면)",),
+  NMarker(position: NLatLng(36.12252942, 128.3510414), id: "종합버스터미널",),
+];
+
+// 네이버맵 - 각 마커들을 기반으로 설정한 카메라, 매핑 정보
+final cameras = [
+  // 구미역, 금오공대, 종합터미널
+  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,     zoom: GUMI_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,    zoom: KUMOH_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target, zoom: TERMINAL_POS.zoom),
+
+  // 버스리스트 활성화 된 구미역, 금오공대, 종합터미널
+  NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: KUMOH_S_POS.target,    zoom: KUMOH_S_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_S_POS.target, zoom: TERMINAL_S_POS.zoom)
+];
+const cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
+
+
+// 자주 사용하는 변수들
+const NCameraAnimation myFly = NCameraAnimation.fly;
+const Duration myDuration    = Duration(milliseconds: 200);
+const mainColor = Color(0xFF3F51B5);
+const white = Colors.white;
