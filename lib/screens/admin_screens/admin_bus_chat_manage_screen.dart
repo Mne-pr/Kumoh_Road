@@ -98,14 +98,9 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
         List<Map<String, dynamic>> comments = commentsDynamic.map((e) => e as Map<String, dynamic>).toList();
 
         for (var com in comments) {
-          print("${com['comment']} == ${comment.commentString}");
-          print("${(com['createdTime'] as Timestamp).toDate()} == ${comment.writtenAt}");
-          print("${com['writerId']} == ${comment.targetId}");
-
           if (com['comment'] == comment.commentString
               && (com['createdTime'] as Timestamp).toDate().toString() == comment.writtenAt
               && com['writerId'] == comment.targetId) {
-            print('건졌다..');
             com['enable'] = false;
           }
         }
@@ -173,19 +168,16 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
                 alignment: Alignment.bottomRight,
                 scale: 1.4,
                 child: CupertinoSwitch(
-                  activeColor: Colors.grey,
-                  trackColor: const Color(0xFF3F51B5),
-                  value: !isCurrent,
+                  activeColor: const Color(0xFF3F51B5),
+                  trackColor: Colors.grey,
+                  value: isCurrent,
                   onChanged: (value) {
+                    if (value) { fetchCurCommentReports(); }
+                    else { fetchPastCommentReports(); }
                     setState(() {
-                      isCurrent = !value;
+                      isCurrent = value;
                       isLoading = true; // 스위치를 토글할 때 로딩 상태를 true로 설정
                     });
-                    if (value) {
-                      fetchCurCommentReports();
-                    } else {
-                      fetchPastCommentReports();
-                    }
                   },
                 ),
               ),
@@ -246,53 +238,74 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
               else           { pastReportList.removeAt(index);}
             });
           },
-          child: ListTile(
-            leading: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdminUserInfoScreen(userId: comment.userModel.userId), // 임시임
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+            child: ListTile(
+              leading: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminUserInfoScreen(userId: comment.userModel.userId), // 임시임
+                    ),
+                  );
+                },
+                child: CircleAvatar( backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text(
+                          comment.userModel.nickname,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 8),
+                        ReportCountWidget(comment.reportCounts), // 신고 횟수를 이름 바로 옆으로 이동
+                      ],
+                    ),
                   ),
-                );
-              },
-              child: CircleAvatar( backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Row(
+                  Text(
+                    '${comment.userModel.mannerTemperature}°C',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _getTemperatureColor(comment.userModel.mannerTemperature),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  _getTemperatureEmoji(comment.userModel.mannerTemperature),
+                ],
+              ),
+              subtitle: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${comment.commentString}',
+                          softWrap: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        comment.userModel.nickname,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                      Container(
+                        margin: EdgeInsets.only(top: 5.0), // 원하는 마진 값 설정
+                        child: _buildMannerBar(comment.userModel.mannerTemperature),
                       ),
-                      const SizedBox(width: 8),
-                      ReportCountWidget(comment.reportCounts), // 신고 횟수를 이름 바로 옆으로 이동
                     ],
                   ),
-                ),
-                Text(
-                  '${comment.userModel.mannerTemperature}°C',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _getTemperatureColor(comment.userModel.mannerTemperature),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                _getTemperatureEmoji(comment.userModel.mannerTemperature),
-              ],
+                ],
+              ),
+              onTap: () {},
             ),
-            subtitle: Row(
-              children: [
-                Text('${comment.commentString}'),
-                const Spacer(),
-                _buildMannerBar(comment.userModel.mannerTemperature),
-              ],
-            ),
-            onTap: () {},
           ),
         ),
       ),

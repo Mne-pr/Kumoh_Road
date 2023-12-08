@@ -36,7 +36,11 @@ class CommentList{
 
     if (doc.exists){
       final comments = doc.get('comments');
-      for (var comment in comments) { tempCommentList.add(comment);}
+      for (var comment in comments) { 
+        if (comment['enable'] == true) { // enable이 true인 유저만 추가
+          tempCommentList.add(comment);
+        }
+      }
 
       try {
         commentList = tempCommentList.map((comment) => Comment.fromJson(comment,extraData: extraData)).toList();
