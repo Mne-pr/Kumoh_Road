@@ -16,7 +16,6 @@ import '../../widgets/bottom_navigation_bar.dart';
 import 'package:http/http.dart' as http;
 
 import '../../widgets/bus_chat_widget.dart';
-import '../../widgets/bus_station_widget.dart';
 
 class BusInfoScreen extends StatefulWidget {
   const BusInfoScreen({super.key});
@@ -24,6 +23,7 @@ class BusInfoScreen extends StatefulWidget {
   @override
   State<BusInfoScreen> createState() => _BusInfoScreenState();
 }
+
 class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateMixin {
 
   // 로딩 상태
@@ -49,7 +49,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late AnimationController commentAnicon = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
 
   // 애니메이션
-  late Animation<double> chBtnHeightAni;
   late Animation<double> chBusListSizeAni;
   late Animation<double> chCommentSizeAni;
 
@@ -76,7 +75,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 화면 너비, 높이
   late Orientation orientation;
-  late double      screenHeight;
+  late Size        screen;
 
   // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
   Future<BusList> compareSources(BusList busListFromApi, final nodeId) async {
@@ -322,9 +321,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 애니메이션 초기설정
   void reAnimation() {
-    chBtnHeightAni   = Tween(begin: 0.0, end: screenHeight * 0.50).animate(busStAnicon)  ..addListener(() {setState(() {});});
-    chBusListSizeAni = Tween(begin: 2.5, end: screenHeight * 0.50).animate(busStAnicon)  ..addListener(() {setState(() {});});
-    chCommentSizeAni = Tween(begin: 0.0, end: screenHeight * 0.50).animate(commentAnicon)..addListener(() {setState(() {});});
+    chBusListSizeAni = Tween(begin: 2.5, end: screen.height * 0.50).animate(busStAnicon)  ..addListener(() {setState(() {});});
+    chCommentSizeAni = Tween(begin: 0.0, end: screen.height * 0.50).animate(commentAnicon)..addListener(() {setState(() {});});
   }
 
   @override
@@ -368,7 +366,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     userProvider = Provider.of<UserProvider>(context)..startListeningToUserChanges();
     orientation  = MediaQuery.of(context).orientation;
-    screenHeight = MediaQuery.of(context).size.height;
+    screen   = MediaQuery.of(context).size;
     reAnimation();
 
     return Scaffold(
@@ -385,13 +383,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
                   Container(
                     height: chBusListSizeAni.value - chCommentSizeAni.value,
-                    child: BusListWidget(
-                      busList: busList,
-                      isLoading: isLoading,
-                      onRefresh: updateBusListBox,
-                      onScrollToTop: busStationBoxSlide,
-                      onCommentsCall: callComments,
-                    ),
+                    child: BusListWidget(),
                   ),
 
                   Container(
@@ -403,7 +395,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                       isLoading:     isLoading,
                       comments:      comments,
                       commentUsers:  commentUsers,
-                      userProvider: userProvider,
+                      userProvider:  userProvider,
                     ),
                   ),
 
@@ -470,70 +462,218 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         if (isBusWidgetTop == true  && details.delta.dy > 0) { busStationBoxSlide(); }
       },
 
-      child: Container(
-        decoration: BoxDecoration(
-          color: white, borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
-          boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.15), spreadRadius: 0, blurRadius: 10, offset: Offset(0, -5)),],
-        ),
+      child: Column(
+        children: [
+          Container(
+            width: screen.width * 0.3,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(20.0),topRight: Radius.circular(20.0),),
+              boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.3), spreadRadius: 0, blurRadius: 12, offset: Offset(0, 0)),],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [(isBusWidgetTop) ? Icon(Icons.arrow_downward_outlined) : Icon(Icons.arrow_upward_outlined)],
+            ),
+          ),
 
-        child: Stack(
-          children: [
-            Column(
+          Container(
+            decoration: BoxDecoration(
+              color: white, borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
+              boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.05), spreadRadius: 0, blurRadius: 10, offset: Offset(0, -5)),],
+            ),
+
+            child: Stack(
               children: [
-                SizedBox(height: 20),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(width: 20),
-                    Icon(Icons.location_on, color: mainColor, size: 25),
-                    SizedBox(width: 5),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(station.mainText, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
-                          SizedBox(height: 14),
-                          Text(station.subText,  style: TextStyle(fontSize: 12, color: Colors.grey),),
-                          Text('${station.id}',  style: TextStyle(fontSize: 12, color: Colors.grey),),
-                        ],
-                      ),
+                Column(
+                  children: [
+                    SizedBox(height: 20),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        SizedBox(width: 20),
+                        Icon(Icons.location_on, color: mainColor, size: 25),
+                        SizedBox(width: 5),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(station.mainText, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
+                              SizedBox(height: 14),
+                              Text(station.subText,  style: TextStyle(fontSize: 12, color: Colors.grey),),
+                              Text('${station.id}',  style: TextStyle(fontSize: 12, color: Colors.grey),),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                    SizedBox(height: 15),
                   ],
                 ),
-                SizedBox(height: 15),
-              ],
-            ),
 
-            Positioned(
-              top: 0, bottom: 0,
-              right: MediaQuery.of(context).size.width * 0.05,
-              child: Center( child: buttons[curButton],),
-            ),
-
-            isMapMoved ? Positioned(
-              top: 0, bottom: 0,
-              right: MediaQuery.of(context).size.width * 0.2,
-              child: Center(
-                child: OutlineCircleButton(
-                  child: Icon(Icons.undo_outlined, color: white), radius: 50.0, borderSize: 0.5,
-                  foregroundColor: mainColor, borderColor: white,
-                  onTap: () {
-                    final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
-                    buttons[toCurLocationButtonIndex].onTap();
-                  },
+                Positioned(
+                  top: 0, bottom: 0,
+                  right: MediaQuery.of(context).size.width * 0.05,
+                  child: Center( child: buttons[curButton],),
                 ),
-              ),
-            ) : Container(),
 
-          ],
-        )
+                isMapMoved ? Positioned(
+                  top: 0, bottom: 0,
+                  right: MediaQuery.of(context).size.width * 0.2,
+                  child: Center(
+                    child: OutlineCircleButton(
+                      child: Icon(Icons.undo_outlined, color: white), radius: 50.0, borderSize: 0.5,
+                      foregroundColor: mainColor, borderColor: white,
+                      onTap: () {
+                        final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
+                        buttons[toCurLocationButtonIndex].onTap();
+                      },
+                    ),
+                  ),
+                ) : Container(),
+
+              ],
+            )
 
 
-      ),
+          ),
+        ],
+      )
+
+
     );
 
   }
 
+
+
+  bool isRefreshing = false;
+  Widget BusListWidget() {
+    ScrollController scrollCon = ScrollController();
+    final numOfBus = busList.length;
+
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(width: 2.0,color: const Color(0xFF3F51B5).withOpacity(1.0),),
+              bottom: BorderSide(width: 0.5,color: const Color(0xFF3F51B5).withOpacity(0.8),),
+            ),
+            color: white,
+          ),
+          height: screen.height / 2,
+          child: (isRefreshing)
+            ? Center( child: SizedBox(height: screen.height / 2, child: Center(child: CircularProgressIndicator())))
+            : RefreshIndicator(
+            color: Colors.white10, displacement: 1000000,
+            onRefresh: () async { busStationBoxSlide();},
+            child: ListView.builder(
+              physics: AlwaysScrollableScrollPhysics(),
+              controller: scrollCon,
+              itemCount: (numOfBus == 0) ? 1 : numOfBus + 1,
+              itemBuilder: (context, index) {
+
+                if (numOfBus == 0) { // 버스 없을 때
+                  return SizedBox(
+                    height: screen.height / 2,
+                    child: Center(child: Text("버스가 없습니다", style: TextStyle(fontSize: 20))),
+                  );
+                }
+                if (index >= numOfBus) { // 마지막 줄
+                  return Column(children: [ Divider(), SizedBox(height: 85,),]);
+                }
+
+                Bus bus = busList[index];
+                final urgentColor = ((bus.arrtime / 60).toInt() >= 5) ? mainColor : Colors.red;
+                final busColor = (bus.routetp == '일반버스') ? const Color(0xff05d686) : Colors.purple;
+
+                return GestureDetector(
+                  onTap: () async { await callComments(bus.code);},
+                  behavior: HitTestBehavior.opaque,
+                  child:  Column(
+                    children: [
+                      (index == 0)
+                          ? SizedBox(width: 0,)
+                          : Divider(thickness: 1.0,height: 1.0,),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      SizedBox(height: 8),
+                                      Icon(Icons.directions_bus,color: busColor, size: 25),
+                                      SizedBox(width: 15),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: <Widget>[
+                                            SizedBox(height: 2),
+                                            Text(
+                                              '${bus.routeno}',
+                                              style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
+                                            SizedBox(height: 10),
+                                            Text(
+                                              '남은 정류장 : ${bus.arrprevstationcnt}',
+                                              style: TextStyle(fontSize: 12,color: Colors.grey),
+                                            ),
+                                            SizedBox(height: 6),
+                                            Text(
+                                              '${(bus.arrtime / 60).toInt()}분 ${bus.arrtime % 60}초 후 도착',
+                                              style: TextStyle(fontSize: 14,color: urgentColor),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () async { await callComments(bus.code);},
+                            icon: Icon(Icons.comment_outlined), //Icons.arrow_circle_up_outlined
+                            color: const Color(0xFF3F51B5),
+                          ),
+                          SizedBox(width: 18,),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+
+            ),
+
+          ),
+        ),
+
+        Positioned(
+          right:  screen.width  * 0.05,
+          bottom: screen.height * 0.03,
+          child: OutlineCircleButton(
+            child: Icon(Icons.refresh, color: white),
+            radius: 50.0,borderSize: 0.5,
+            foregroundColor: isRefreshing ? Colors.transparent : mainColor,
+            borderColor: white,
+            onTap: () async {
+              await updateBusListBox();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('업데이트됨'),duration: Duration(milliseconds: 700)),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+
+  }
 }
 
 
@@ -601,4 +741,4 @@ const cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
 const NCameraAnimation myFly = NCameraAnimation.fly;
 const Duration myDuration    = Duration(milliseconds: 200);
 const mainColor = Color(0xFF3F51B5);
-const white = Colors.white;
+const white     = Colors.white;
