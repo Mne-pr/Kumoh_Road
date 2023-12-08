@@ -79,7 +79,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                   _formKey2.currentState!.validate()) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('저장 중')
+                    content: Text('글쓰기 중')
                   ),
                 );
                 _formKey.currentState!.save();
@@ -105,7 +105,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                 int newPostCount = currUser.postCount + 1;
                 await currUser.updateUserInfo(postCount: newPostCount);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('저장 완료')),
+                  const SnackBar(content: Text('글쓰기 완료')),
                 );
                 Navigator.of(context).pop();
               }

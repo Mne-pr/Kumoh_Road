@@ -10,8 +10,6 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_providers.dart';
 import '../../widgets/bottom_navigation_bar.dart';
-import '../../widgets/loding_indicator_widget.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 Logger log = Logger(printer: PrettyPrinter());
 late UserProvider currUser;
@@ -36,6 +34,7 @@ class TaxiScreen extends StatefulWidget {
 class _TaxiScreenState extends State<TaxiScreen> {
   String _selectedStartInfo = "금오공과대학교";
   String? _selectedTime;
+  bool _isExistingArrivalInfo = true;
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +61,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
                   future: _buildTrainOrBusArrivalInfo(context),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      return snapshot.data ??
-                          const Center(child: Text('게시글이 없습니다'));
+                      return snapshot.data!;
                     } else if (snapshot.hasError) {
                       log.e(snapshot.error);
                       log.e(snapshot.stackTrace);
@@ -79,18 +77,14 @@ class _TaxiScreenState extends State<TaxiScreen> {
             FutureBuilder(
               future: _fetchAndBuildPosts(context),
               builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Expanded(
-                      child: Center(child: LoadingIndicatorWidget()));
+                if (snapshot.hasData) {
+                  return snapshot.data!;
                 } else if (snapshot.hasError) {
-                  log.e("${snapshot.error}");
-                  log.e("${snapshot.stackTrace}");
-                  return const Center(child: Text("게시글 로딩 실패"));
-                } else if (snapshot.hasData) {
-                  return snapshot.data ??
-                      const Center(child: Text('게시글이 없습니다'));
+                  log.e(snapshot.error);
+                  log.e(snapshot.stackTrace);
+                  return const Text("게시글 로딩 실패");
                 } else {
-                  return const Center(child: Text('게시글이 없습니다'));
+                  return const CircularProgressIndicator();
                 }
               },
             ),
@@ -132,6 +126,12 @@ class _TaxiScreenState extends State<TaxiScreen> {
       );
       return;
     }
+    if (! _isExistingArrivalInfo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('도착정보가 없어서 글쓰기를 할 수 없습니다')),
+      );
+      return;
+    }
 
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) {
@@ -153,6 +153,9 @@ class _TaxiScreenState extends State<TaxiScreen> {
           value: _selectedStartInfo,
           onChanged: (String? newValue) {
             setState(() {
+              if(newValue == "금오공과대학교"){
+                _isExistingArrivalInfo = true;
+              }
               _selectedStartInfo = newValue!;
             });
           },
@@ -174,7 +177,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
     for (int i = 1; i <= 3; i++) {
       int hour = now.hour + i;
       if (hour >= 24) {
-        continue;
+        hour = hour % 24;
       }
       timeList.add(hour);
     }
@@ -231,12 +234,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
     // if) DB의 도착 정보 != 오늘 날짜
     if (!isSameDate) {
       List<ArriveInfo> putArriveInfoList = [];
-      Fluttertoast.showToast(
-        msg: "데이터를 로딩 중입니다\n기다려 주세요!!!!",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 3,
-      );
       // api에서 오늘 도착정보 가져오기
       if (isChoicedGumiStation) {
         putArriveInfoList = await ArriveInfo.getTrainArriveInfoFromApi();
@@ -277,7 +274,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
       arriveInfoList = await ArriveInfo.fetchBusArriveInfoFromDb();
     }
 
-    final log = Logger(printer: PrettyPrinter());
     if (arriveInfoList.isEmpty) {
       log.e("DB에서 도착정보 불러오기 실패함");
       return const Text("도착 정보 불러오기 실패");
@@ -291,6 +287,9 @@ class _TaxiScreenState extends State<TaxiScreen> {
         .toList();
 
     if (afterArriveInfoList.isEmpty) {
+      _isExistingArrivalInfo = false;
+      log.i("도착정보 상태변수 변경 : $_isExistingArrivalInfo");
+
       return const Text("현재 이후 도착정보 없음");
     }
 
@@ -368,6 +367,10 @@ class _TaxiScreenState extends State<TaxiScreen> {
   }
 
   Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList, String collectionName) async {
+    // 도착정보가 없을 시
+    if(_isExistingArrivalInfo == false){
+      return Container();
+    }
     // 선택한 시간의 등록된 게시물이 없을 시
     if (postList.isEmpty) {
       return const Center(

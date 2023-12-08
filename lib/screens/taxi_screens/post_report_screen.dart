@@ -24,7 +24,6 @@ class PostReportScreen extends StatefulWidget {
 }
 
 class _PostReportScreenState extends State<PostReportScreen> {
-
   void _navigateToDetailReportScreen(String category) async {
     // 신고당한 그 1개 게시글 문서의 id를 읽기
     String postId = '';
@@ -52,7 +51,7 @@ class _PostReportScreenState extends State<PostReportScreen> {
       MaterialPageRoute(
         builder: (context) {
           return PostReportDetailScreen(
-            postId: postId,
+            postId: "${widget.collectionName}-$postId",
             reportedUserId: widget.reportedUserId,
             reportedUserName: widget.reportedUserName,
             reportCategory: category,

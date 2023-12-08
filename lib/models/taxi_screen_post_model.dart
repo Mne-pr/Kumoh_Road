@@ -26,6 +26,19 @@ class TaxiScreenPostModel {
     required this.writerId
   });
 
+  static Future<String> getDocId ({required String collectionId, required String writerId, required DateTime createdTime}) async {
+    try{
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(collectionId)
+          .where("createdTime", isEqualTo: createdTime)
+          .where("writerId", isEqualTo: writerId)
+          .get();
+
+      return querySnapshot.docs.first.id;
+    }on Exception catch(e){
+      throw Exception(e);
+    }
+  }
+
   static Future<List<TaxiScreenPostModel>> getAllPostsByCollectionName(String collectionName) async {
     Logger log = Logger(printer: PrettyPrinter());
     try{
