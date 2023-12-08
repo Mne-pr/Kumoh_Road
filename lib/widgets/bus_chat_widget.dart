@@ -95,7 +95,7 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 
           Container( // 댓글 출력 창
             decoration: BoxDecoration( color: Colors.white,),
-            height:     MediaQuery.of(context).size.height / 2 - ((!isChatModifying) ? 60 : 0),
+            height:     MediaQuery.of(context).size.height / 2 - ((!isChatModifying) ? 62.5 : 0),
 
             child: RefreshIndicator(
               displacement: 100000, // 인디케이터 보이지 않도록
