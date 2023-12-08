@@ -240,9 +240,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Future<void> commentsBoxSlide() async {
     if (MediaQuery.of(context).viewInsets.bottom == 0) { // 댓글 쓰다가 내려가지 않게
       if (commentAnicon.isDismissed) {
+        setState(() {isCommentWidgetOpen = true;});
         await commentAnicon.forward(); // 댓글 들고오기
         await getComments();
-        setState(() {isCommentWidgetOpen = true;});
       }
       else if (commentAnicon.isCompleted) {
         await commentAnicon.reverse();
@@ -676,6 +676,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           ),
         ),
 
+        (isCommentWidgetOpen) ? Container() :
         Positioned(
           right:  screen.width  * 0.05,
           bottom: screen.height * 0.03,
@@ -733,9 +734,17 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
               ) : (comments.isEmpty || commentUsers.isEmpty) ?
               ListView(
                 children: [
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height / 2 - 30,
-                    child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
+                  Stack(
+                    children: [
+                      Positioned(
+                        top: 0, left: 0, right: 0,
+                        child: Icon(Icons.arrow_downward),
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height / 2 - 30,
+                        child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
+                      ),
+                    ],
                   ),
                 ],
               ) : GestureDetector(
@@ -751,7 +760,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                       return Container(
                         child: Stack(
                           children: [
-                            Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
+                            Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_downward,size: 20.0,), ),
                             OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
                           ],),);}
 
@@ -817,11 +826,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       ),
     );
 
-
-
-
-
   }
+
 }
 
 
