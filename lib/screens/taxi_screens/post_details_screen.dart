@@ -9,9 +9,10 @@ import 'package:kumoh_road/utilities/url_launcher_util.dart';
 import 'package:kumoh_road/widgets/user_info_section.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import '../../utilities/report_manager.dart';
 
 Logger log = Logger(printer: PrettyPrinter());
-late UserProvider currUser;
+UserProvider? currUser;
 late double deviceWidth;
 late double deviceHeight;
 late double deviceFontSize;
@@ -40,14 +41,27 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   bool _showMemberSection = true;
   late List<dynamic> _commentList;
   late List<dynamic> _memberList;
-
+  late final ReportManager _reportManager;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
     _commentList = widget.post.commentList;
     _memberList = widget.post.memberList;
+
+    if(currUser == null){
+      currUser = Provider.of<UserProvider>(context);
+      currUser!.startListeningToUserChanges();
+      _reportManager = ReportManager(currUser!);
+    }
+
+    if(currUser!.id == null) {
+      // 현재 사용자 ID가 없는 경우, 첫 번째 화면으로 이동
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      });
+    }
   }
 
   @override
@@ -58,8 +72,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     deviceFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
     mainColor = Theme.of(context).primaryColor;
 
-    bool isWriter = currUser.id.toString() == widget.writer.userId;
-    bool isMember = widget.post.memberList.contains(currUser.id.toString());
+    bool isWriter = currUser!.id.toString() == widget.writer.userId;
+    bool isMember = widget.post.memberList.contains(currUser!.id.toString());
 
     return Scaffold(
       body: Stack(
@@ -89,6 +103,9 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                   const Divider(),
                   _buildReviewSection(context),
                   const Divider(),
+
+                  // ,
+
                   FutureBuilder(
                     future: _buildCommentSection(context),
                     builder:
@@ -256,19 +273,28 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
 
   Future<Widget> _buildCommentSection(BuildContext context) async {
     List<dynamic> commentList = _commentList;
+
     if (widget.post.commentList.length > 3) {
-      commentList =
-          widget.post.commentList.sublist(widget.post.commentList.length - 3);
+      commentList = widget.post.commentList.sublist(widget.post.commentList.length - 3);
     }
+
     commentList.sort((comment1, comment2) {
       DateTime time1 = (comment1['time'] as Timestamp).toDate();
       DateTime time2 = (comment2['time'] as Timestamp).toDate();
       return time2.compareTo(time1);
     });
-    List<String> commentUserIdList =
-        commentList.map((e) => e['user_code'] as String).toList();
-    List<TaxiScreenUserModel> commentUserList =
-        await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
+
+    // for(var e in commentList){
+    //   log.i((e['time'] as Timestamp).toDate());
+    // }
+
+    List<String> commentUserIdList = commentList.map((e) => e['user_code'] as String).toList();
+    List<TaxiScreenUserModel> commentUserList =  await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
+
+    for(var e in commentUserList){
+      log.i(e.userId);
+    }
+    log.i("");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +306,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundImage: NetworkImage(currUser.profileImageUrl!),
+              backgroundImage: NetworkImage(currUser!.profileImageUrl!),
             ),
             Expanded(
               child: Form(
@@ -342,7 +368,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     var doc = querySnapshot.docs.first;
                     var commentList = doc['commentList'] as List<dynamic>;
                     var newComment = {
-                      'user_code': currUser.id.toString(),
+                      'user_code': currUser!.id.toString(),
                       'comment': _content,
                       'time': now,
                       'enable': true
@@ -351,14 +377,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     await collection
                         .doc(doc.id)
                         .update({'commentList': commentList});
-                    int newPostCommentCnt = currUser.postCommentCount + 1;
-                    currUser.updateUserInfo(
+                    int newPostCommentCnt = currUser!.postCommentCount + 1;
+                    currUser!.updateUserInfo(
                         postCommentCount: newPostCommentCnt);
 
                     FocusScope.of(context).unfocus();
                     setState(() {
                       _commentList.add({
-                        'user_code': currUser.id.toString(),
+                        'user_code': currUser!.id.toString(),
                         'comment': _content,
                         'time': Timestamp.fromDate(now),
                         'enable': true
@@ -381,18 +407,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
           shrinkWrap: true,
           itemCount: commentList.length,
           itemBuilder: (context, index) {
-            return commentItem(
-                context,
-                commentList[index] as Map<String, dynamic>,
-                commentUserList[index]);
+            return commentItem(context, commentList[index] as Map<String, dynamic>, commentList.length - index, commentUserList[index]);
           },
         ),
       ],
     );
   }
 
-  Widget commentItem(BuildContext context, Map<String, dynamic> comment,
-      TaxiScreenUserModel user) {
+  Widget commentItem(BuildContext context, Map<String, dynamic> comment, int commentIndex, TaxiScreenUserModel user) {
     DateTime writeTime = (comment['time'] as Timestamp).toDate();
     return Row(
       children: [
@@ -402,13 +424,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 이름, 시간(mm분전)
             Row(
               children: [
                 user.userId == widget.writer.userId
                     ? Text(
-                        "${user.nickname} (방장)",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      )
+                  "${user.nickname} (방장)",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                )
                     : Text(user.nickname),
                 Padding(
                   padding: EdgeInsets.only(left: deviceWidth * 0.02),
@@ -421,8 +444,81 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
             ),
             Text(comment['comment'])
           ],
+        ),
+        const Spacer(),
+        user.userId != currUser!.id.toString()
+        ? PopupMenuButton(
+          itemBuilder: (context) {
+            return [
+              reportMenuItem(commentIndex, comment["user_code"], comment["comment"])
+            ];
+          },
+          icon: Transform.scale(
+              scale: 0.8,
+              child: const Icon(Icons.more_vert)
+          ),
         )
+        : Container(),
       ],
+    );
+  }
+  
+  PopupMenuItem<String> reportMenuItem(int commentIndex, String reportedUserId, String commentContent) {
+    return PopupMenuItem<String>(
+      onTap: () {
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) {
+            return AlertDialog(
+              content: const Text("신고하시겠습니까?"),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text("아니요")
+                ),
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent
+                    ),
+                    onPressed: () async {
+                      String docId = "";
+                      try{
+                        docId = await TaxiScreenPostModel.getDocId(
+                            collectionId: widget.collectionName,
+                            writerId: widget.writer.userId,
+                            createdTime: widget.post.createdTime
+                        );
+                      }on Exception catch(e){
+                        log.e("문서 id 찾기 실패", error: e);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('신고 처리 실패')),
+                        );
+                        return;
+                      }
+                      
+                      _reportManager.reportPostComment(
+                        postCommentId: "${widget.collectionName}-$docId-$commentIndex",
+                        reason: commentContent,
+                        category: "",
+                        reportedUserId: reportedUserId
+                      );
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('신고 처리가 되었습니다')),
+                      );
+                      Navigator.pop(context);
+                    },
+                    child: const Text("네")
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: const Text("신고하기"),
     );
   }
 
@@ -454,20 +550,20 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
             ElevatedButton(
                 onPressed: () async {
                   bool isWriter =
-                      widget.writer.userId == currUser.id.toString();
+                      widget.writer.userId == currUser!.id.toString();
                   if (isWriter) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('이미 합승중입니다')),
                     );
                     return;
                   }
-                  if (_memberList.contains(currUser.id.toString())) {
+                  if (_memberList.contains(currUser!.id.toString())) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('이미 합승중입니다')),
                     );
                     return;
                   }
-                  bool sameGender = widget.writer.gender == currUser.gender;
+                  bool sameGender = widget.writer.gender == currUser!.gender;
                   if (!sameGender) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -485,7 +581,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                         .get();
                     var doc = querySnapshot.docs.first;
                     var commentList = doc['memberList'] as List<dynamic>;
-                    commentList.add(currUser.id.toString());
+                    commentList.add(currUser!.id.toString());
                     await collection
                         .doc(doc.id)
                         .update({'memberList': commentList});
@@ -496,15 +592,15 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     );
                   }
                   setState(() {
-                    _memberList.add(currUser.id.toString());
+                    _memberList.add(currUser!.id.toString());
                     _showMemberSection = true;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('합승 완료')),
                   );
                 },
-                child: widget.writer.userId == currUser.id.toString() ||
-                        _memberList.contains(currUser.id.toString())
+                child: widget.writer.userId == currUser!.id.toString() ||
+                        _memberList.contains(currUser!.id.toString())
                     ? const Text("합승중")
                     : const Text("합승하기"))
           ],
@@ -518,7 +614,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
       children: [
         GestureDetector(
           onTap: () {
-            if(currUser.id.toString() == user.userId) { return; }
+            if(currUser!.id.toString() == user.userId) { return; }
 
             Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => OtherUserProfileScreen(userId: user.userId),
@@ -548,7 +644,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     List<TaxiScreenUserModel> memberList =
         await TaxiScreenUserModel.getUserList(memberIdList);
 
-    bool isWriter = widget.post.writerId == currUser.id.toString();
+    bool isWriter = widget.post.writerId == currUser!.id.toString();
     List<Widget> listView = [];
     if (isWriter) {
       listView.add(memberListItem(context, widget.writer, "방장", Container()));

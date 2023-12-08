@@ -51,7 +51,7 @@ class _PostReportScreenState extends State<PostReportScreen> {
       MaterialPageRoute(
         builder: (context) {
           return PostReportDetailScreen(
-            postId: postId,
+            postId: "${widget.collectionName}-$postId",
             reportedUserId: widget.reportedUserId,
             reportedUserName: widget.reportedUserName,
             reportCategory: category,

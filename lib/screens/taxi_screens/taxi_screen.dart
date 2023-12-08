@@ -367,7 +367,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
   }
 
   Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList, String collectionName) async {
-    log.i("도착정보 존재함? : $_isExistingArrivalInfo");
     // 도착정보가 없을 시
     if(_isExistingArrivalInfo == false){
       return Container();
