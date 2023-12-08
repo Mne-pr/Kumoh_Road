@@ -36,7 +36,8 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
     final userCollection = fire.collection('users');
 
     DocumentSnapshot commentData = await commentDoc.get();
-    CommentList commentlist = CommentList.fromDocument(commentData, extraData: widget.code);
+    CommentList commentlist = CommentList.fromDocument(
+        commentData, extraData: widget.code);
 
     List<UserModel> tempUsers = [];
     for (final comment in commentlist.comments) {
@@ -59,7 +60,8 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context)..startListeningToUserChanges();
+    final userProvider = Provider.of<UserProvider>(context)
+      ..startListeningToUserChanges();
 
     void submitComment(String comment) async {
       // 댓글 문서 가져오기
@@ -102,7 +104,10 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
                 // 각 댓글을 표시하는 위젯
                 Comment comment = comments[index];
                 UserModel user = commentUsers[index];
-                return OneChatWidget(user: user, comment: comment, userProvider: userProvider,updateComment: getComments,);
+                return OneChatWidget(user: user,
+                  comment: comment,
+                  userProvider: userProvider,
+                  updateComment: getComments,);
               },
             ),
           ),
@@ -112,11 +117,12 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
     );
   }
 
-  Widget _buildCommentInput(void Function(String) submitComment, UserProvider userProvider) {
+  Widget _buildCommentInput(void Function(String) submitComment,
+      UserProvider userProvider) {
     TextEditingController commentController = TextEditingController();
 
     return Container(
-      padding: const EdgeInsets.all(12.0), // 외부 padding을 늘려서 전체 크기를 줄임
+      padding: const EdgeInsets.all(12.0),
       child: Row(
         children: [
           Expanded(
@@ -124,19 +130,28 @@ class _BusCommentsScreenState extends State<BusCommentsScreen> {
               controller: commentController,
               enabled: userProvider.isStudentVerified,
               decoration: InputDecoration(
-                hintText: userProvider.isStudentVerified ? '버스 정보를 공유해주세요!' : '댓글을 작성하려면 학생인증이 필요합니다',
+                hintText: userProvider.isStudentVerified
+                    ? '버스 정보를 공유해주세요!'
+                    : '댓글을 작성하려면 학생인증이 필요합니다',
                 border: const OutlineInputBorder(),
-                hintStyle: TextStyle(color: userProvider.isStudentVerified ? Colors.black : Colors.grey),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0), // 내부 padding을 줄임
+                hintStyle: TextStyle(color: userProvider.isStudentVerified
+                    ? Colors.black
+                    : Colors.grey),
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10.0, horizontal: 10.0),
               ),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.send),
-            onPressed: userProvider.isStudentVerified ? () {
-              submitComment(commentController.text);
-              commentController.clear();
-            } : null,
+            onPressed: () {
+              if (userProvider.isStudentVerified && commentController.text
+                  .trim()
+                  .isNotEmpty) {
+                submitComment(commentController.text);
+                commentController.clear();
+              }
+            },
           ),
         ],
       ),
