@@ -52,6 +52,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late Animation<double> chBusListSizeAni;
   late Animation<double> chCommentSizeAni;
 
+  // 댓글 컨트롤러
+  final TextEditingController commentCon = TextEditingController();
+
   // 버스정류장 위젯 애니메이션 감지
   bool isBusWidgetTop      = false;
   bool isCommentWidgetOpen = false;
@@ -273,7 +276,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 댓글 가져오기
   Future<void> getComments() async {
-    setState(() { isLoading = true;});
+    setState(() { isLoading = true; isChatModifying = false;});
 
     final commentDoc =     FIRE.collection('bus_chat').doc(curBusCode);
     final userCollection = FIRE.collection('users');
@@ -300,7 +303,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 댓글 문서 가져오기
     final chatDoc = FIRE.collection('bus_chat').doc(curBusCode);
-    //final chatDoc = fire.collection('bus_chat_temp').doc('GMB131-190-GMB19020');
 
     // 문서의 comments 필드에 추가
     await chatDoc.update({
@@ -317,6 +319,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 댓글 다시 불러오기
     await getComments();
+
+    // 마무리
+    commentCon.clear();
+    try{ FocusScope.of(context).unfocus();} catch(e) {}
   }
 
   // 애니메이션 초기설정
@@ -359,7 +365,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   @override
   void dispose() {
-    busStAnicon.dispose(); super.dispose();
+    busStAnicon.dispose();
+    commentAnicon.dispose();
+    super.dispose();
   }
 
   @override
@@ -388,18 +396,10 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
                   Container(
                     height: chCommentSizeAni.value,
-                    child: BusChatListWidget(
-                      onScrollToTop: commentsBoxSlide,
-                      submitComment: submitComment,
-                      updateComment: getComments,
-                      isLoading:     isLoading,
-                      comments:      comments,
-                      commentUsers:  commentUsers,
-                      userProvider:  userProvider,
-                    ),
+                    child: BusChatListWidget(),
                   ),
 
-                  CustomBottomNavigationBar(selectedIndex: 2,),
+                  (isChatModifying) ? SizedBox(width: 0,) : CustomBottomNavigationBar(selectedIndex: 2,),
                 ],
               ),
             ),
@@ -545,8 +545,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   }
 
-
-
   bool isRefreshing = false;
   Widget BusListWidget() {
     ScrollController scrollCon = ScrollController();
@@ -672,6 +670,153 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         ),
       ],
     );
+
+  }
+
+
+  bool isNoChat = true;
+  bool isChatModifying = false;
+
+  void onTextChange() {
+    if (commentCon.text.isEmpty || commentCon.text.trim().isEmpty || commentCon.text[0] == ' ') {
+      setState(() { commentCon.text="";});
+    }
+    if (commentCon.text.length > 50) {
+      setState(() { commentCon.text = commentCon.text.substring(0,50);});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('50자 이상 댓글을 달 수 없습니다'),duration: Duration(milliseconds: 250)),
+      );
+    }
+    setState(() { isNoChat = commentCon.text.isEmpty;});
+  }
+
+  void modifyingChat() {
+    setState(() { isChatModifying = true;});
+  }
+
+  Widget BusChatListWidget() {
+    commentCon.addListener(onTextChange);
+    bool verified = userProvider.isStudentVerified;
+
+    return Container(
+      margin:     EdgeInsets.zero,
+      decoration: BoxDecoration(
+        border:    Border(
+          top:      BorderSide(width: 2.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),
+          bottom:   BorderSide(width: 0.5, color: const Color(0xFF3F51B5).withOpacity(0.2),),
+        ),
+      ),
+
+      child: Column(
+        children: [
+
+         Expanded(
+          child:  Container( // 댓글 출력 창
+            decoration: BoxDecoration( color: Colors.white,),
+            height:     MediaQuery.of(context).size.height / 2 - ((!isChatModifying) ? 62.5 : 0),
+
+            child: RefreshIndicator(
+              displacement: 100000, // 인디케이터 보이지 않도록
+              onRefresh:    () async { await commentsBoxSlide();},
+
+              child: (isLoading) ?
+              ListView(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height / 2 - 30,
+                    child: Center( child: CircularProgressIndicator(),),
+                  ),
+                ],
+              ) : (comments.isEmpty || commentUsers.isEmpty) ?
+              ListView(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height / 2 - 30,
+                    child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
+                  ),
+                ],
+              ) : GestureDetector(
+                onTap: () {setState(() { isChatModifying = false;}); FocusScope.of(context).unfocus();},
+                child: ListView.builder(
+                  itemCount:   comments.length,
+                  itemBuilder: (context, index) {
+
+                    Comment comment = comments[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
+                    UserModel user  = commentUsers[index];
+
+                    if (index == 0) { // 첫째 줄
+                      return Container(
+                        child: Stack(
+                          children: [
+                            Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_drop_down,size: 20.0,), ),
+                            OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
+                          ],),);}
+
+                    else { // 나머지 줄
+                      return Container(
+                        decoration: BoxDecoration( border: Border(
+                            top: BorderSide(width: 1.0, color: Colors.grey.shade200),
+                            bottom: (index == comments.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
+                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
+                      );}
+                  },
+                ),
+              ),
+            ),
+          ),
+         ),
+
+          (isChatModifying) ? SizedBox(width: 0,) :
+          Container( // 댓글 입력 창
+            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(width: 1.0, color: const Color(0xFF3F51B5).withOpacity(0.2),),) ),
+            height:     60,
+
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(5, 8, 5, 8),
+
+              child: Row(
+                children: [
+
+                  Expanded(
+                    child: TextField(
+                      controller:  commentCon,
+                      enabled: verified,
+                      decoration:  InputDecoration(
+                        filled: true,
+                        hintText: verified ? '버스 정보를 공유해주세요!' : '댓글을 작성하려면 학생인증이 필요합니다',
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                        hintStyle: verified
+                            ? (isNoChat ? TextStyle(color: Colors.grey) : TextStyle(color: Colors.black))
+                            : TextStyle(color: Colors.grey),
+                      ),
+                      onSubmitted: (String text) { if (!isNoChat) submitComment(commentCon.text); },
+                    ),),
+
+                  SizedBox(width: 5,),
+
+                  Material( // 버튼이 피드백 대처를 위한 공간 마련
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap:        () { isNoChat ? null : submitComment(commentCon.text);},
+                      borderRadius: BorderRadius.circular(24), // 클릭 피드백 동그라미
+                      splashColor:  Color(0xff05d686), // 물결 효과 색상 설정
+                      child: Padding(
+                        padding: EdgeInsets.all(9.0),
+                        child:   Icon(Icons.send, color: isNoChat ? Colors.grey : const Color(0xFF3F51B5)),
+                      ),),),
+
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+
+
+
 
   }
 }
