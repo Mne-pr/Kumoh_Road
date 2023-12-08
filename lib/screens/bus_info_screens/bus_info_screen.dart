@@ -56,7 +56,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   final TextEditingController commentCon = TextEditingController();
 
   // 버스정류장 위젯 애니메이션 감지
-  bool isBusWidgetTop      = false;
+  bool isBusStWidgetOpen   = false;
   bool isCommentWidgetOpen = false;
 
   // 버스정류장 정보와 그 상태들
@@ -273,7 +273,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     if (isCommentWidgetOpen == false){
       if (busStAnicon.isDismissed) {
         busStAnicon.forward();
-        setState(() { isBusWidgetTop = true;});
+        setState(() { isBusStWidgetOpen = true;});
 
         final index = (curBusStop%2)==1 ? curBusStop : curBusStop+1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
@@ -281,7 +281,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       }
       else if (busStAnicon.isCompleted) {
         busStAnicon.reverse();
-        setState(() { isBusWidgetTop = false;});
+        setState(() { isBusStWidgetOpen = false;});
 
         final index = (curBusStop%2)==0 ? curBusStop : curBusStop-1;
         cameras[index].setAnimation(animation: myFly, duration: myDuration);
@@ -354,7 +354,22 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   }
 
 
-
+  Future<bool> onBackPressed() async {
+    if (isCommentWidgetOpen) {
+      await commentsBoxSlide();
+      print('오기는 하냐???');
+      return Future.value(false);
+    }
+    else if (isBusStWidgetOpen) {
+      await busStationBoxSlide();
+      print('오기는 하냐고');
+      return Future.value(false);
+    }
+    else {
+      print('뒤진거냐고');
+      return await Navigator.maybePop(context);
+    }
+  }
 
   @override
   void initState() {
@@ -402,35 +417,38 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     screen   = MediaQuery.of(context).size;
     reAnimation();
 
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            buildNaverMapWidget(),
+    return WillPopScope(
+      onWillPop: onBackPressed,
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            children: [
+              buildNaverMapWidget(),
 
-            Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: Column(
-                children: [
-                  BusStationWidget(),
+              Positioned(
+                bottom: 0, left: 0, right: 0,
+                child: Column(
+                  children: [
+                    BusStationWidget(),
 
-                  Container(
-                    height: chBusListSizeAni.value - chCommentSizeAni.value,
-                    child: BusListWidget(),
-                  ),
+                    Container(
+                      height: chBusListSizeAni.value - chCommentSizeAni.value,
+                      child: BusListWidget(),
+                    ),
 
-                  Container(
-                    height: chCommentSizeAni.value,
-                    child: BusChatListWidget(),
-                  ),
+                    Container(
+                      height: chCommentSizeAni.value,
+                      child: BusChatListWidget(),
+                    ),
 
-                  (isChatModifying) ? SizedBox(width: 0,) : CustomBottomNavigationBar(selectedIndex: 2,),
-                ],
+                    (isChatModifying) ? SizedBox(width: 0,) : CustomBottomNavigationBar(selectedIndex: 2,),
+                  ],
+                ),
               ),
-            ),
 
-            LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1100,),
-          ],
+              LoadingScreen(limitTime: true, opacity: loadingOpacity, miliTime: 1100,),
+            ],
+          ),
         ),
       ),
     );
@@ -483,8 +501,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     return GestureDetector(
       onVerticalDragUpdate: (details) {
-        if (isBusWidgetTop == false && details.delta.dy < 0) { busStationBoxSlide(); }
-        if (isBusWidgetTop == true  && details.delta.dy > 0) { busStationBoxSlide(); }
+        if (isBusStWidgetOpen == false && details.delta.dy < 0) { busStationBoxSlide(); }
+        if (isBusStWidgetOpen == true  && details.delta.dy > 0) { busStationBoxSlide(); }
       },
 
       child: Column(
@@ -498,7 +516,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [(isBusWidgetTop) ? Icon(Icons.arrow_downward_outlined) : Icon(Icons.arrow_upward_outlined)],
+              children: [(isBusStWidgetOpen) ? Icon(Icons.arrow_downward_outlined) : Icon(Icons.arrow_upward_outlined)],
             ),
           ),
 
@@ -878,14 +896,12 @@ final busStopMarks = [
 
 // 네이버맵 - 각 마커들을 기반으로 설정한 카메라, 매핑 정보
 final cameras = [
-  // 구미역, 금오공대, 종합터미널
+  // 구미역, 금오공대, 종합터미널 (버스리스트 미활성화/활성화)
   NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,     zoom: GUMI_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,    zoom: KUMOH_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target, zoom: TERMINAL_POS.zoom),
-
-  // 버스리스트 활성화 된 구미역, 금오공대, 종합터미널
   NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,    zoom: KUMOH_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: KUMOH_S_POS.target,    zoom: KUMOH_S_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target, zoom: TERMINAL_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: TERMINAL_S_POS.target, zoom: TERMINAL_S_POS.zoom)
 ];
 const cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
