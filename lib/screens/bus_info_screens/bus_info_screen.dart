@@ -80,6 +80,28 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   late Orientation orientation;
   late Size        screen;
 
+  // 버스 챗리스트 위젯 관련
+  bool isNoChat = true;
+  bool isChatModifying = false;
+
+  // 텍스트 입력 시
+  void onTextChange() {
+    if (commentCon.text.isEmpty || commentCon.text.trim().isEmpty || commentCon.text[0] == ' ') {
+      setState(() { commentCon.text="";});
+    }
+    if (commentCon.text.length > 50) {
+      setState(() { commentCon.text = commentCon.text.substring(0,50);});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('50자 이상 댓글을 달 수 없습니다'),duration: Duration(milliseconds: 250)),
+      );
+    }
+    setState(() { isNoChat = commentCon.text.isEmpty;});
+  }
+
+  void modifyingChat() {
+    setState(() { isChatModifying = true;});
+  }
+
   // 버스리스트 가져올 때 파이어베이스의 버스리스트를 업데이트하는 함수
   Future<BusList> compareSources(BusList busListFromApi, final nodeId) async {
     final stationDoc = FIRE.collection('bus_station_info').doc(nodeId);
@@ -331,6 +353,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     chCommentSizeAni = Tween(begin: 0.0, end: screen.height * 0.50).animate(commentAnicon)..addListener(() {setState(() {});});
   }
 
+
+
+
   @override
   void initState() {
     super.initState();
@@ -545,7 +570,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   }
 
-  bool isRefreshing = false;
   Widget BusListWidget() {
     ScrollController scrollCon = ScrollController();
     final numOfBus = busList.length;
@@ -561,7 +585,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
             color: white,
           ),
           height: screen.height / 2,
-          child: (isRefreshing)
+          child: (isLoading)
             ? Center( child: SizedBox(height: screen.height / 2, child: Center(child: CircularProgressIndicator())))
             : RefreshIndicator(
             color: Colors.white10, displacement: 1000000,
@@ -658,7 +682,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           child: OutlineCircleButton(
             child: Icon(Icons.refresh, color: white),
             radius: 50.0,borderSize: 0.5,
-            foregroundColor: isRefreshing ? Colors.transparent : mainColor,
+            foregroundColor: isLoading ? Colors.transparent : mainColor,
             borderColor: white,
             onTap: () async {
               await updateBusListBox();
@@ -671,27 +695,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       ],
     );
 
-  }
-
-
-  bool isNoChat = true;
-  bool isChatModifying = false;
-
-  void onTextChange() {
-    if (commentCon.text.isEmpty || commentCon.text.trim().isEmpty || commentCon.text[0] == ' ') {
-      setState(() { commentCon.text="";});
-    }
-    if (commentCon.text.length > 50) {
-      setState(() { commentCon.text = commentCon.text.substring(0,50);});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('50자 이상 댓글을 달 수 없습니다'),duration: Duration(milliseconds: 250)),
-      );
-    }
-    setState(() { isNoChat = commentCon.text.isEmpty;});
-  }
-
-  void modifyingChat() {
-    setState(() { isChatModifying = true;});
   }
 
   Widget BusChatListWidget() {
