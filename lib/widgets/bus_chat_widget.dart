@@ -40,6 +40,15 @@ class _BusChatListWidgetState extends State<BusChatListWidget> {
 
   // 현재 채팅창이 공백인지 아닌지
   void onTxtChange() {
+    if (commentCon.text.isEmpty || commentCon.text.trim().isEmpty || commentCon.text[0] == ' ') {
+      setState(() { commentCon.text="";});
+    }
+    if (commentCon.text.length > 50) {
+      setState(() { commentCon.text = commentCon.text.substring(0,50);});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('50자 이상 댓글을 달 수 없습니다'),duration: Duration(milliseconds: 250)),
+      );
+    }
     setState(() { isNoChat = commentCon.text.isEmpty;});
   }
 
@@ -227,6 +236,15 @@ class _chatState extends State<OneChatWidget> {
   bool isOwner = false;
 
   void onTxtChange() {
+    if (commentCon.text.isEmpty || commentCon.text.trim().isEmpty || commentCon.text[0] == ' ') {
+      setState(() { commentCon.text="";});
+    }
+    if (commentCon.text.length > 50) {
+      setState(() { commentCon.text = commentCon.text.substring(0,50);});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('50자 이상 댓글을 달 수 없습니다'),duration: Duration(milliseconds: 250)),
+      );
+    }
     setState(() { isNoChat = commentCon.text.isEmpty;});
   }
 
