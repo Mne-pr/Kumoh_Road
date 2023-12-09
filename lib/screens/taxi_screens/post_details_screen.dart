@@ -4,6 +4,7 @@ import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
 import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/screens/main_screens/main_screen.dart';
+import 'package:kumoh_road/screens/taxi_screens/review_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/other_user_info_screen.dart';
 import 'package:kumoh_road/utilities/url_launcher_util.dart';
 import 'package:kumoh_road/widgets/user_info_section.dart';
@@ -33,7 +34,7 @@ class PostDetailsScreen extends StatefulWidget {
   State<PostDetailsScreen> createState() => _PostDetailsScreenState();
 }
 
-class _PostDetailsScreenState extends State<PostDetailsScreen> {
+class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindingObserver{
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _controller = TextEditingController();
   String _content = "";
@@ -42,6 +43,29 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   late List<dynamic> _commentList;
   late List<dynamic> _memberList;
   late final ReportManager _reportManager;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return ReviewScreen(writerId: widget.writer.userId, writerName: widget.writer.nickname,);
+      },));
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -284,17 +308,12 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
       return time2.compareTo(time1);
     });
 
-    // for(var e in commentList){
-    //   log.i((e['time'] as Timestamp).toDate());
-    // }
-
     List<String> commentUserIdList = commentList.map((e) => e['user_code'] as String).toList();
     List<TaxiScreenUserModel> commentUserList =  await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
 
     for(var e in commentUserList){
       log.i(e.userId);
     }
-    log.i("");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

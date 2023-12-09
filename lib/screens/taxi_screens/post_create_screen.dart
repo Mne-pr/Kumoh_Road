@@ -108,6 +108,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                   const SnackBar(content: Text('글쓰기 완료')),
                 );
                 Navigator.of(context).pop();
+                setState(() { });
               }
             },
             label: Text(
