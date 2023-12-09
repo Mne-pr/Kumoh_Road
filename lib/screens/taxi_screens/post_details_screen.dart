@@ -4,6 +4,7 @@ import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
 import 'package:kumoh_road/providers/user_providers.dart';
 import 'package:kumoh_road/screens/main_screens/main_screen.dart';
+import 'package:kumoh_road/screens/taxi_screens/post_report_screen.dart';
 import 'package:kumoh_road/screens/taxi_screens/review_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/other_user_info_screen.dart';
 import 'package:kumoh_road/utilities/url_launcher_util.dart';
@@ -11,6 +12,8 @@ import 'package:kumoh_road/widgets/user_info_section.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import '../../utilities/report_manager.dart';
+import '../../widgets/manner_detail_widget.dart';
+import 'package:uuid/uuid.dart';
 
 Logger log = Logger(printer: PrettyPrinter());
 UserProvider? currUser;
@@ -34,7 +37,8 @@ class PostDetailsScreen extends StatefulWidget {
   State<PostDetailsScreen> createState() => _PostDetailsScreenState();
 }
 
-class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindingObserver{
+class _PostDetailsScreenState extends State<PostDetailsScreen>
+    with WidgetsBindingObserver {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _controller = TextEditingController();
   String _content = "";
@@ -61,9 +65,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return ReviewScreen(writerId: widget.writer.userId, writerName: widget.writer.nickname,);
-      },));
+      Navigator.push(context, MaterialPageRoute(
+        builder: (context) {
+          return ReviewScreen(
+            writerId: widget.writer.userId,
+            writerName: widget.writer.nickname,
+          );
+        },
+      ));
     }
   }
 
@@ -74,13 +83,13 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
     _commentList = widget.post.commentList;
     _memberList = widget.post.memberList;
 
-    if(currUser == null){
+    if (currUser == null) {
       currUser = Provider.of<UserProvider>(context);
       currUser!.startListeningToUserChanges();
       _reportManager = ReportManager(currUser!);
     }
 
-    if(currUser!.id == null) {
+    if (currUser!.id == null) {
       // 현재 사용자 ID가 없는 경우, 첫 번째 화면으로 이동
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).popUntil((route) => route.isFirst);
@@ -115,41 +124,82 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTopSection(),
-                  UserInfoSection(
-                    nickname: widget.writer.nickname,
-                    imageUrl: widget.writer.profileImageUrl,
-                    age: widget.writer.age,
-                    gender: widget.writer.gender,
-                    mannerTemperature: widget.writer.mannerTemperature,
+                  const SizedBox(height: 4),
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage:
+                          NetworkImage(widget.writer.profileImageUrl),
+                      radius: 28, // 아바타 크기 증가
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(
+                                widget.writer.nickname,
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '${widget.writer.mannerTemperature}°C',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _getTemperatureColor(
+                                widget.writer.mannerTemperature),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _getTemperatureEmoji(widget.writer.mannerTemperature),
+                      ],
+                    ),
+                    subtitle: Row(
+                      children: [
+                        Text('${widget.writer.age}세 (${widget.writer.gender})'),
+                        const Spacer(),
+                        _buildMannerBar(widget.writer.mannerTemperature),
+                      ],
+                    ),
                   ),
                   const Divider(),
-                  _buildPostContentSection(context),
-                  const Divider(),
-                  _buildReviewSection(context),
-                  const Divider(),
-
-                  // ,
-
-                  FutureBuilder(
-                    future: _buildCommentSection(context),
-                    builder:
-                        (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-                      if (snapshot.hasError) {
-                        log.e(snapshot.error);
-                        log.e(snapshot.stackTrace);
-                        return const Center(
-                          child: Text("댓글 로딩 실패"),
-                        );
-                      } else if (snapshot.hasData) {
-                        return snapshot.data!;
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    },
+                  Padding(
+                    // Padding 추가
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildPostContentSection(context),
+                        const Divider(),
+                        _buildReviewSection(context),
+                        const Divider(),
+                        FutureBuilder(
+                          future: _buildCommentSection(context),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<Widget> snapshot) {
+                            if (snapshot.hasError) {
+                              log.e(snapshot.error);
+                              log.e(snapshot.stackTrace);
+                              return const Center(
+                                child: Text("댓글 로딩 실패"),
+                              );
+                            } else if (snapshot.hasData) {
+                              return snapshot.data!;
+                            } else {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                          },
+                        ),
+                        SizedBox(
+                          height: deviceHeight * 0.8,
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(
-                    height: deviceHeight * 0.8,
-                  )
                 ],
               ),
             ),
@@ -179,6 +229,44 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
     );
   }
 
+  Color _getTemperatureColor(double temperature) {
+    if (temperature >= 37.5) {
+      return Colors.red;
+    } else if (temperature >= 36.5) {
+      return Colors.orange;
+    } else {
+      return Colors.blue;
+    }
+  }
+
+  Widget _getTemperatureEmoji(double temperature) {
+    String emoji;
+    if (temperature >= 37.5) {
+      emoji = '🥵';
+    } else if (temperature >= 36.5) {
+      emoji = '😊';
+    } else {
+      emoji = '😨';
+    }
+    return Text(emoji);
+  }
+
+  Widget _buildMannerBar(double temperature) {
+    return Container(
+      width: 100, // 매너 막대 너비 고정
+      height: 8, // 매너 막대 높이
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LinearProgressIndicator(
+          value: temperature / 100,
+          backgroundColor: Colors.grey[300],
+          color: _getTemperatureColor(temperature),
+          minHeight: 6,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopSection() {
     return Stack(
       children: [
@@ -187,32 +275,69 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
           left: 0,
           right: 0,
           top: deviceHeight * 0.04,
-          child: Row(
-            children: [
-              IconButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  icon: const Icon(
-                    Icons.arrow_back_ios_outlined,
-                    color: Colors.white,
-                  )),
-              IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const MainScreen(),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(
+                        Icons.arrow_back_ios_outlined,
+                        color: Colors.white,
                       ),
-                    );
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const MainScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.home_outlined,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (String value) {
+                    if (value == 'report') {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) =>
+                              PostReportScreen(
+                                reportedUserId: widget.writer.userId,
+                                reportedUserName: widget.writer.nickname,
+                                collectionName: widget.collectionName,
+                                createdTime: widget.post.createdTime,
+                              ),
+                          )
+                      );
+                    }
                   },
-                  icon: const Icon(
-                    Icons.home_outlined,
-                    color: Colors.white,
-                  )),
-            ],
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    reportMenuItem(widget.writer.userId, widget.writer.nickname, widget.collectionName, widget.post.createdTime),
+                  ],
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  PopupMenuItem<String> reportMenuItem(String reportedUserId, String reportedUserName, String collectionName, DateTime createdTime) {
+    return const PopupMenuItem<String>(
+      value: 'report',
+      child: Text("게시글 신고하기"),
     );
   }
 
@@ -249,58 +374,109 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
   }
 
   Widget _buildPostContentSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.post.title,
-          style: TextStyle(
-            fontSize: deviceFontSize * 1.2,
-            fontWeight: FontWeight.bold,
+    int minutesAgo =
+        DateTime.now().difference(widget.post.createdTime).inMinutes;
+    String timeText = minutesAgo > 0 ? "$minutesAgo분전" : "방금전";
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.post.title,
+            style: TextStyle(
+              fontSize: deviceFontSize * 1.3,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        Text(
-          "${DateTime.now().difference(widget.post.createdTime).inMinutes}분전",
-          style: const TextStyle(color: Colors.grey),
-        ),
-        Text(widget.post.content),
-        Text(
-          "조회 ${widget.post.viewCount}회",
-          style: const TextStyle(color: Colors.grey),
-        ),
-      ],
+          const SizedBox(height: 4), // 제목과 시간 사이의 간격 조정
+          Text(
+            timeText,
+            style:
+                TextStyle(color: Colors.grey, fontSize: deviceFontSize * 0.9),
+          ),
+          const SizedBox(height: 8), // 시간과 내용 사이의 간격 조정
+          Text(
+            widget.post.content,
+            style: TextStyle(fontSize: deviceFontSize),
+          ),
+          const SizedBox(height: 4), // 내용과 조회수 사이의 간격 조정
+          Text(
+            "조회 ${widget.post.viewCount}회",
+            style:
+                TextStyle(color: Colors.grey, fontSize: deviceFontSize * 0.9),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildReviewSection(BuildContext context) {
     double defaultFontSize = deviceFontSize;
-    // 매너와 언매너 리스트 합치기
-    List<Map<String, dynamic>> reviewList = widget.writer.mannerList!
-        .followedBy(widget.writer.unmannerList!)
+
+    List<Map<String, dynamic>> filteredMannerList = widget.writer.mannerList!
+        .where((review) => review["votes"] > 0)
         .toList();
-    reviewList.sort((a, b) => b["votes"].compareTo(a["votes"]));
-    List<Map<String, dynamic>> showList = reviewList.take(3).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "${widget.writer.nickname}님의 택시 합승 최근 리뷰",
-          style: TextStyle(
-              fontSize: defaultFontSize * 1.2, fontWeight: FontWeight.bold),
-        ),
-        Text("${showList[0]['content']}"),
-        Text("${showList[1]['content']}"),
-        Text("${showList[2]['content']}"),
-      ],
+    List<Map<String, dynamic>> filteredUnmannerList = widget
+        .writer.unmannerList!
+        .where((review) => review["votes"] > 0)
+        .toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              "${widget.writer.nickname}님의 택시 합승 리뷰",
+              style: TextStyle(
+                  fontSize: defaultFontSize * 1.1, fontWeight: FontWeight.bold),
+            ),
+            trailing: const Icon(Icons.chevron_right, size: 24),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => MannerDetailsWidget(
+                  mannerList: filteredMannerList,
+                  unmannerlyList: filteredUnmannerList,
+                ),
+              );
+            },
+          ),
+          ...filteredMannerList
+              .take(2)
+              .map((review) => _buildReviewListItem(review, true))
+              .toList(),
+          ...filteredUnmannerList
+              .take(2)
+              .map((review) => _buildReviewListItem(review, false))
+              .toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewListItem(Map<String, dynamic> review, bool isManner) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(review['content']),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(isManner ? Icons.thumb_up_alt : Icons.thumb_down_alt,
+              color: isManner ? Colors.green : Colors.red, size: 20),
+          const SizedBox(width: 4),
+          Text('${review['votes']}'),
+        ],
+      ),
     );
   }
 
   Future<Widget> _buildCommentSection(BuildContext context) async {
     List<dynamic> commentList = _commentList;
-
-    if (widget.post.commentList.length > 3) {
-      commentList = widget.post.commentList.sublist(widget.post.commentList.length - 3);
-    }
 
     commentList.sort((comment1, comment2) {
       DateTime time1 = (comment1['time'] as Timestamp).toDate();
@@ -308,10 +484,12 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
       return time2.compareTo(time1);
     });
 
-    List<String> commentUserIdList = commentList.map((e) => e['user_code'] as String).toList();
-    List<TaxiScreenUserModel> commentUserList =  await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
+    List<String> commentUserIdList =
+        commentList.map((e) => e['user_code'] as String).toList();
+    List<TaxiScreenUserModel> commentUserList =
+        await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
 
-    for(var e in commentUserList){
+    for (var e in commentUserList) {
       log.i(e.userId);
     }
 
@@ -320,13 +498,15 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
       children: [
         Text("댓글",
             style: TextStyle(
-                fontSize: deviceFontSize * 1.2, fontWeight: FontWeight.bold)),
+                fontSize: deviceFontSize * 1.1, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
         Row(
           children: [
             CircleAvatar(
-              radius: 20,
+              radius: 24,
               backgroundImage: NetworkImage(currUser!.profileImageUrl!),
             ),
+            const SizedBox(width: 10),
             Expanded(
               child: Form(
                 key: _formKey,
@@ -386,7 +566,10 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
                         .get();
                     var doc = querySnapshot.docs.first;
                     var commentList = doc['commentList'] as List<dynamic>;
+                    var uuid = const Uuid();
+                    String commentId = uuid.v4(); // 고유 ID 생성
                     var newComment = {
+                      'id': commentId,
                       'user_code': currUser!.id.toString(),
                       'comment': _content,
                       'time': now,
@@ -397,12 +580,12 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
                         .doc(doc.id)
                         .update({'commentList': commentList});
                     int newPostCommentCnt = currUser!.postCommentCount + 1;
-                    currUser!.updateUserInfo(
-                        postCommentCount: newPostCommentCnt);
-
+                    currUser!.updateUserInfo(postCommentCount: newPostCommentCnt);
                     FocusScope.of(context).unfocus();
+
                     setState(() {
                       _commentList.add({
+                        'id': commentId,
                         'user_code': currUser!.id.toString(),
                         'comment': _content,
                         'time': Timestamp.fromDate(now),
@@ -424,121 +607,190 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
         ),
         ListView.builder(
           shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: commentList.length,
           itemBuilder: (context, index) {
-            return commentItem(context, commentList[index] as Map<String, dynamic>, commentList.length - index, commentUserList[index]);
+            return commentItem(context, commentList[index] as Map<String, dynamic>, index, commentUserList[index]);
           },
         ),
       ],
     );
   }
 
-  Widget commentItem(BuildContext context, Map<String, dynamic> comment, int commentIndex, TaxiScreenUserModel user) {
+  Widget commentItem(BuildContext context, Map<String, dynamic> comment,
+      int commentIndex, TaxiScreenUserModel user) {
     DateTime writeTime = (comment['time'] as Timestamp).toDate();
-    return Row(
-      children: [
-        CircleAvatar(
-          backgroundImage: NetworkImage(user.profileImageUrl),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 이름, 시간(mm분전)
-            Row(
+    String timeText = DateTime.now().difference(writeTime).inMinutes == 0
+        ? "방금 전"
+        : "${DateTime.now().difference(writeTime).inMinutes}분 전";
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(user.profileImageUrl),
+            radius: 24,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                user.userId == widget.writer.userId
-                    ? Text(
-                  "${user.nickname} (방장)",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                )
-                    : Text(user.nickname),
-                Padding(
-                  padding: EdgeInsets.only(left: deviceWidth * 0.02),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        user.userId == widget.writer.userId
+                            ? "${user.nickname} (방장)"
+                            : user.nickname,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(timeText, style: const TextStyle(color: Colors.grey)),
+                  ],
+                ),
+                InkWell(
                   child: Text(
-                    "${DateTime.now().difference(writeTime).inMinutes}분전",
-                    style: const TextStyle(color: Colors.grey),
+                    comment['comment'],
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
                   ),
                 ),
               ],
             ),
-            Text(comment['comment'])
-          ],
-        ),
-        const Spacer(),
-        user.userId != currUser!.id.toString()
-        ? PopupMenuButton(
-          itemBuilder: (context) {
-            return [
-              reportMenuItem(commentIndex, comment["user_code"], comment["comment"])
-            ];
-          },
-          icon: Transform.scale(
-              scale: 0.8,
-              child: const Icon(Icons.more_vert)
           ),
-        )
-        : Container(),
-      ],
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              if (value == 'delete') {
+                _confirmDeletion(context, comment);
+              } else if (value == 'report') {
+                _reportComment(comment['id'], comment["user_code"], comment["comment"]);
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+                if (user.userId == currUser!.id.toString())
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('삭제하기'),
+                  ),
+                if (user.userId != currUser!.id.toString())
+                  const PopupMenuItem<String>(
+                    value: 'report',
+                    child: Text('신고하기'),
+                  ),
+              ];
+            },
+            icon: const Icon(Icons.more_vert),
+          ),
+        ],
+      ),
     );
   }
-  
-  PopupMenuItem<String> reportMenuItem(int commentIndex, String reportedUserId, String commentContent) {
-    return PopupMenuItem<String>(
-      onTap: () {
-        showDialog(
-          context: context,
-          barrierDismissible: true,
-          builder: (context) {
-            return AlertDialog(
-              content: const Text("신고하시겠습니까?"),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("아니요")
-                ),
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent
-                    ),
-                    onPressed: () async {
-                      String docId = "";
-                      try{
-                        docId = await TaxiScreenPostModel.getDocId(
-                            collectionId: widget.collectionName,
-                            writerId: widget.writer.userId,
-                            createdTime: widget.post.createdTime
-                        );
-                      }on Exception catch(e){
-                        log.e("문서 id 찾기 실패", error: e);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('신고 처리 실패')),
-                        );
-                        return;
-                      }
-                      
-                      _reportManager.reportPostComment(
-                        postCommentId: "${widget.collectionName}-$docId-$commentIndex",
-                        reason: commentContent,
-                        category: "",
-                        reportedUserId: reportedUserId
-                      );
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('신고 처리가 되었습니다')),
-                      );
-                      Navigator.pop(context);
-                    },
-                    child: const Text("네")
-                ),
-              ],
-            );
-          },
+
+  void _reportComment(String commentId, String reportedUserId, String commentContent) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("댓글 신고"),
+          content: const Text("이 댓글을 신고하시겠습니까?"),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("취소"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("신고"),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  String docId = await TaxiScreenPostModel.getDocId(
+                      collectionId: widget.collectionName,
+                      writerId: widget.writer.userId,
+                      createdTime: widget.post.createdTime);
+                  _reportManager.reportPostComment(
+                      postCommentId:
+                          "${widget.collectionName}:$docId:$commentId",
+                      reason: commentContent,
+                      category: "",
+                      reportedUserId: reportedUserId);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('신고 처리가 되었습니다')),
+                  );
+                } catch (e) {
+                  // 오류 처리
+                  log.e("신고 처리 중 오류 발생", error: e);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('신고 처리 실패')),
+                  );
+                }
+              },
+            ),
+          ],
         );
       },
-      child: const Text("신고하기"),
     );
+  }
+
+  void _confirmDeletion(BuildContext context, Map<String, dynamic> comment) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("댓글 삭제"),
+          content: const Text("이 댓글을 삭제하시겠습니까?"),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("취소"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("삭제"),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                _deleteComment(comment);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteComment(Map<String, dynamic> comment) async {
+    try {
+      String docId = await TaxiScreenPostModel.getDocId(
+          collectionId: widget.collectionName,
+          writerId: widget.writer.userId,
+          createdTime: widget.post.createdTime);
+
+      // Firestore에서 댓글 삭제
+      FirebaseFirestore.instance
+          .collection(widget.collectionName)
+          .doc(docId)
+          .update({'commentList': FieldValue.arrayRemove([comment])})
+          .then((_) {
+        setState(() {
+          _commentList.removeWhere((c) => c['id'] == comment['id']);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('댓글이 삭제되었습니다')),
+        );
+      });
+    } catch (e) {
+      log.e("댓글 삭제 중 오류 발생", error: e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('댓글 삭제 실패')),
+      );
+    }
   }
 
   Widget _buildBottomSection(BuildContext context) {
@@ -557,33 +809,42 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
                 Text(
                   "정원 4명중 ${_memberList.length + 1}명 참여중",
                   style: TextStyle(
-                      fontSize: deviceFontSize * 1.2, fontWeight: FontWeight.bold),
+                      fontSize: deviceFontSize * 1.2,
+                      fontWeight: FontWeight.bold),
                 ),
                 Text(
                   "${widget.writer.gender}만 참여가능",
-                  style: TextStyle(fontSize: deviceFontSize, color: Colors.grey),
+                  style:
+                      TextStyle(fontSize: deviceFontSize, color: Colors.grey),
                 )
               ],
             ),
             const Spacer(),
             ElevatedButton(
                 onPressed: () async {
-                  bool isWriter = widget.writer.userId == currUser!.id.toString();
+                  bool isWriter =
+                      widget.writer.userId == currUser!.id.toString();
                   if (isWriter) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('이미 합승중입니다'), duration: Duration(seconds: 1)),
+                      const SnackBar(
+                          content: Text('이미 합승중입니다'),
+                          duration: Duration(seconds: 1)),
                     );
                     return;
                   }
                   if (_memberList.contains(currUser!.id.toString())) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('이미 합승중입니다'), duration: Duration(seconds: 1)),
+                      const SnackBar(
+                          content: Text('이미 합승중입니다'),
+                          duration: Duration(seconds: 1)),
                     );
                     return;
                   }
-                  if (_memberList.length >= 3){
+                  if (_memberList.length >= 3) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('정원 초과입니다'), duration: Duration(seconds: 1)),
+                      const SnackBar(
+                          content: Text('정원 초과입니다'),
+                          duration: Duration(seconds: 1)),
                     );
                     return;
                   }
@@ -634,12 +895,15 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
     );
   }
 
-  Row memberListItem(BuildContext context, TaxiScreenUserModel user, String role, Widget buttonArea) {
+  Row memberListItem(BuildContext context, TaxiScreenUserModel user,
+      String role, Widget buttonArea) {
     return Row(
       children: [
         GestureDetector(
           onTap: () {
-            if(currUser!.id.toString() == user.userId) { return; }
+            if (currUser!.id.toString() == user.userId) {
+              return;
+            }
 
             Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => OtherUserProfileScreen(userId: user.userId),
@@ -651,8 +915,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
         ),
         Text(
           user.nickname,
-          style:
-              TextStyle(fontSize: deviceFontSize * 1.1, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: deviceFontSize * 1.1, fontWeight: FontWeight.bold),
         ),
         Text(
           " $role",

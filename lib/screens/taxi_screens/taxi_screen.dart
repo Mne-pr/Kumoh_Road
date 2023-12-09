@@ -363,8 +363,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
     return _buildPosts(context, postList, collectionName);
   }
 
-  PopupMenuItem<String> reportMenuItem(String reportedUserId,
-      String reportedUserName, String collectionName, DateTime createdTime) {
+  PopupMenuItem<String> reportMenuItem(String reportedUserId, String reportedUserName, String collectionName, DateTime createdTime) {
     return PopupMenuItem<String>(
       onTap: () {
         Navigator.push(context,

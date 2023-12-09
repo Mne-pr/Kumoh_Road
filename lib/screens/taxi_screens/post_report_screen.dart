@@ -51,7 +51,7 @@ class _PostReportScreenState extends State<PostReportScreen> {
       MaterialPageRoute(
         builder: (context) {
           return PostReportDetailScreen(
-            postId: "${widget.collectionName}-$postId",
+            postId: "${widget.collectionName}:$postId",
             reportedUserId: widget.reportedUserId,
             reportedUserName: widget.reportedUserName,
             reportCategory: category,
@@ -76,7 +76,7 @@ class _PostReportScreenState extends State<PostReportScreen> {
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
-              '신고하는 이유를 선택해주세요',
+              '해당 게시글을 신고하는 이유를 선택해주세요',
               style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
             ),
           ),
@@ -100,6 +100,11 @@ class _PostReportScreenState extends State<PostReportScreen> {
             title: const Text('불쾌한 표현이 있습니다'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _navigateToDetailReportScreen('불쾌한 표현이 있습니다'),
+          ),
+          ListTile(
+            title: const Text('기타'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _navigateToDetailReportScreen('기타'),
           ),
         ],
       ),
