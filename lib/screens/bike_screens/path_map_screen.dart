@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -8,20 +9,23 @@ import 'translate_address_screen.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import "package:http/http.dart" as http;
 import "package:geolocator/geolocator.dart";
+import '../../utilities/bike_util.dart';
 
 class PathMapScreen extends StatefulWidget {
   const PathMapScreen({Key? key}) : super(key: key);
 
   @override
-
   _PathMapScreenState createState() => _PathMapScreenState();
 }
 
-class _PathMapScreenState extends State<PathMapScreen> {
+class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
+  late StreamSubscription<Position> positionStream;
+
   //design 변수
   double marginSize = 15;
   FocusNode originTextFocus = FocusNode();
   FocusNode destinationTextFocus = FocusNode();
+  List<Point> coordinate = List.filled(2, Point(0, 0, "0", 0, 0));
 
   //text 변수
   final originAddress = TextEditingController();
@@ -44,25 +48,85 @@ class _PathMapScreenState extends State<PathMapScreen> {
     );
   }
 
-  void getPosition() async{
+  void findMyPosition() async {
     LocationPermission permission = await Geolocator.checkPermission();
-    if(permission == LocationPermission.denied){
+    if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-    try{
+    try {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       double tmp1 = position.latitude;
       double tmp2 = position.longitude;
       final tmpL = NLatLng(tmp1, tmp2);
-      final movePoint = NCameraUpdate.scrollAndZoomTo(target: tmpL, zoom: 15,);
-      final tmpM = NMarker(id: "MyPosition", position: tmpL, icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      final movePoint = NCameraUpdate.scrollAndZoomTo(
+        target: tmpL,
+        zoom: 18,
+      );
+      await mapController.deleteOverlay(NOverlayInfo(type: NOverlayType.marker, id: "MyPosition"));
+      final tmpM = NMarker(
+          id: "MyPosition",
+          position: tmpL,
+          icon: await NOverlayImage.fromWidget(
+              widget: const Icon(
+                Icons.face,
+                size: 30,
+                color: Color(0xFF3F51B5),
+              ),
+              size: const Size(30, 30),
+              context: context));
       await mapController.updateCamera(movePoint);
       await mapController.addOverlay(tmpM);
       print("$tmp1 $tmp2");
-    }catch(e){
+    } catch (e) {
       print(e);
     }
   }
+
+  void moveMyPosition() async {
+    int a = 0;
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      double tmp1 = position.latitude;
+      double tmp2 = position.longitude;
+      final tmpL = NLatLng(tmp1, tmp2);
+      final movePoint = NCameraUpdate.scrollAndZoomTo(
+        target: tmpL,
+        zoom: 16,
+      );
+      final tmpM = NMarker(id: "MyPosition$a", position: tmpL, icon: const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      a = (a + 1) % 10;
+      await mapController.updateCamera(movePoint);
+      await mapController.addOverlay(tmpM);
+      print("$tmp1 $tmp2");
+    } catch (e) {
+      print(e);
+    }
+    positionStream = Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 10))
+        .listen((Position position) async {
+      double tmp1 = position.latitude;
+      double tmp2 = position.longitude;
+      final tmpL = NLatLng(tmp1, tmp2);
+      final movePoint = NCameraUpdate.scrollAndZoomTo(
+        target: tmpL,
+        zoom: 16,
+      );
+      final tmpM = NMarker(id: "MyPosition$a", position: tmpL, icon: const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      await mapController.deleteOverlay(NOverlayInfo(type: NOverlayType.marker, id: "MyPosition${a - 1}"));
+      a = (a + 1) % 10;
+      await mapController.updateCamera(movePoint);
+      await mapController.addOverlay(tmpM);
+      print("$a $tmp1 $tmp2");
+    });
+  }
+
+  void stopListening() {
+    positionStream.cancel();
+  }
+
   Future<List> getCoordinate(String pointAddress) async {
     http.Response response =
         await http.get(Uri.parse("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$pointAddress"), headers: nmapID);
@@ -85,6 +149,12 @@ class _PathMapScreenState extends State<PathMapScreen> {
     }
   }
 
+  void changeText() {
+    String tmp = originAddress.text;
+    originAddress.text = destinationAddress.text;
+    destinationAddress.text = tmp;
+  }
+
   Future<List> getPath() async {
     http.Response response = await http.get(
         Uri.parse(
@@ -104,14 +174,20 @@ class _PathMapScreenState extends State<PathMapScreen> {
       target: NLatLng((coordinateList[0][3] + coordinateList[1][3]) / 2 - 0.01, (coordinateList[0][4] + coordinateList[1][4]) / 2),
       zoom: 11.5,
     );
-    markerList[0] = NMarker(id: coordinateList[0][2], position: NLatLng(coordinateList[0][3], coordinateList[0][4]), icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
-    markerList[1] = NMarker(id: coordinateList[1][2], position: NLatLng(coordinateList[1][3], coordinateList[1][4]), icon:const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+    markerList[0] = NMarker(
+        id: coordinateList[0][2],
+        position: NLatLng(coordinateList[0][3], coordinateList[0][4]),
+        icon: const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+    markerList[1] = NMarker(
+        id: coordinateList[1][2],
+        position: NLatLng(coordinateList[1][3], coordinateList[1][4]),
+        icon: const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
     List<dynamic> tempList = await getPath();
     List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => const NLatLng(0.0, 0.0));
     for (int i = 0; i < tempList.length; i++) {
       pathCoordinate[i] = tempList[i];
     }
-    final tempLine = NPolylineOverlay(id: "path", coords: pathCoordinate, color: const Color(0xffff0000), width: 5);
+    final tempLine = NArrowheadPathOverlay(id: "path", coords: pathCoordinate, color: const Color(0xff0000ff), width: 4);
     await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
     await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
@@ -124,35 +200,43 @@ class _PathMapScreenState extends State<PathMapScreen> {
       if (inputString[0] != originAddress.text) {
         inputString[0] = originAddress.text;
         coordinateList[0] = await getCoordinate(inputString[0]);
+        coordinate[0] = await changeCoordinate(inputString[0]);
+        print("${coordinate[0].statusCode} ${coordinate[0].numResponse} ${coordinate[0].name} ${coordinate[0].lat} ${coordinate[0].lon}");
         print("출발지 API 호출함");
       }
       if (inputString[1] != destinationAddress.text) {
         inputString[1] = destinationAddress.text;
         coordinateList[1] = await getCoordinate(inputString[1]);
+        coordinate[1] = await changeCoordinate(inputString[1]);
+        print("${coordinate[0].statusCode} ${coordinate[0].numResponse} ${coordinate[0].name} ${coordinate[0].lat} ${coordinate[0].lon}");
         print("도착지 API 호출함");
       }
-      if (coordinateList[0][0] == 200 && coordinateList[1][0] == 200) {
-        if (coordinateList[0][1] == 0 && coordinateList[1][1] == 0) {
-          errorView("잘못된 주소입니다");
-          originTextFocus.requestFocus();
-        } else if (coordinateList[0][1] == 0) {
-          errorView("잘못된 출발지 주소입니다");
-          originTextFocus.requestFocus();
-        } else if (coordinateList[1][1] == 0) {
-          errorView("잘못된 도착지 주소입니다");
-          destinationTextFocus.requestFocus();
+      if (inputString[0] != inputString[1]) {
+        if (coordinateList[0][0] == 200 && coordinateList[1][0] == 200) {
+          if (coordinateList[0][1] == 0 && coordinateList[1][1] == 0) {
+            errorView("잘못된 주소입니다");
+            originTextFocus.requestFocus();
+          } else if (coordinateList[0][1] == 0) {
+            errorView("잘못된 출발지 주소입니다");
+            originTextFocus.requestFocus();
+          } else if (coordinateList[1][1] == 0) {
+            errorView("잘못된 도착지 주소입니다");
+            destinationTextFocus.requestFocus();
+          } else {
+            print(coordinateList);
+            moveMap();
+          }
         } else {
-          print(coordinateList);
-          moveMap();
+          errorView("Error:response is Not 200");
         }
       } else {
-        errorView("Error:response is Not 200");
+        errorView("출발지와 도착지가 같습니다");
       }
     }
   }
 
   @override
-  void dispose(){
+  void dispose() {
     originAddress.dispose();
     originTextFocus.dispose();
     destinationAddress.dispose();
@@ -190,8 +274,25 @@ class _PathMapScreenState extends State<PathMapScreen> {
               ),
               onMapReady: (NaverMapController controller) {
                 mapController = controller;
-                getPosition();
+                findMyPosition();
               },
+            ),
+            Positioned(
+              top: 15,
+              left: 15,
+              child: IconButton(
+                  icon: const Icon(
+                    Icons.my_location_outlined,
+                    size: 45,
+                    color: Color(0xFF3F51B5),
+                  ),
+                  onPressed: () => {
+                        findMyPosition(),
+                      },
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.white,
+                  )),
             ),
             Positioned(
               bottom: 0,
@@ -204,78 +305,105 @@ class _PathMapScreenState extends State<PathMapScreen> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    Container(
-                      margin: EdgeInsets.fromLTRB(marginSize, marginSize, marginSize, 5),
-                      height: 35,
-                      child: SizedBox(
-                        width: (MediaQuery.of(context).size.width - marginSize * 2),
-                        height: 35,
-                        child: TextField(
-                          controller: originAddress,
-                          focusNode: originTextFocus,
-                          textAlignVertical: TextAlignVertical.bottom,
-                          textAlign: TextAlign.left,
-                          onSubmitted: (text) {},
-                          onTap: () async {
-                            final getAddress = await Navigator.push(
-                              context, MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
-                            );
-                            if(getAddress != null){
-                              originAddress.text = getAddress as String;
-                            }
-                          },
-                          decoration: const InputDecoration(
-                            hintText: "출발지를 입력하세요",
-                            filled: true,
-                            fillColor: Color(0xffdddddd),
-                            enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Colors.black54,
-                                width: 1.5,
-                              ),
+                    Row(
+                      children: [
+                        Container(
+                          margin:EdgeInsets.fromLTRB(marginSize, marginSize, 5, 5),
+                          width: 35,
+                          height: 35,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.swap_vert,
+                              size: 35,
+                              color: Color(0xFF3F51B5),
                             ),
+                            onPressed: () => {
+                              changeText(),
+                            },
                           ),
                         ),
-                      ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.fromLTRB(marginSize, 5, marginSize, 5),
-                      height: 35,
-                      child: SizedBox(
-                        width: (MediaQuery.of(context).size.width - marginSize * 2),
-                        height: 35,
-                        child: TextField(
-                          controller: destinationAddress,
-                          focusNode: destinationTextFocus,
-                          textAlignVertical: TextAlignVertical.bottom,
-                          textAlign: TextAlign.left,
-                          onSubmitted: (text) {},
-                          onTap: () async {
-                            final getAddress = await Navigator.push(
-                              context, MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
-                            );
-                            if(getAddress != null){
-                              destinationAddress.text = getAddress as String;
-                            }
-                          },
-                          decoration: const InputDecoration(
-                            hintText: "도착지를 입력하세요",
-                            filled: true,
-                            fillColor: Color(0xffdddddd),
-                            enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Colors.black54,
-                                width: 1.5,
+                        Column(
+                          children: [
+                            Container(
+                              margin: EdgeInsets.fromLTRB(0, marginSize, marginSize, 5),
+                              height: 35,
+                              child: SizedBox(
+                                width: (MediaQuery.of(context).size.width - marginSize * 2 - 40),
+                                height: 35,
+                                child: TextField(
+                                  controller: originAddress,
+                                  focusNode: originTextFocus,
+                                  textAlignVertical: TextAlignVertical.bottom,
+                                  textAlign: TextAlign.left,
+                                  onSubmitted: (text) {},
+                                  onTap: () async {
+                                    final getAddress = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
+                                    );
+                                    if (getAddress != null) {
+                                      originAddress.text = getAddress as String;
+                                    }
+                                  },
+                                  decoration: const InputDecoration(
+                                    hintText: "출발지를 입력하세요",
+                                    filled: true,
+                                    fillColor: Color(0xffdddddd),
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.black54,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            Container(
+                              margin: EdgeInsets.fromLTRB(0, 5, marginSize, 5),
+                              height: 35,
+                              child: SizedBox(
+                                width: (MediaQuery.of(context).size.width - marginSize * 2 - 40),
+                                height: 35,
+                                child: TextField(
+                                  controller: destinationAddress,
+                                  focusNode: destinationTextFocus,
+                                  textAlignVertical: TextAlignVertical.bottom,
+                                  textAlign: TextAlign.left,
+                                  onSubmitted: (text) {},
+                                  onTap: () async {
+                                    final getAddress = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
+                                    );
+                                    if (getAddress != null) {
+                                      destinationAddress.text = getAddress as String;
+                                    }
+                                  },
+                                  decoration: const InputDecoration(
+                                    hintText: "도착지를 입력하세요",
+                                    filled: true,
+                                    fillColor: Color(0xffdddddd),
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.black54,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
                     ),
                     Container(
-                      margin: EdgeInsets.fromLTRB(MediaQuery.of(context).size.width * 0.3, 5, MediaQuery.of(context).size.width * 0.3, 0),
+                      margin: EdgeInsets.fromLTRB(marginSize, 5, marginSize, 0),
                       child: SizedBox(
                         width: (MediaQuery.of(context).size.width - marginSize * 2),
                         height: 35,

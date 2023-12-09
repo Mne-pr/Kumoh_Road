@@ -3,62 +3,49 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import "package:http/http.dart" as http;
+import 'preview_location.dart';
+import '../../utilities/bike_util.dart';
 
 class TranslateAddressScreen extends StatefulWidget {
   const TranslateAddressScreen({Key? key}) : super(key: key);
 
   @override
-  _TranslateAddressScreen createState() => _TranslateAddressScreen();
+  _TranslateAddressScreenState createState() => _TranslateAddressScreenState();
 }
 
-class AddressData {
-  String addressName;
-  String address;
-
-  AddressData(this.addressName, this.address);
-}
-
-class _TranslateAddressScreen extends State<TranslateAddressScreen> {
-  String key = 'devU01TX0FVVEgyMDIzMTIwNTEzMDAxNzExNDMzNDg=';
+class _TranslateAddressScreenState extends State<TranslateAddressScreen> with AddressChangeClass, PathDataClass {
+  String key = 'devU01TX0FVVEgyMDIzMTIwNTE1NTE0OTExNDMzNTM=';
   final addressText = TextEditingController();
   List<AddressData> addressList = <AddressData>[
     AddressData('구미역', '경북 구미시 구미중앙로 76'),
     AddressData('구미종합터미널', '경북 구미시 송원동로 72'),
     AddressData('금오공과대학교(양호동)', '경북 구미시 대학로 61')
-
   ];
   double marginSize = 10;
+  FocusNode inputTextFocus = FocusNode();
 
   Widget buildListTile(AddressData data) {
     return ListTile(
       title: Text(data.addressName),
       subtitle: Text(data.address),
+      onTap: () {
+        Navigator.pop(context, data.address);
+      },
       trailing: TextButton(
-        child: const Text("선택"),
-        onPressed: () {
-          Navigator.pop(context, data.address);
+        child: const Text("위치"),
+        onPressed: () async {
+          inputTextFocus.unfocus();
+          Point tmp = await changeCoordinate(data.address);
+          Navigator.push(context, MaterialPageRoute(builder: (context)=> PreviewLocation(tmp)));
         },
       ),
     );
   }
 
-  void asd(String buildingName) async {
-    http.Response response = await http.get(Uri.parse(
-        "http://www.juso.go.kr/addrlink/addrLinkApi.do?currentPage=1&countPerPage=10&keyword=$buildingName&confmKey=devU01TX0FVVEgyMDIzMTIwNTE1NTE0OTExNDMzNTM=&resultType=json"));
-    String jsonData = utf8.decode(response.bodyBytes);
-    int count = int.parse(jsonDecode(jsonData)["results"]["common"]["totalCount"]);
+  void renewalList(String buildingName) async {
+    List<AddressData> tmp = await getAddressList(buildingName);
     setState(() {
-      addressList = [];
-      for(int i = 0; i < count && i < 10; i++){
-        String tmp1 = jsonDecode(jsonData)["results"]["juso"][i]["bdNm"];
-        if(tmp1 == ""){
-          continue;
-        }
-        String tmp2 = jsonDecode(jsonData)["results"]["juso"][i]["roadAddrPart1"];
-        addressList.add(AddressData(tmp1, tmp2));
-        print("$tmp1 $tmp2");
-      }
+      addressList = tmp;
     });
   }
 
@@ -85,29 +72,50 @@ class _TranslateAddressScreen extends State<TranslateAddressScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    margin: EdgeInsets.fromLTRB(marginSize, marginSize, marginSize, 5),
+                    margin: EdgeInsets.fromLTRB(5, marginSize, marginSize, 5),
                     height: 35,
-                    child: SizedBox(
-                      width: (MediaQuery.of(context).size.width - marginSize * 2),
-                      height: 35,
-                      child: TextField(
-                        textAlignVertical: TextAlignVertical.bottom,
-                        textAlign: TextAlign.left,
-                        controller: addressText,
-                        onSubmitted: (text) {},
-                        decoration: const InputDecoration(
-                          hintText: "주소를 입력하세요",
-                          filled: true,
-                          fillColor: Color(0xffdddddd),
-                          enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Colors.black54,
-                              width: 1.5,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 35,
+                          height: 35,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.chevron_left,
+                              size: 30,
+                              color: Color(0xFF3F51B5),
+                            ),
+                            onPressed: () => {
+                              Navigator.pop(context),
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: (MediaQuery.of(context).size.width - marginSize * 2 - 35),
+                          height: 35,
+                          child: TextField(
+                            textAlignVertical: TextAlignVertical.bottom,
+                            textAlign: TextAlign.left,
+                            controller: addressText,
+                            focusNode: inputTextFocus,
+                            onSubmitted: (text) {},
+                            decoration: const InputDecoration(
+                              hintText: "주소를 입력하세요",
+                              filled: true,
+                              fillColor: Color(0xffdddddd),
+                              enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.black54,
+                                  width: 1.5,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                   Container(
@@ -117,7 +125,8 @@ class _TranslateAddressScreen extends State<TranslateAddressScreen> {
                       height: 35,
                       child: TextButton(
                         onPressed: () => {
-                          asd(addressText.text),
+                          inputTextFocus.unfocus(),
+                          renewalList(addressText.text),
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.all(5),
