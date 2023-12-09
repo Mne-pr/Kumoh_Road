@@ -393,14 +393,16 @@ class _MainScreenState extends State<MainScreen> {
         var now = DateTime.now();
         var nowTotalMinutes = now.hour * 60 + now.minute;
         var filteredDocs = snapshot.data!.docs.where((doc) {
+          var createdTime = (doc["createdTime"] as Timestamp).toDate();
+          var isToday = createdTime.year == now.year && createdTime.month == now.month && createdTime.day == now.day;
           var timeParts = doc["categoryTime"].split(':');
           var docHour = int.parse(timeParts[0]);
           var docMinute = int.parse(timeParts[1]);
-          var docTotalMinutes = docHour * 60 + docMinute;
-          return docTotalMinutes >= nowTotalMinutes;
+          var docTotalMinutes = docHour * 60 + docMinute + 60;
+          return isToday && docTotalMinutes >= nowTotalMinutes;
         }).toList();
 
-        // 필터링된 결과에서 상위 5개 문서만 선택
+        // 필터링된 결과에서 상위 4개 문서만 선택
         var limitedDocs = filteredDocs.take(5).toList();
         return ListView(
           shrinkWrap: true,
