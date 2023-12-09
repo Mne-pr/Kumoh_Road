@@ -668,7 +668,6 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
     List<String> memberIdList = _memberList.map((e) => e as String).toList();
     List<TaxiScreenUserModel> memberList =
         await TaxiScreenUserModel.getUserList(memberIdList);
-
     bool isWriter = widget.post.writerId == currUser!.id.toString();
     List<Widget> listView = [];
     if (isWriter) {

@@ -72,7 +72,10 @@ class TaxiScreenUserModel extends UserModel{
       List<TaxiScreenUserModel> userList = [];
       for(var id in userIdList){
         for(var doc in snapshot.docs){
-          if(userIdList.contains(doc.id)){
+          // if(userIdList.contains(doc.id)){
+          //   userList.add(TaxiScreenUserModel.fromUserModel(UserModel.fromDocument(doc)));
+          // }
+          if(id == doc.id){
             userList.add(TaxiScreenUserModel.fromUserModel(UserModel.fromDocument(doc)));
           }
         }
