@@ -41,43 +41,6 @@ class ReviewScreen extends StatefulWidget {
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
-  // void _navigateToDetailReportScreen(String category) async {
-  //   // 신고당한 그 1개 게시글 문서의 id를 읽기
-  //   String postId = '';
-  //   try {
-  //     // 신고당한 게시글의 문서 id를 얻기
-  //     FirebaseFirestore firestore = FirebaseFirestore.instance;
-  //     CollectionReference collection =
-  //     firestore.collection(widget.collectionName);
-  //     QuerySnapshot querySnapshot = await collection
-  //         .where('writerId', isEqualTo: widget.reportedUserId)
-  //         .where('createdTime', isEqualTo: widget.createdTime)
-  //         .get();
-  //     var doc = querySnapshot.docs.first;
-  //     postId = doc.id;
-  //   } on Exception catch (e) {
-  //     log.e("신고당한 게시글 문서 id 불러오기 실패함", error: e);
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('신고 내용 페이지 로딩 실패')),
-  //     );
-  //     return;
-  //   }
-  //
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //         builder: (context) {
-  //           return PostReportDetailScreen(
-  //             postId: "${widget.collectionName}-$postId",
-  //             reportedUserId: widget.reportedUserId,
-  //             reportedUserName: widget.reportedUserName,
-  //             reportCategory: category,
-  //           );
-  //         }
-  //     ),
-  //   );
-  // }
-
   String _feedback = "좋아요";
 
   @override
@@ -139,12 +102,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   Widget emotionItem(String msg) {
     late Icon face;
+    Color color = Colors.grey; // 기본 색상 설정
+
     if (msg == '별로에요') {
       face = const Icon(Icons.sentiment_very_dissatisfied);
+      if (_feedback == '별로에요') {
+        color = Colors.red; // 선택된 경우 색상 변경
+      }
     } else if (msg == "좋아요!") {
       face = const Icon(Icons.sentiment_satisfied);
+      if (_feedback == '좋아요!') {
+        color = Colors.amber; // 선택된 경우 색상 변경
+      }
     } else if (msg == "최고에요!") {
       face = const Icon(Icons.sentiment_very_satisfied);
+      if (_feedback == '최고에요!') {
+        color = Colors.green; // 선택된 경우 색상 변경
+      }
     }
 
     return InkWell(
@@ -159,7 +133,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
           children: [
             Transform.scale(
               scale: 3,
-              child: face
+              child: Icon(
+                face.icon,
+                color: color, // 적용된 색상
+              ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 32),
@@ -262,28 +239,3 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

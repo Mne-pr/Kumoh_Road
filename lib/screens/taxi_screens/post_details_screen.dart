@@ -41,8 +41,8 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _controller = TextEditingController();
   String _content = "";
-  bool _showBottomSection = true;
-  bool _showMemberSection = true;
+  bool _showMemberSection = false;
+  bool _showReviewScreen = false;
   late List<dynamic> _commentList;
   late List<dynamic> _memberList;
   late final ReportManager _reportManager;
@@ -63,7 +63,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && _showReviewScreen) {
       Navigator.push(context, MaterialPageRoute(
         builder: (context) {
           return ReviewScreen(
@@ -114,8 +114,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
             onTap: () {
               FocusScope.of(context).unfocus();
               setState(() {
-                _showBottomSection = true;
-                _showMemberSection = true;
+                _showMemberSection = false;
               });
             },
             child: SingleChildScrollView(
@@ -125,10 +124,18 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                   _buildTopSection(),
                   const SizedBox(height: 4),
                   ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage:
-                          NetworkImage(widget.writer.profileImageUrl),
-                      radius: 28, // 아바타 크기 증가
+                    leading: GestureDetector(
+                      onTap: () {
+                        if (currUser!.id.toString() != widget.writer.userId) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => OtherUserProfileScreen(userId: widget.writer.userId),
+                          ));
+                        }
+                      },
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(widget.writer.profileImageUrl),
+                        radius: 28,
+                      ),
                     ),
                     title: Row(
                       children: [
@@ -138,7 +145,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                               Text(
                                 widget.writer.nickname,
                                 style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
+                                    fontSize: 16),
                               ),
                             ],
                           ),
@@ -222,7 +229,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                   },
                 )
               : Container(),
-          _showBottomSection ? _buildBottomSection(context) : Container(),
+          _buildBottomSection(context),
         ],
       ),
     );
@@ -275,7 +282,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
           right: 0,
           top: deviceHeight * 0.04,
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -538,7 +545,6 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                   onTap: () {
                     setState(() {
                       _showMemberSection = false;
-                      _showBottomSection = false;
                     });
                   },
                   onChanged: (value) {
@@ -599,8 +605,6 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                         'enable': true
                       });
                       _controller.clear();
-                      _showBottomSection = true;
-                      _showMemberSection = true;
                     });
                   } on Exception catch (error) {
                     log.e(error);
@@ -630,14 +634,22 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
     String timeText = DateTime.now().difference(writeTime).inMinutes == 0
         ? "방금 전"
         : "${DateTime.now().difference(writeTime).inMinutes}분 전";
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(user.profileImageUrl),
-            radius: 24,
+          GestureDetector(
+            onTap: () {
+              if (currUser!.id.toString() != user.userId) {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => OtherUserProfileScreen(userId: user.userId),
+                ));
+              }
+            },
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(user.profileImageUrl),
+              radius: 24,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -806,64 +818,62 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
       left: 0,
       right: 0,
       child: Container(
-        height: deviceHeight * 0.05,
-        color: Colors.grey.shade50,
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        height: 55,
+        color: Colors.white,
         child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "정원 4명중 ${_memberList.length + 1}명 참여중",
-                  style: TextStyle(
-                      fontSize: deviceFontSize * 1.2,
-                      fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  "${widget.writer.gender}만 참여가능",
-                  style:
-                      TextStyle(fontSize: deviceFontSize, color: Colors.grey),
-                )
-              ],
+          Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 10),
+            Text(
+              "정원 4명중 ${_memberList.length + 1}명 참여중",
+              style: TextStyle(
+                fontSize: deviceFontSize * 1.2,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const Spacer(),
-            ElevatedButton(
-                onPressed: () async {
-                  bool isWriter =
-                      widget.writer.userId == currUser!.id.toString();
-                  if (isWriter) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('이미 합승중입니다'),
-                          duration: Duration(seconds: 1)),
-                    );
-                    return;
-                  }
-                  if (_memberList.contains(currUser!.id.toString())) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('이미 합승중입니다'),
-                          duration: Duration(seconds: 1)),
-                    );
-                    return;
-                  }
-                  if (_memberList.length >= 3) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('정원 초과입니다'),
-                          duration: Duration(seconds: 1)),
-                    );
-                    return;
-                  }
-
-                  bool sameGender = widget.writer.gender == currUser!.gender;
-                  if (!sameGender) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('${widget.writer.gender}만 참여 가능합니다')),
-                    );
-                    return;
-                  }
+            Text(
+              "${widget.writer.gender}만 참여가능",
+              style: TextStyle(fontSize: deviceFontSize, color: Colors.grey),
+            ),
+          ],
+        ),
+        const Spacer(),
+        Expanded(
+          child: ElevatedButton(
+              onPressed: () async {
+                bool isWriter = widget.writer.userId == currUser!.id.toString();
+                if (isWriter) {
+                  setState(() {
+                    _showMemberSection = !_showMemberSection;
+                  });
+                  return;
+                }
+                if (_memberList.contains(currUser!.id.toString())) {
+                  setState(() {
+                    _showMemberSection = !_showMemberSection;
+                  });
+                  return;
+                }
+                if (_memberList.length >= 3) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('정원이 가득찼습니다.'),
+                        duration: Duration(seconds: 1)),
+                  );
+                  return;
+                  return;
+                }
+                bool sameGender = widget.writer.gender == currUser!.gender;
+                if (!sameGender) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('${widget.writer.gender}만 참여 가능합니다')),
+                  );
+                  return;
+                }
                   try {
                     FirebaseFirestore firestore = FirebaseFirestore.instance;
                     CollectionReference collection =
@@ -886,69 +896,85 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                   }
                   setState(() {
                     _memberList.add(currUser!.id.toString());
-                    _showMemberSection = true;
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('합승 완료')),
-                  );
-                },
-                child: widget.writer.userId == currUser!.id.toString() ||
-                        _memberList.contains(currUser!.id.toString())
-                    ? const Text("합승중")
-                    : const Text("합승하기"))
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('합승 완료')),
+                );
+              },
+            child: Text(
+              _showMemberSection
+                  ? "목록닫기"
+                  : widget.writer.userId == currUser!.id.toString() ||
+                  _memberList.contains(currUser!.id.toString())
+                  ? "목록확인"
+                  : "합승하기",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
           ],
         ),
       ),
     );
   }
 
-  Row memberListItem(BuildContext context, TaxiScreenUserModel user,
-      String role, Widget buttonArea) {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () {
-            if (currUser!.id.toString() == user.userId) {
-              return;
-            }
-
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => OtherUserProfileScreen(userId: user.userId),
-            ));
-          },
-          child: CircleAvatar(
-            backgroundImage: NetworkImage(user.profileImageUrl),
+  Widget memberListItem(BuildContext context, TaxiScreenUserModel user, String role, Widget buttonArea) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              if (currUser!.id.toString() != user.userId) {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => OtherUserProfileScreen(userId: user.userId),
+                ));
+              }
+            },
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(user.profileImageUrl),
+              radius: 20, // 조정된 아바타 크기
+            ),
           ),
-        ),
-        Text(
-          user.nickname,
-          style: TextStyle(
-              fontSize: deviceFontSize * 1.1, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          " $role",
-          style: const TextStyle(color: Colors.grey),
-        ),
-        const Spacer(),
-        buttonArea
-      ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.nickname,
+                  style: TextStyle(
+                      fontSize: deviceFontSize * 1.1, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  role,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          buttonArea
+        ],
+      ),
     );
   }
 
   Future<Widget> _buildMemberListSection(BuildContext context) async {
     List<String> memberIdList = _memberList.map((e) => e as String).toList();
     List<TaxiScreenUserModel> memberList =
-        await TaxiScreenUserModel.getUserList(memberIdList);
+    await TaxiScreenUserModel.getUserList(memberIdList);
     bool isWriter = widget.post.writerId == currUser!.id.toString();
     List<Widget> listView = [];
+
     if (isWriter) {
       listView.add(memberListItem(context, widget.writer, "방장", Container()));
       for (var e in memberList) {
-        listView
-            .add(memberListItem(context, e, "참여자", kickOutButton(e.userId)));
+        listView.add(memberListItem(context, e, "참여자", kickOutButton(e.userId)));
       }
     } else {
-      // 참여자일 경우
       listView.add(memberListItem(context, widget.writer, "방장", wireButton()));
       for (var e in memberList) {
         listView.add(memberListItem(context, e, "참여자", Container()));
@@ -956,46 +982,21 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
     }
 
     return DraggableScrollableSheet(
-        initialChildSize: 0.4, // 나타나는 크기
-        builder: (BuildContext context2, ScrollController controller) {
-          return Container(
-            height: deviceHeight * 0.4,
-            decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 1,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3), // changes position of shadow
-                  ),
-                ]),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "참여자",
-                          style: TextStyle(
-                              fontSize: deviceFontSize * 1.1,
-                              fontWeight: FontWeight.bold),
-                        )
-                      ]),
-                ),
-                Expanded(
-                  child: ListView(
-                    children: listView,
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
+      initialChildSize: 0.5,
+      builder: (BuildContext context2, ScrollController controller) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey, width: 1),
+          ),
+          child: ListView(
+            controller: controller,
+            children: listView,
+          ),
+        );
+      },
+    );
   }
 
   ElevatedButton kickOutButton(String kickId) {
@@ -1028,12 +1029,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
     );
   }
 
-  //송금 버튼
   ElevatedButton wireButton() {
     return ElevatedButton(
       onPressed: () {
         try {
           launchURL(widget.writer.qrCodeUrl!);
+          setState(() {
+            _showReviewScreen = true;
+          });
         } catch (e) {
           log.e(e);
           ScaffoldMessenger.of(context).showSnackBar(
