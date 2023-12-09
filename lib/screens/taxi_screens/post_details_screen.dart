@@ -568,20 +568,26 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> with WidgetsBindi
             const Spacer(),
             ElevatedButton(
                 onPressed: () async {
-                  bool isWriter =
-                      widget.writer.userId == currUser!.id.toString();
+                  bool isWriter = widget.writer.userId == currUser!.id.toString();
                   if (isWriter) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('이미 합승중입니다')),
+                      const SnackBar(content: Text('이미 합승중입니다'), duration: Duration(seconds: 1)),
                     );
                     return;
                   }
                   if (_memberList.contains(currUser!.id.toString())) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('이미 합승중입니다')),
+                      const SnackBar(content: Text('이미 합승중입니다'), duration: Duration(seconds: 1)),
                     );
                     return;
                   }
+                  if (_memberList.length >= 3){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('정원 초과입니다'), duration: Duration(seconds: 1)),
+                    );
+                    return;
+                  }
+
                   bool sameGender = widget.writer.gender == currUser!.gender;
                   if (!sameGender) {
                     ScaffoldMessenger.of(context).showSnackBar(
