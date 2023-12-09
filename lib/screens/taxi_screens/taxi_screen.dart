@@ -39,10 +39,22 @@ class _TaxiScreenState extends State<TaxiScreen> {
   @override
   Widget build(BuildContext context) {
     currUser = Provider.of<UserProvider>(context, listen: false);
-    deviceWidth = MediaQuery.of(context).size.width;
-    deviceHeight = MediaQuery.of(context).size.height;
-    deviceFontSize = Theme.of(context).textTheme.bodyLarge!.fontSize!;
-    mainColor = Theme.of(context).primaryColor;
+    deviceWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    deviceHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+    deviceFontSize = Theme
+        .of(context)
+        .textTheme
+        .bodyLarge!
+        .fontSize!;
+    mainColor = Theme
+        .of(context)
+        .primaryColor;
 
     final List<String> startList = ['금오공과대학교', '구미종합터미널', '구미역'];
     bool isChoicedKumoh = (_selectedStartInfo == "금오공과대학교");
@@ -126,7 +138,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
       );
       return;
     }
-    if (! _isExistingArrivalInfo) {
+    if (!_isExistingArrivalInfo) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('도착정보가 없어서 글쓰기를 할 수 없습니다')),
       );
@@ -153,7 +165,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
           value: _selectedStartInfo,
           onChanged: (String? newValue) {
             setState(() {
-              if(newValue == "금오공과대학교"){
+              if (newValue == "금오공과대학교") {
                 _isExistingArrivalInfo = true;
               }
               _selectedStartInfo = newValue!;
@@ -344,12 +356,15 @@ class _TaxiScreenState extends State<TaxiScreen> {
       collectionName = "train_posts";
     }
     // 현재 출발지, 현재 categoryTime, 오늘 날짜인 문서만 필터링
-    List<TaxiScreenPostModel> postList = await TaxiScreenPostModel.getAllPostByCollectionAndDateTime(collectionName, _selectedTime!, DateTime.now());
+    List<TaxiScreenPostModel> postList = await TaxiScreenPostModel
+        .getAllPostByCollectionAndDateTime(
+        collectionName, _selectedTime!, DateTime.now());
 
     return _buildPosts(context, postList, collectionName);
   }
 
-  PopupMenuItem<String> reportMenuItem(String reportedUserId, String reportedUserName, String collectionName, DateTime createdTime) {
+  PopupMenuItem<String> reportMenuItem(String reportedUserId,
+      String reportedUserName, String collectionName, DateTime createdTime) {
     return PopupMenuItem<String>(
       onTap: () {
         Navigator.push(context,
@@ -366,9 +381,10 @@ class _TaxiScreenState extends State<TaxiScreen> {
     );
   }
 
-  Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList, String collectionName) async {
+  Future<Widget> _buildPosts(BuildContext context,
+      List<TaxiScreenPostModel> postList, String collectionName) async {
     // 도착정보가 없을 시
-    if(_isExistingArrivalInfo == false){
+    if (_isExistingArrivalInfo == false) {
       return Container();
     }
     // 선택한 시간의 등록된 게시물이 없을 시
@@ -381,163 +397,117 @@ class _TaxiScreenState extends State<TaxiScreen> {
     List<TaxiScreenPostModel> sortedPostList = postList;
     sortedPostList.sort((a, b) => b.createdTime.compareTo(a.createdTime));
     List<String> userIdList = sortedPostList.map((e) => e.writerId).toList();
-    List<TaxiScreenUserModel> writerList = await TaxiScreenUserModel.getUserList(userIdList);
+    List<TaxiScreenUserModel> writerList = await TaxiScreenUserModel
+        .getUserList(userIdList);
+
 
     return Expanded(
       child: ListView.separated(
         itemCount: sortedPostList.length,
         itemBuilder: (context, int index) {
           double imageSize = deviceWidth * 0.3;
-          bool isWriter = sortedPostList[index].writerId == currUser.id.toString();
-
+          int minutesAgo = DateTime.now().difference(sortedPostList[index].createdTime).inMinutes;
+          String timeText = minutesAgo == 0 ? "방금 전" : "$minutesAgo분 전";
           return sortedPostList[index].visible
-            ? GestureDetector(
-                onTap: () async {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) =>
-                          PostDetailsScreen(
-                            writer: writerList[index],
-                            post: sortedPostList[index],
-                            collectionName:
-                            converter[_selectedStartInfo]!,
-                          )
-                  ));
-
-                  // 조회수 1 증가
-                  final FirebaseFirestore firestore =
-                      FirebaseFirestore.instance;
-                  QuerySnapshot querySnapshot = await firestore
-                      .collection(converter[_selectedStartInfo]!)
-                      .where('categoryTime', isEqualTo: _selectedTime)
-                      .where('writerId', isEqualTo: writerList[index].userId)
-                      .get();
-                  for (var doc in querySnapshot.docs) {
-                    await firestore
-                        .collection(converter[_selectedStartInfo]!)
-                        .doc(doc.id)
-                        .update({'viewCount': FieldValue.increment(1)});
-                  }
-                },
-                child: Container(
-                  height: deviceWidth * 0.4,
-                  // 여백 터치해도 탭 인식 되기 위함
-                  decoration: const BoxDecoration(
-                      border: Border.fromBorderSide(BorderSide.none)
+              ? GestureDetector(
+            onTap: () async {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) =>
+                      PostDetailsScreen(
+                        writer: writerList[index],
+                        post: sortedPostList[index],
+                        collectionName:
+                        converter[_selectedStartInfo]!,
+                      )
+              ));
+              final FirebaseFirestore firestore =
+                  FirebaseFirestore.instance;
+              QuerySnapshot querySnapshot = await firestore
+                  .collection(converter[_selectedStartInfo]!)
+                  .where('categoryTime', isEqualTo: _selectedTime)
+                  .where('writerId', isEqualTo: writerList[index].userId)
+                  .get();
+              for (var doc in querySnapshot.docs) {
+                await firestore
+                    .collection(converter[_selectedStartInfo]!)
+                    .doc(doc.id)
+                    .update({'viewCount': FieldValue.increment(1)});
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 8.0, horizontal: 16.0),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    child: sortedPostList[index].imageUrl.isEmpty
+                        ? Image.asset(
+                      'assets/images/default_avatar.png',
+                      width: imageSize,
+                      height: imageSize,
+                      fit: BoxFit.cover,
+                    )
+                        : Image.network(
+                      sortedPostList[index].imageUrl,
+                      width: imageSize,
+                      height: imageSize,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        child: sortedPostList[index].imageUrl.isEmpty
-                            ? Image.asset(
-                          'assets/images/default_avatar.png',
-                          width: imageSize,
-                          height: imageSize,
-                          fit: BoxFit.cover,
-                        )
-                            : Image.network(
-                          sortedPostList[index].imageUrl,
-                          frameBuilder: (context, child, frame,
-                              wasSynchronouslyLoaded) {
-                            return child;
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) {
-                              return child;
-                            } else {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                          },
-                          width: imageSize,
-                          height: imageSize,
-                          fit: BoxFit.cover,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sortedPostList[index].title,
+                          style: TextStyle(fontSize: deviceFontSize * 1.2),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        SizedBox(height: 5), // 제목과 작성자 정보 사이 간격 추가
+                        Text(
+                          "${writerList[index].nickname} (${writerList[index]
+                              .gender})",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        Text(
+                          timeText,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        SizedBox(height: 5), // 작성자 정보와 참여 인원 사이 간격 추가
+                        Text(
+                          "${sortedPostList[index].memberList.length + 1}/4",
+                          style: TextStyle(
+                            fontSize: deviceFontSize * 1.1,
+                            color: mainColor,
+                          ),
+                        ),
+                        Row(
                           children: [
-                            // 제목, 버튼
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    sortedPostList[index].title,
-                                    style: TextStyle(
-                                      fontSize: deviceFontSize * 1.2,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  isWriter
-                                    ? Container()
-                                    : PopupMenuButton<String>(
-                                      icon: Transform.scale(
-                                          scale: 0.8,
-                                          child: const Icon(Icons.more_vert)
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10)),
-                                      itemBuilder: (context) {
-                                        TaxiScreenUserModel currWriter = writerList[index];
-
-                                        return [
-                                          reportMenuItem(currWriter.userId, currWriter.nickname, collectionName, sortedPostList[index].createdTime)
-                                        ];
-                                      }
-                                     ),
-                                ]
+                            const Spacer(),
+                            Transform.scale(
+                              scale: 0.8,
+                              child: const Icon(
+                                  Icons.comment_outlined, color: Colors.grey),
                             ),
-                            // 이름, 성별, 생성시간
-                            Row(
-                              children: [
-                                Text(
-                                  "${writerList[index].nickname}(${writerList[index]
-                                      .gender}) ",
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                                Text(
-                                  "${DateTime
-                                      .now()
-                                      .difference(sortedPostList[index].createdTime)
-                                      .inMinutes}분전",
-                                  style: const TextStyle(color: Colors.grey),
-                                )
-                              ],
-                            ),
-                            // 참여인원
                             Text(
-                              "${sortedPostList[index].memberList.length + 1}/4",
-                              style: TextStyle(
-                                  fontSize: deviceFontSize * 1.1,
-                                  color: mainColor),
-                            ),
-                            // 댓글수
-                            Row(
-                              children: [
-                                const Spacer(),
-                                Transform.scale(
-                                  scale: 0.8,
-                                  child: const Icon(Icons.comment_outlined,
-                                      color: Colors.grey),
-                                ),
-                                Text("${sortedPostList[index].commentList.length}"),
-                              ],
-                            ),
-                            const Spacer()
+                                " ${sortedPostList[index].commentList.length}"),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-               )
-            : Container();
+                ],
+              ),
+            ),
+          )
+              : Container();
         },
         separatorBuilder: (BuildContext context, int index) {
           return sortedPostList[index].visible ? const Divider() : Container();
-        }
+        },
       ),
     );
   }

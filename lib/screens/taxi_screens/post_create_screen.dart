@@ -123,9 +123,9 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 3.0),
           child: Text(
-            "현재 위치를 인증해주세요:\n기차 내부, 버스 내부, 학교 사진 등등..",
+            "현재 위치를 인증해주세요:\n기차 내부 사진, 버스 내부 사진, 학교 사진..",
             textAlign: TextAlign.left,
             style: TextStyle(fontSize: deviceFontSize * 1.2),
           ),
@@ -181,6 +181,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Text(
