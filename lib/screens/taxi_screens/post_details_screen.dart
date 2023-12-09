@@ -8,7 +8,6 @@ import 'package:kumoh_road/screens/taxi_screens/post_report_screen.dart';
 import 'package:kumoh_road/screens/taxi_screens/review_screen.dart';
 import 'package:kumoh_road/screens/user_info_screens/other_user_info_screen.dart';
 import 'package:kumoh_road/utilities/url_launcher_util.dart';
-import 'package:kumoh_road/widgets/user_info_section.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import '../../utilities/report_manager.dart';
@@ -280,6 +279,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // 왼쪽 아이콘들
                 Row(
                   children: [
                     IconButton(
@@ -306,7 +306,9 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                     ),
                   ],
                 ),
-                PopupMenuButton<String>(
+                // 게시글 신고 아이콘 (작성자가 아닐 경우에만 표시)
+                currUser!.id.toString() != widget.writer.userId
+                    ? PopupMenuButton<String>(
                   onSelected: (String value) {
                     if (value == 'report') {
                       Navigator.push(context,
@@ -322,10 +324,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                     }
                   },
                   itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                    reportMenuItem(widget.writer.userId, widget.writer.nickname, widget.collectionName, widget.post.createdTime),
+                    const PopupMenuItem<String>(
+                      value: 'report',
+                      child: Text("게시글 신고하기"),
+                    ),
                   ],
                   icon: const Icon(Icons.more_vert, color: Colors.white),
-                ),
+                )
+                    : Container(), // 작성자일 경우 아무것도 표시하지 않음
               ],
             ),
           ),
@@ -333,6 +339,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
       ],
     );
   }
+
 
   PopupMenuItem<String> reportMenuItem(String reportedUserId, String reportedUserName, String collectionName, DateTime createdTime) {
     return const PopupMenuItem<String>(

@@ -5,7 +5,6 @@ import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
 import 'package:kumoh_road/screens/taxi_screens/post_create_screen.dart';
 import 'package:kumoh_road/screens/taxi_screens/post_details_screen.dart';
-import 'package:kumoh_road/screens/taxi_screens/post_report_screen.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_providers.dart';
@@ -363,25 +362,7 @@ class _TaxiScreenState extends State<TaxiScreen> {
     return _buildPosts(context, postList, collectionName);
   }
 
-  PopupMenuItem<String> reportMenuItem(String reportedUserId, String reportedUserName, String collectionName, DateTime createdTime) {
-    return PopupMenuItem<String>(
-      onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) =>
-                PostReportScreen(
-                  reportedUserId: reportedUserId,
-                  reportedUserName: reportedUserName,
-                  collectionName: collectionName,
-                  createdTime: createdTime,
-                ),)
-        );
-      },
-      child: const Text("신고하기"),
-    );
-  }
-
-  Future<Widget> _buildPosts(BuildContext context,
-      List<TaxiScreenPostModel> postList, String collectionName) async {
+  Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList, String collectionName) async {
     // 도착정보가 없을 시
     if (_isExistingArrivalInfo == false) {
       return Container();
@@ -398,7 +379,6 @@ class _TaxiScreenState extends State<TaxiScreen> {
     List<String> userIdList = sortedPostList.map((e) => e.writerId).toList();
     List<TaxiScreenUserModel> writerList = await TaxiScreenUserModel
         .getUserList(userIdList);
-
 
     return Expanded(
       child: ListView.separated(
