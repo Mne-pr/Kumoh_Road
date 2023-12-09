@@ -268,9 +268,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
       recommendation = '추운 날씨에는 버스 이용을 추천드려요.';
       destinationScreen = () => const BusInfoScreen();
     } else if (airQuality.any((element) => element.contains('나쁨'))) {
-      transportIcon = Icons.directions_walk;
-      recommendation = '공기 질이 좋지 않을 땐 택시가 좋습니다.';
-      destinationScreen = () => const TaxiScreen(); // 도보 관련 화면
+      transportIcon = Icons.local_taxi;
+      recommendation = '공기 질이 좋지 않을 땐 택시가 좋아요.';
+      destinationScreen = () => const TaxiScreen();
     } else {
       transportIcon = Icons.pedal_bike;
       recommendation = '날씨가 좋으니 자전거로 활기찬 하루를 시작하세요!';
