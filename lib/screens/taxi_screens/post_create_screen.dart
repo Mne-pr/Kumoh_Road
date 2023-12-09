@@ -46,7 +46,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
     return Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text('글쓰기', style: TextStyle(color: Colors.black)),
+          title: const Text('합승 게시글 작성', style: TextStyle(color: Colors.black)),
           backgroundColor: Colors.white,
           iconTheme: const IconThemeData(color: Colors.black),
           elevation: 1,
@@ -54,19 +54,17 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
         ),
         body: SafeArea(
           child: GestureDetector(
-            // 키보드 외 화면 터치 시 키보드의 포커스를 해제하기 위함
-            onTap: () {
-              FocusScope.of(context).unfocus();
-            },
+            onTap: () => FocusScope.of(context).unfocus(),
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  photoInput(context),
-                  formInput(),
-                  SizedBox(
-                    height: deviceHeight * 0.8,
-                  )
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0), // 전체 패딩 추가
+                child: Column(
+                  children: [
+                    photoInput(context),
+                    formInput(),
+                    SizedBox(height: deviceHeight * 0.8),
+                  ],
+                ),
               ),
             ),
           ),
@@ -79,7 +77,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                   _formKey2.currentState!.validate()) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('글쓰기 중')
+                    content: Text('게시글 작성 중')
                   ),
                 );
                 _formKey.currentState!.save();
@@ -105,7 +103,7 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
                 int newPostCount = currUser.postCount + 1;
                 await currUser.updateUserInfo(postCount: newPostCount);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('글쓰기 완료')),
+                  const SnackBar(content: Text('게시글 작성 완료')),
                 );
                 Navigator.of(context).pop();
                 setState(() { });
@@ -121,148 +119,174 @@ class _PostCreateScreenState extends State<PostCreateScreen> {
   }
 
   Widget photoInput(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          child: Container(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            "현재 위치를 인증해주세요:\n기차 내부, 버스 내부, 학교 사진 등등..",
+            textAlign: TextAlign.left,
+            style: TextStyle(fontSize: deviceFontSize * 1.2),
+          ),
+        ),
+        Row(
+          children: [
+            InkWell(
+              child: Container(
+                  width: deviceWidth * 0.2,
+                  height: deviceWidth * 0.2,
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: const Center(child: Icon(Icons.camera_alt))),
+              onTap: () async {
+                if (await Permission.camera.request().isGranted) {
+                  final File? imageFile =
+                  await ImagePickerUtils.pickImageFromCamera();
+                  setState(() {
+                    _imagePath = imageFile?.path ?? "";
+                  });
+                }
+              },
+            ),
+            _imagePath != null
+                ? Container(
+              margin: EdgeInsets.only(
+                  left: deviceWidth * 0.04),
               width: deviceWidth * 0.2,
               height: deviceWidth * 0.2,
               decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(20)),
-              child: const Center(child: Icon(Icons.camera_alt))),
-          onTap: () async {
-            if (await Permission.camera.request().isGranted) {
-              final File? imageFile =
-                  await ImagePickerUtils.pickImageFromCamera();
-              setState(() {
-                _imagePath = imageFile?.path ?? "";
-              });
-            }
-          },
-        ),
-        _imagePath != null
-            ? Container(
-                margin: EdgeInsets.only(
-                    left: deviceWidth * 0.04),
-                width: deviceWidth * 0.2,
-                height: deviceWidth * 0.2,
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(20)),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.file(
-                    File(_imagePath!),
-                    fit: BoxFit.cover,
-                    width: deviceWidth * 0.2,
-                    height: deviceWidth * 0.2,
-                  ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.file(
+                  File(_imagePath!),
+                  fit: BoxFit.cover,
+                  width: deviceWidth * 0.2,
+                  height: deviceWidth * 0.2,
                 ),
-              )
-            : Container(),
+              ),
+            )
+                : Container(),
+          ],
+        ),
       ],
     );
   }
 
+
   Widget formInput() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Text(
+            "합승 게시글 제목",
+            style: TextStyle(fontSize: deviceFontSize * 1.2),
+          ),
+        ),
         Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                Column(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(
-                          bottom: deviceHeight * 0.01),
-                      child: const Text("제목",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    TextFormField(
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        hintText: "제목",
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          borderSide: BorderSide(width: 2, color: Colors.black),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(10.0)),
-                            borderSide:
-                                BorderSide(width: 1, color: Colors.grey)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                        ),
-                      ),
-                      onSaved: (value) {
-                        _title = value!;
-                      },
-                      onChanged: (value) {
-                        _formKey.currentState!.validate();
-                      },
-                      validator: (value) {
-                        // 앞뒤 공백, 개행문자 제거
-                        if (value == null || value.trim().isEmpty) {
-                          return "제목을 입력해주세요";
-                        }
-                        if (value.length > 50) {
-                          return "글자수를 초과했습니다";
-                        }
-                        return null;
-                      },
-                    )
-                  ],
-                ),
-              ],
-            )),
+          key: _formKey,
+          child: TextFormField(
+            maxLines: 2,
+            style: TextStyle(fontSize: deviceFontSize * 1.1),
+            decoration: InputDecoration(
+              hintText: "참여자들을 위해 최대한 자세한 제목을 작성해주세요!\n(최대 50자)",
+              focusedBorder: OutlineInputBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+                borderSide: BorderSide(width: 2, color: mainColor),
+              ),
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                borderSide: BorderSide(width: 1, color: Colors.grey),
+              ),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0)),
+              ),
+            ),
+            onSaved: (value) {
+              _title = value!;
+            },
+            onChanged: (value) {
+              _formKey.currentState!.validate();
+            },
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+              return "제목을 입력해주세요";
+              }
+              if (value.length > 50) {
+              return "제목은 최대 50자까지 가능합니다";
+              }
+              return null;
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+          child: Text(
+            "합승 게시글 내용",
+            style: TextStyle(fontSize: deviceFontSize * 1.2),
+          ),
+        ),
         Form(
           key: _formKey2,
-          child: Column(
-            children: [
-              Container(
-                margin: EdgeInsets.only(
-                    bottom: deviceWidth * 0.01),
-                child: const Text("내용",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+          child: TextFormField(
+            maxLines: 5,
+            style: TextStyle(fontSize: deviceFontSize * 1.1),
+            decoration: InputDecoration(
+              hintText: "참여자들을 위해 최대한 자세한 내용을 작성해주세요!\n(최대 100자)", // 힌트 텍스트에 정보 포함
+              focusedBorder: OutlineInputBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+                borderSide: BorderSide(width: 2, color: mainColor),
               ),
-              TextFormField(
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  hintText: "내용",
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    borderSide: BorderSide(width: 2, color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(width: 1, color: Colors.grey)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                  ),
-                ),
-                onSaved: (value) {
-                  _content = value!;
-                },
-                onChanged: (value) {
-                  _formKey2.currentState!.validate();
-                },
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "내용을 입력해주세요";
-                  }
-                  if (value.length > 100) {
-                    return "글자수를 초과했습니다";
-                  }
-                  return null;
-                },
-              )
-            ],
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                borderSide: BorderSide(width: 1, color: Colors.grey),
+              ),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0)),
+              ),
+            ),
+            onSaved: (value) {
+              _content = value!;
+            },
+            onChanged: (value) {
+              _formKey2.currentState!.validate();
+            },
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+              return "내용을 입력해주세요";
+              }
+              if (value.length > 100) {
+              return "내용은 최대 100자까지 가능합니다";
+              }
+              return null;
+            },
           ),
-        )
+        ),
       ],
+    );
+  }
+
+
+  Widget inputFieldContainer(String label, Widget child) {
+    return Container(
+      margin: EdgeInsets.only(bottom: deviceHeight * 0.02),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: deviceFontSize * 1.2),
+          ),
+          SizedBox(height: deviceHeight * 0.01),
+          child,
+        ],
+      ),
     );
   }
 
