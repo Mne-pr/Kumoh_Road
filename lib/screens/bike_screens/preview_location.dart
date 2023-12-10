@@ -57,6 +57,25 @@ class _PreviewLocationState extends State<PreviewLocation> {
                 marker.openInfoWindow(markerInfo);
               },
             ),
+            Positioned(
+              top: 15,
+              left: 15,
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.cancel,
+                    size: 40,
+                    color: Color(0xFF3F51B5),
+                  ),
+                  onPressed: () => {
+                    Navigator.pop(context),
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
