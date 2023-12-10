@@ -282,45 +282,27 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  // 연결 끊기 메서드 Todo 후에 게시글 댓글 다 삭제 해야함
+  // 회원 탈퇴 메서드
   Future<void> unlink() async {
     try {
       await UserApi.instance.unlink();
-      // 연결 끊기 성공, SDK에서 토큰 삭제
       if (_id != null) {
-        // Firestore에서 사용자 정보 삭제
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_id.toString())
-            .delete();
+        String userId = _id.toString();
 
-        // 사용자가 작성한 신고 삭제
-        QuerySnapshot reportsSnapshot = await FirebaseFirestore.instance
-            .collection('reports')
-            .where('reporterUserId', isEqualTo: _id.toString())
-            .get();
+        // Firestore에서 사용자 정보 및 관련 데이터 삭제
+        await FirebaseFirestore.instance.collection('users').doc(userId).delete();
 
-        for (var doc in reportsSnapshot.docs) {
-          await doc.reference.delete();
-        }
+        // 사용자가 작성한 신고 및 대상 신고 삭제
+        await _deleteReports('reports', 'reporterUserId', userId);
+        await _deleteReports('reports', 'reportedUserId', userId);
 
-        // 사용자가 작성한 버스 댓글 삭제
-        QuerySnapshot busChatSnapshot = await FirebaseFirestore.instance
-            .collection('bus_chat')
-            .get();
+        // 사용자가 작성한 게시물 삭제
+        await _deleteUserPosts(['express_bus_posts', 'school_posts', 'train_posts'], userId);
 
-        for (var doc in busChatSnapshot.docs) {
-          List<dynamic> comments = doc.get('comments');
-          List<dynamic> updatedComments = comments.where((commentJson) {
-            Comment comment = Comment.fromJson(commentJson);
-            return comment.writerId != _id.toString();
-          }).toList();
-
-          await doc.reference.update({'comments': updatedComments});
-        }
+        // 사용자가 작성한 댓글 및 멤버 리스트에서 사용자 정보 삭제
+        await _deleteUserCommentsAndMembers(['express_bus_posts', 'school_posts', 'train_posts', 'bus_chat'], userId);
       }
     } catch (error) {
-      // 연결 끊기 실패 처리
       print('Error unlinking user: $error');
     } finally {
       _resetLocalUserData();
@@ -329,6 +311,52 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<void> _deleteReports(String collection, String field, String userId) async {
+    var snapshot = await FirebaseFirestore.instance.collection(collection).where(field, isEqualTo: userId).get();
+    for (var doc in snapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  Future<void> _deleteUserPosts(List<String> collections, String userId) async {
+    for (var collection in collections) {
+      var snapshot = await FirebaseFirestore.instance.collection(collection).where('writerId', isEqualTo: userId).get();
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+    }
+  }
+
+  Future<void> _deleteUserCommentsAndMembers(List<String> collections, String userId) async {
+    for (var collection in collections) {
+      var snapshot = await FirebaseFirestore.instance.collection(collection).get();
+      for (var doc in snapshot.docs) {
+        if (collection != 'bus_chat') {
+          List<dynamic> comments = doc.get('commentList') ?? [];
+          List<dynamic> updatedComments = comments.where((comment) => comment['user_code'] != userId).toList();
+          if (comments.length != updatedComments.length) {
+            await doc.reference.update({'commentList': updatedComments});
+          }
+
+          List<dynamic> members = doc.get('memberList') ?? [];
+          List<dynamic> updatedMembers = members.where((memberId) => memberId != userId).toList();
+          if (members.length != updatedMembers.length) {
+            await doc.reference.update({'memberList': updatedMembers});
+          }
+        } else {
+          List<dynamic> comments = doc.get('comments');
+          List<dynamic> updatedComments = comments.where((commentJson) {
+            Comment comment = Comment.fromJson(commentJson);
+            return comment.writerId != userId;
+          }).toList();
+
+          if (comments.length != updatedComments.length) {
+            await doc.reference.update({'comments': updatedComments});
+          }
+        }
+      }
+    }
+  }
 
   // 로컬 사용자 데이터 초기화
   void _resetLocalUserData() {
