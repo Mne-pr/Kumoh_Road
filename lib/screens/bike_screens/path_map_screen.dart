@@ -175,26 +175,44 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
       zoom: 11.5,
     );
     markerList[0] = NMarker(
-        id: coordinateList[0][2],
-        position: NLatLng(coordinateList[0][3], coordinateList[0][4]),
-        icon: const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      id: coordinateList[0][2],
+      position: NLatLng(coordinateList[0][3], coordinateList[0][4]),
+      icon: await NOverlayImage.fromWidget(
+        widget: const Icon(
+          Icons.face,
+          size: 30,
+          color: Color(0xFF3F51B5),
+        ),
+        size: const Size(30, 30),
+        context: context,
+      ),
+    );
     markerList[1] = NMarker(
-        id: coordinateList[1][2],
-        position: NLatLng(coordinateList[1][3], coordinateList[1][4]),
-        icon: const NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+      id: coordinateList[1][2],
+      position: NLatLng(coordinateList[1][3], coordinateList[1][4]),
+      icon: await NOverlayImage.fromWidget(
+        widget: const Icon(
+          Icons.flag,
+          size: 30,
+          color: Color(0xFF3F51B5),
+        ),
+        size: const Size(30, 30),
+        context: context,
+      ),
+    );
     List<dynamic> tempList = await getPath();
     List<NLatLng> pathCoordinate = List.generate(tempList.length, (index) => const NLatLng(0.0, 0.0));
     for (int i = 0; i < tempList.length; i++) {
       pathCoordinate[i] = tempList[i];
     }
-    final tempLine = NArrowheadPathOverlay(id: "path", coords: pathCoordinate, color: const Color(0xff0000ff), width: 4);
+    final tempLine = NArrowheadPathOverlay(id: "path", coords: pathCoordinate, color: const Color(0xff3ff0B5), width: 4);
     await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
     await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
   }
 
   void mapSet() async {
-    if (originAddress.text == "" || destinationAddress.text == "") {
+    if (destinationAddress.text == "") {
       errorView("주소 입력란이 비어있습니다");
     } else {
       if (inputString[0] != originAddress.text) {
@@ -203,6 +221,20 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
         coordinate[0] = await changeCoordinate(inputString[0]);
         print("${coordinate[0].statusCode} ${coordinate[0].numResponse} ${coordinate[0].name} ${coordinate[0].lat} ${coordinate[0].lon}");
         print("출발지 API 호출함");
+      }
+      else if(originAddress.text == ""){
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        try {
+          Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+          double tmp1 = position.latitude;
+          double tmp2 = position.longitude;
+          coordinateList[0] = [200, 1, "현재 위치", tmp1, tmp2];
+        } catch (e) {
+          print(e);
+        }
       }
       if (inputString[1] != destinationAddress.text) {
         inputString[1] = destinationAddress.text;
@@ -308,7 +340,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                     Row(
                       children: [
                         Container(
-                          margin:EdgeInsets.fromLTRB(marginSize, marginSize, 5, 5),
+                          margin: EdgeInsets.fromLTRB(marginSize, marginSize, 5, 5),
                           width: 35,
                           height: 35,
                           child: IconButton(
@@ -348,7 +380,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                                     }
                                   },
                                   decoration: const InputDecoration(
-                                    hintText: "출발지를 입력하세요",
+                                    hintText: "현재 위치 or 출발지를 선택하세요",
                                     filled: true,
                                     fillColor: Color(0xffdddddd),
                                     enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
@@ -404,26 +436,27 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                     ),
                     Container(
                       margin: EdgeInsets.fromLTRB(marginSize, 5, marginSize, 0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: const Color(0xFF3F51B5), ),
+                        color: const Color(0xFF3F51B5),
+                      ),
                       child: SizedBox(
                         width: (MediaQuery.of(context).size.width - marginSize * 2),
                         height: 35,
-                        child: TextButton(
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.directions_bike,
+                            size: 30,
+                            color: Colors.white,
+                          ),
                           onPressed: () => {
                             originTextFocus.unfocus(),
                             destinationTextFocus.unfocus(),
                             mapSet(),
                           },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.all(5),
-                            backgroundColor: const Color(0xFF3F51B5),
-                            foregroundColor: Colors.white,
-                            textStyle: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          child: const Text('경로 탐색'),
                         ),
                       ),
                     ),
