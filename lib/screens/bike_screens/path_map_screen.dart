@@ -27,6 +27,11 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
   FocusNode originTextFocus = FocusNode();
   FocusNode destinationTextFocus = FocusNode();
   List<Point> coordinate = List.filled(2, Point(0, 0, "0", 0, 0));
+  int duration = 0;
+  int distance = 0;
+  int min = 0;
+  int sec = 0;
+  bool visible = false;
 
   //text 변수
   final originAddress = TextEditingController();
@@ -47,6 +52,17 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
       textColor: Colors.black,
       toastLength: Toast.LENGTH_SHORT,
     );
+  }
+
+  void show(){
+    setState((){
+      visible = true;
+    });
+  }
+  void hide(){
+    setState(() {
+      visible = false;
+    });
   }
 
   void findMyPosition() async {
@@ -162,6 +178,15 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
             "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start=${coordinateList[0][4]},${coordinateList[0][3]}&goal=${coordinateList[1][4]},${coordinateList[1][3]}&option={탐색옵션}"),
         headers: nmapID);
     String jsonData = utf8.decode(response.bodyBytes);
+    setState(() {
+      duration = jsonDecode(jsonData)["route"]["traoptimal"][0]["summary"]["duration"];
+      distance = jsonDecode(jsonData)["route"]["traoptimal"][0]["summary"]["distance"];
+      duration ~/= 1000;
+      min = (duration ~/ 60);
+      sec = duration - min * 60;
+      min = min * 22 ~/ 13;
+    });
+    print("${duration} ${distance / 1000}");
     List<dynamic> tempList = jsonDecode(jsonData)["route"]["traoptimal"][0]["path"];
     List<dynamic> tcoordList = List.generate(tempList.length, (index) => null, growable: false);
     for (int i = 0; i < tempList.length; i++) {
@@ -210,6 +235,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
     await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
     await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
+    show();
   }
 
   void mapSet() async {
@@ -328,6 +354,42 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
               ),
             ),
             Positioned(
+              right: 70,
+              bottom: 160,
+              child: Visibility(
+                visible: visible,
+                child: Container(
+                  width: 140,
+                  height: 35,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFF3F51B5),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.timer_outlined,
+                        size: 28,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Text((min ~/ 60 == 0) ? "$min분 $sec초" : "${min ~/ 60}시간 ${min % 60}분 $sec초",
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
               bottom: 0,
               child: Container(
                 width: MediaQuery.of(context).size.width,
@@ -375,6 +437,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                                     originTextFocus.unfocus(),
                                   },
                                   onTap: () async {
+                                    hide();
                                     final getAddress = await Navigator.push(
                                       context,
                                       MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
@@ -414,6 +477,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                                     destinationTextFocus.unfocus(),
                                   },
                                   onTap: () async {
+                                    hide();
                                     final getAddress = await Navigator.push(
                                       context,
                                       MaterialPageRoute(builder: (context) => const TranslateAddressScreen()),
