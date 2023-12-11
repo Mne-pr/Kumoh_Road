@@ -624,8 +624,28 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 }
 
                 Bus bus = busList[index];
+                String busName = bus.routeno;
+
                 final urgentColor = ((bus.arrtime / 60).toInt() >= 5) ? mainColor : Colors.red;
                 final busColor = (bus.routetp == '일반버스') ? const Color(0xff05d686) : Colors.purple;
+
+                // 여기서 특수버스(?)인지 확인 후 출력 ㄱ
+                // 구미역이나 정류장은 그냥 쓰면 됨
+
+                // 특수버스인지 확인
+                if (importantBuses.contains(busName)) {
+                  // 구미역, 정류장은 그냥 확인하면 됨
+                  if (curBusCode == "GMB80" || curBusCode == "GMB91" || curBusCode == "GMB167") {
+                    busName = '${busName} -> 금오공대!';
+                  }
+
+                  // 금오공대가 문제
+                  if (curBusCode == "132" || curBusCode == "131") {
+
+
+                  }
+                }
+
 
                 return GestureDetector(
                   onTap: () async { await callComments(bus.code);},
@@ -654,7 +674,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                                           children: <Widget>[
                                             SizedBox(height: 2),
                                             Text(
-                                              '${bus.routeno}',
+                                              busName,
                                               style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
                                             SizedBox(height: 10),
                                             Text(
@@ -871,6 +891,7 @@ final FIRE = FirebaseFirestore.instance;
 
 // 공공데이터 - api 호출주소
 const BUS_API_ADDR        = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
+const BUS_ROUTE_API_ADDR  = 'http://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteAcctoThrghSttnList';
 const BUS_API_SERVICE_KEY = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
 
 
@@ -898,8 +919,8 @@ final busStopMarks = [
 final cameras = [
   // 구미역, 금오공대, 종합터미널 (버스리스트 미활성화/활성화)
   NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom),
-  //NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom)..setPivot(NPoint(1/2,1/4)),
+  NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
+  //NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom)..setPivot(NPoint(1/2,1/4)),
   NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,      zoom: KUMOH_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: KUMOH_S_POS.target,    zoom: KUMOH_S_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target,   zoom: TERMINAL_POS.zoom),
@@ -913,3 +934,5 @@ const NCameraAnimation myFly = NCameraAnimation.fly;
 const Duration myDuration    = Duration(milliseconds: 200);
 const mainColor = Color(0xFF3F51B5);
 const white     = Colors.white;
+
+const importantBuses = ['190','190-1','190-2','190-3','191','192','193','193-2','195','196','5200','557','900'];
