@@ -357,17 +357,14 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Future<bool> onBackPressed() async {
     if (isCommentWidgetOpen) {
       await commentsBoxSlide();
-      print('오기는 하냐???');
       return Future.value(false);
     }
     else if (isBusStWidgetOpen) {
       await busStationBoxSlide();
-      print('오기는 하냐고');
       return Future.value(false);
     }
     else {
-      print('뒤진거냐고');
-      return await Navigator.maybePop(context);
+      return true;
     }
   }
 
@@ -487,9 +484,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         await busStopMarks[0].performClick();
       },
 
-      onCameraChange: (reason, animated) => {
+      onCameraChange: (reason, animated) async {
+        NCameraPosition v = await con.getCameraPosition();
+        print('이동한 좌표 : ${v.target.latitude}, ${v.target.longitude}');
         if(reason== NCameraUpdateReason.gesture) {
-          setState((){ isMapMoved=true;})
+          setState((){ isMapMoved=true;});
         }
       },
 
@@ -625,8 +624,28 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 }
 
                 Bus bus = busList[index];
+                String busName = bus.routeno;
+
                 final urgentColor = ((bus.arrtime / 60).toInt() >= 5) ? mainColor : Colors.red;
                 final busColor = (bus.routetp == '일반버스') ? const Color(0xff05d686) : Colors.purple;
+
+                // 여기서 특수버스(?)인지 확인 후 출력 ㄱ
+                // 구미역이나 정류장은 그냥 쓰면 됨
+
+                // 특수버스인지 확인
+                if (importantBuses.contains(busName)) {
+                  // 구미역, 정류장은 그냥 확인하면 됨
+                  if (curBusCode == "GMB80" || curBusCode == "GMB91" || curBusCode == "GMB167") {
+                    busName = '${busName} -> 금오공대!';
+                  }
+
+                  // 금오공대가 문제
+                  if (curBusCode == "132" || curBusCode == "131") {
+
+
+                  }
+                }
+
 
                 return GestureDetector(
                   onTap: () async { await callComments(bus.code);},
@@ -655,7 +674,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                                           children: <Widget>[
                                             SizedBox(height: 2),
                                             Text(
-                                              '${bus.routeno}',
+                                              busName,
                                               style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
                                             SizedBox(height: 10),
                                             Text(
@@ -872,18 +891,20 @@ final FIRE = FirebaseFirestore.instance;
 
 // 공공데이터 - api 호출주소
 const BUS_API_ADDR        = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
+const BUS_ROUTE_API_ADDR  = 'http://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteAcctoThrghSttnList';
 const BUS_API_SERVICE_KEY = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2LCU02TN8EJKg0mXS9g2O8B%2BGE6ZLs8VUuo4w%3D%3D';
 
 
 // 네이버맵 - 정류장 위치
-const GUMI_POS     = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
-const KUMOH_POS    = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
+const GUMI_POS     = NCameraPosition(target: NLatLng(36.12882898, 128.3312606), zoom: 15.5, bearing: 0, tilt: 0);
+const KUMOH_POS    = NCameraPosition(target: NLatLng(36.14132750, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
 const TERMINAL_POS = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
 
 // 네이버맵 - 버스리스트 활성화 시 정류장 위치
-const GUMI_S_POS    = NCameraPosition(target: NLatLng(36.12567222, 128.3313162), zoom: 15.2, bearing: 0, tilt: 0);
-const TERMINAL_S_POS= NCameraPosition(target: NLatLng(36.12002942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
-const KUMOH_S_POS   = NCameraPosition(target: NLatLng(36.13420749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
+const GUMI_S_POS    = NCameraPosition(target: NLatLng(36.12502488, 128.3311492), zoom: 15.2, bearing: 0, tilt: 0);
+const KUMOH_S_POS   = NCameraPosition(target: NLatLng(36.13280847, 128.3952659), zoom: 14.0, bearing: 0, tilt: 0);
+const TERMINAL_S_POS= NCameraPosition(target: NLatLng(36.11941346, 128.3510914), zoom: 15.5, bearing: 0, tilt: 0);
+
 
 // 네이버맵 - 각 버스정류장 위치에 따른 마커
 final busStopMarks = [
@@ -897,11 +918,12 @@ final busStopMarks = [
 // 네이버맵 - 각 마커들을 기반으로 설정한 카메라, 매핑 정보
 final cameras = [
   // 구미역, 금오공대, 종합터미널 (버스리스트 미활성화/활성화)
-  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,     zoom: GUMI_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,    zoom: KUMOH_POS.zoom),
+  //NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom)..setPivot(NPoint(1/2,1/4)),
+  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,      zoom: KUMOH_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: KUMOH_S_POS.target,    zoom: KUMOH_S_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target, zoom: TERMINAL_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target,   zoom: TERMINAL_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: TERMINAL_S_POS.target, zoom: TERMINAL_S_POS.zoom)
 ];
 const cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
@@ -912,3 +934,5 @@ const NCameraAnimation myFly = NCameraAnimation.fly;
 const Duration myDuration    = Duration(milliseconds: 200);
 const mainColor = Color(0xFF3F51B5);
 const white     = Colors.white;
+
+const importantBuses = ['190','190-1','190-2','190-3','191','192','193','193-2','195','196','5200','557','900'];
