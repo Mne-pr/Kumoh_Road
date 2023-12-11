@@ -139,19 +139,6 @@ class _MainScreenState extends State<MainScreen> {
                   setState(() =>
                   busListIsExpanded = !busListIsExpanded) // 확장 상태 토글
           ),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('송제용 유저 프로필 보기(테스트 용 예시)'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                  const OtherUserProfileScreen(userId: '3153999885'),
-                ),
-              );
-            },
-          ),
         ],
       ),
       bottomNavigationBar: const CustomBottomNavigationBar(
