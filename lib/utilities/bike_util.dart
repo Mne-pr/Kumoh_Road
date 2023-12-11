@@ -63,6 +63,17 @@ mixin AddressChangeClass {
     AddressData('금오공과대학교(양호동)', '경북 구미시 대학로 61')
   ];
 
+  void errorView(String errorMessage) {
+    Fluttertoast.showToast(
+      msg: errorMessage,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.grey,
+      fontSize: 20.0,
+      textColor: Colors.black,
+      toastLength: Toast.LENGTH_SHORT,
+    );
+  }
+
   Future<List<AddressData>> getAddressList(String buildingName) async {
     int page = 1;
     int count = -500;
@@ -90,6 +101,7 @@ mixin AddressChangeClass {
         page += 1;
       } else {
         tmp = addressBaseDataList;
+        errorView("검색 주소가 비어있거나 잘못되었습니다");
       }
     } while (count > 0);
     return tmp;
