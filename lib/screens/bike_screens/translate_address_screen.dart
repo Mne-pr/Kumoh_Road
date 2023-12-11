@@ -36,7 +36,7 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
         onPressed: () async {
           inputTextFocus.unfocus();
           Point tmp = await changeCoordinate(data.address);
-          Navigator.push(context, MaterialPageRoute(builder: (context)=> PreviewLocation(tmp)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => PreviewLocation(tmp)));
         },
       ),
     );
@@ -98,10 +98,15 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
                           child: TextField(
                             textAlignVertical: TextAlignVertical.bottom,
                             textAlign: TextAlign.left,
+                            maxLength: 23,
                             controller: addressText,
                             focusNode: inputTextFocus,
                             onSubmitted: (text) {},
+                            onTapOutside: (text) => {
+                              inputTextFocus.unfocus(),
+                            },
                             decoration: const InputDecoration(
+                              counterText: "",
                               hintText: "주소를 입력하세요",
                               filled: true,
                               fillColor: Color(0xffdddddd),

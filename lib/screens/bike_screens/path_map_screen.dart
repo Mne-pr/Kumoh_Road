@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import "package:http/http.dart" as http;
 import "package:geolocator/geolocator.dart";
 import '../../utilities/bike_util.dart';
+import '../../widgets/outline_circle_button.dart';
 
 class PathMapScreen extends StatefulWidget {
   const PathMapScreen({Key? key}) : super(key: key);
@@ -205,7 +206,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
     for (int i = 0; i < tempList.length; i++) {
       pathCoordinate[i] = tempList[i];
     }
-    final tempLine = NArrowheadPathOverlay(id: "path", coords: pathCoordinate, color: const Color(0xff3ff0B5), width: 4);
+    final tempLine = NArrowheadPathOverlay(id: "path", coords: pathCoordinate, color: const Color(0xffff9000), width: 4);
     await mapController.clearOverlays();
     await mapController.updateCamera(movePoint);
     await mapController.addOverlayAll({markerList[0], markerList[1], tempLine});
@@ -221,8 +222,7 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
         coordinate[0] = await changeCoordinate(inputString[0]);
         print("${coordinate[0].statusCode} ${coordinate[0].numResponse} ${coordinate[0].name} ${coordinate[0].lat} ${coordinate[0].lon}");
         print("출발지 API 호출함");
-      }
-      else if(originAddress.text == ""){
+      } else if (originAddress.text == "") {
         LocationPermission permission = await Geolocator.checkPermission();
         if (permission == LocationPermission.denied) {
           permission = await Geolocator.requestPermission();
@@ -310,21 +310,22 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
               },
             ),
             Positioned(
-              top: 15,
-              left: 15,
-              child: IconButton(
-                  icon: const Icon(
-                    Icons.my_location_outlined,
-                    size: 45,
-                    color: Color(0xFF3F51B5),
-                  ),
-                  onPressed: () => {
-                        findMyPosition(),
-                      },
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.white,
-                  )),
+              right: 10,
+              bottom: 155,
+              child: OutlineCircleButton(
+                radius: 50.0,
+                borderSize: 0.5,
+                foregroundColor: const Color(0xFF3F51B5),
+                borderColor: Colors.white,
+                onTap: () => {
+                  findMyPosition(),
+                },
+                child: const Icon(
+                  Icons.my_location,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
             ),
             Positioned(
               bottom: 0,
@@ -370,6 +371,9 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                                   textAlignVertical: TextAlignVertical.bottom,
                                   textAlign: TextAlign.left,
                                   onSubmitted: (text) {},
+                                  onTapOutside: (text) => {
+                                    originTextFocus.unfocus(),
+                                  },
                                   onTap: () async {
                                     final getAddress = await Navigator.push(
                                       context,
@@ -406,6 +410,9 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                                   textAlignVertical: TextAlignVertical.bottom,
                                   textAlign: TextAlign.left,
                                   onSubmitted: (text) {},
+                                  onTapOutside: (text) => {
+                                    destinationTextFocus.unfocus(),
+                                  },
                                   onTap: () async {
                                     final getAddress = await Navigator.push(
                                       context,
@@ -438,7 +445,9 @@ class _PathMapScreenState extends State<PathMapScreen> with PathDataClass {
                       margin: EdgeInsets.fromLTRB(marginSize, 5, marginSize, 0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: const Color(0xFF3F51B5), ),
+                        border: Border.all(
+                          color: const Color(0xFF3F51B5),
+                        ),
                         color: const Color(0xFF3F51B5),
                       ),
                       child: SizedBox(
