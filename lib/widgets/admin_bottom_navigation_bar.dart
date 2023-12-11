@@ -4,6 +4,7 @@ import 'package:kumoh_road/screens/admin_screens/admin_bus_chat_manage_screen.da
 import 'package:kumoh_road/screens/admin_screens/admin_info_screen.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_main_screen.dart';
 
+import '../screens/admin_screens/admin_taxi_manage_screen.dart';
 import '../screens/admin_screens/admin_user_manage_screen.dart';
 /**
  * 여러 화면에서 편하게 *관리자를 위한* 하단 네비게이션바를 구현하도록 한다.
@@ -28,8 +29,12 @@ class AdminCustomBottomNavigationBar extends StatelessWidget {
         case 0:
           nextPage = AdminMainScreen();
           break;
+        case 1:
+          nextPage = const AdminTaxiManageScreen();
+          break;
         case 2:
           nextPage = const AdminBusChatManageScreen();
+          break;
         case 3:
           nextPage = const AdminUserManageScreen();
           break;
