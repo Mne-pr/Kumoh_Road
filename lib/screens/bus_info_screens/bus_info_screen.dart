@@ -487,9 +487,11 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
         await busStopMarks[0].performClick();
       },
 
-      onCameraChange: (reason, animated) => {
+      onCameraChange: (reason, animated) async {
+        NCameraPosition v = await con.getCameraPosition();
+        print('이동한 좌표 : ${v.target.latitude}, ${v.target.longitude}');
         if(reason== NCameraUpdateReason.gesture) {
-          setState((){ isMapMoved=true;})
+          setState((){ isMapMoved=true;});
         }
       },
 
@@ -876,14 +878,15 @@ const BUS_API_SERVICE_KEY = 'ZjwvGSfmMbf8POt80DhkPTIG41icas1V0hWkj4cp5RTi1Ruyy2L
 
 
 // 네이버맵 - 정류장 위치
-const GUMI_POS     = NCameraPosition(target: NLatLng(36.12827222, 128.3310162), zoom: 15.5, bearing: 0, tilt: 0);
-const KUMOH_POS    = NCameraPosition(target: NLatLng(36.14132749, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
+const GUMI_POS     = NCameraPosition(target: NLatLng(36.12882898, 128.3312606), zoom: 15.5, bearing: 0, tilt: 0);
+const KUMOH_POS    = NCameraPosition(target: NLatLng(36.14132750, 128.3955675), zoom: 15.5, bearing: 0, tilt: 0);
 const TERMINAL_POS = NCameraPosition(target: NLatLng(36.12252942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
 
 // 네이버맵 - 버스리스트 활성화 시 정류장 위치
-const GUMI_S_POS    = NCameraPosition(target: NLatLng(36.12567222, 128.3313162), zoom: 15.2, bearing: 0, tilt: 0);
-const TERMINAL_S_POS= NCameraPosition(target: NLatLng(36.12002942, 128.3510414), zoom: 15.5, bearing: 0, tilt: 0);
-const KUMOH_S_POS   = NCameraPosition(target: NLatLng(36.13420749, 128.3955675), zoom: 14.0, bearing: 0, tilt: 0);
+const GUMI_S_POS    = NCameraPosition(target: NLatLng(36.12502488, 128.3311492), zoom: 15.2, bearing: 0, tilt: 0);
+const KUMOH_S_POS   = NCameraPosition(target: NLatLng(36.13280847, 128.3952659), zoom: 14.0, bearing: 0, tilt: 0);
+const TERMINAL_S_POS= NCameraPosition(target: NLatLng(36.11941346, 128.3510914), zoom: 15.5, bearing: 0, tilt: 0);
+
 
 // 네이버맵 - 각 버스정류장 위치에 따른 마커
 final busStopMarks = [
