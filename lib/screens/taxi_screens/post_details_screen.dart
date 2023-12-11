@@ -94,6 +94,47 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
         Navigator.of(context).popUntil((route) => route.isFirst);
       });
     }
+    _checkPostExistence();
+  }
+
+  Future<void> _checkPostExistence() async {
+    try {
+      String docId = await TaxiScreenPostModel.getDocId(
+          collectionId: widget.collectionName,
+          writerId: widget.writer.userId,
+          createdTime: widget.post.createdTime
+      );
+
+      if (docId.isEmpty) {
+        // 게시글이 없는 경우
+        _showPostNotExistAlert();
+      }
+    } catch (e) {
+      log.e("게시글 확인 중 오류 발생", error: e);
+      _showPostNotExistAlert();
+    }
+  }
+
+  void _showPostNotExistAlert() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("알림"),
+            content: const Text("현재 삭제된 게시글입니다."),
+            actions: <Widget>[
+              TextButton(
+                child: const Text("확인"),
+                onPressed: () {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    });
   }
 
   @override
@@ -565,20 +606,24 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
             ),
             IconButton(
               onPressed: () async {
+                if (!currUser!.isStudentVerified) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('댓글 작성을 위해 학생 인증이 필요합니다')),
+                  );
+                  return;
+                }
                 if (_formKey.currentState!.validate()) {
                   DateTime now = DateTime.now();
                   _formKey.currentState!.save();
                   // DB에 댓글 정보 저장
                   try {
                     FirebaseFirestore firestore = FirebaseFirestore.instance;
-                    CollectionReference collection =
-                        firestore.collection(widget.collectionName);
-                    QuerySnapshot querySnapshot = await collection
-                        .where('createdTime',
-                            isEqualTo: widget.post.createdTime)
-                        .get();
-                    var doc = querySnapshot.docs.first;
-                    var commentList = doc['commentList'] as List<dynamic>;
+                    String docId = await TaxiScreenPostModel.getDocId(
+                        collectionId: widget.collectionName,
+                        writerId: widget.writer.userId,
+                        createdTime: widget.post.createdTime
+                    );
+                    var commentList = (await firestore.collection(widget.collectionName).doc(docId).get()).get('commentList') as List<dynamic>;
                     var uuid = const Uuid();
                     String commentId = uuid.v4(); // 고유 ID 생성
                     var newComment = {
@@ -589,9 +634,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                       'enable': true
                     };
                     commentList.add(newComment);
-                    await collection
-                        .doc(doc.id)
-                        .update({'commentList': commentList});
+                    await firestore.collection(widget.collectionName).doc(docId).update({'commentList': commentList});
                     int newPostCommentCnt = currUser!.postCommentCount + 1;
                     currUser!.updateUserInfo(postCommentCount: newPostCommentCnt);
                     FocusScope.of(context).unfocus();
@@ -845,6 +888,12 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
           child: ElevatedButton(
               onPressed: () async {
                 bool isWriter = widget.writer.userId == currUser!.id.toString();
+                if (!currUser!.isStudentVerified) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('합승 참여를 위해 학생 인증이 필요합니다')),
+                  );
+                  return;
+                }
                 if (isWriter) {
                   setState(() {
                     _showMemberSection = !_showMemberSection;
