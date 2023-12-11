@@ -2,14 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
+import 'package:kumoh_road/screens/admin_screens/admin_main_screen.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_taxi_manage_screen.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/user_providers.dart';
-import '../screens/main_screens/main_screen.dart';
-import '../screens/user_info_screens/other_user_info_screen.dart';
-import '../widgets/manner_detail_widget.dart';
+import '../../providers/user_providers.dart';
+import '../../widgets/report_count_widget.dart';
+import '../main_screens/main_screen.dart';
+import '../user_info_screens/other_user_info_screen.dart';
+import '../../widgets/manner_detail_widget.dart';
 
 Logger log = Logger(printer: PrettyPrinter());
 UserProvider? currUser;
@@ -65,7 +67,6 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
           userInfoSection(),
           const Divider(),
           Padding(
-            // Padding 추가
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,13 +74,13 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
                 _buildPostContentSection(context),
                 const Divider(),
                 _buildReviewSection(context),
-                const Divider(),
-                _buildReportContentSection(),
-                SizedBox(
-                  height: deviceHeight * 0.8,
-                ),
               ],
             ),
+          ),
+          const Divider(),
+          _buildReportContentSection(),
+          SizedBox(
+            height: deviceHeight * 0.3,
           ),
         ],
       ),
@@ -115,7 +116,7 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => const MainScreen(),
+                            builder: (context) => AdminMainScreen(),
                           ),
                         );
                       },
@@ -359,47 +360,68 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
     );
   }
 
-
-  Widget _buildReportContentSection(){
-    Map<String, int> categoryToCount = {
-      '스팸 홍보/도배글입니다': 0,
-      '음란물입니다': 0,
-      '불법 정보를 포함하고 있습니다': 0,
-      '불쾌한 표현이 있습니다': 0,
-      '기타': 0,
-    };
+  Widget _buildReportContentSection() {
+    Map<String, List<String>> categoryToDetails = {};
 
     for (var doc in widget.documents.docs) {
-      categoryToCount[doc['category']] = (categoryToCount[doc['category']]! + 1);
-    }
-    List<Widget> list = [];
-    for(var key in categoryToCount.keys){
-      list.add(_buildReportContentItem(key, categoryToCount[key]!));
+      String category = doc['category'];
+      String detail = "${doc['reason']} \n${doc['createdTime'].toDate().toString()}";
+
+      if (!categoryToDetails.containsKey(category)) {
+        categoryToDetails[category] = [];
+      }
+      categoryToDetails[category]!.add(detail);
     }
 
     return ListView(
       shrinkWrap: true,
-      children: list
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      children: categoryToDetails.entries.map((entry) {
+        return _buildReportCategoryItem(entry.key, entry.value);
+      }).toList(),
     );
   }
 
-  Widget _buildReportContentItem(String content, int count) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(content),
-      trailing: Row(
+  Widget _buildReportCategoryItem(String category, List<String> details) {
+    return ExpansionTile(
+      title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.warning_amber, color: Colors.redAccent, size: 20),
-          const SizedBox(width: 4),
-          Text('$count'),
+          Text(category),
+          const SizedBox(width: 8),
+          ReportCountWidget(details.length),
         ],
       ),
+      children: details.map((detail) {
+        var parts = detail.split('\n');
+        String reason = '신고내용: ${parts[0]}';
+        String date = '신고시간: ${parts[1]}';
+
+        return ListTile(
+          title: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: reason,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                TextSpan(
+                  text: '\n$date',
+                  style: const TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-
-  Widget _bottomSection(){
+  Widget _bottomSection() {
     return Positioned(
       bottom: 0,
       left: 0,
@@ -409,54 +431,60 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
         height: 55,
         color: Colors.white,
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                Text(
-                  "해당 게시글 처리",
-                  style: TextStyle(
-                    fontSize: deviceFontSize * 1.2,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  "관리자 모드",
-                  style: TextStyle(fontSize: deviceFontSize, color: Colors.grey),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () async {
-                  await handleBlind();
-                },
-                child: const Text("블라인드",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
+            _buildActionButton("무시", handleIgnore, Colors.grey, Icons.delete),
+            const SizedBox(width: 10),
+            _buildActionButton("블라인드", handleBlind, const Color(0xFF3F51B5), Icons.visibility_off),
           ],
         ),
       ),
     );
   }
 
-  Future<void> handleBlind() async {
-    // isHandeldByAdmin true로 수정(미완성)
-    var docs = await firestore.collection('reports')
+  Widget _buildActionButton(String title, Function onPressed, Color color, IconData icon) {
+    return Expanded(
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          await onPressed();
+          Navigator.of(context).pop();
+        },
+        icon: Icon(icon, color: Colors.white),
+        label: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+    );
+  }
+
+
+
+  Future<void> handleIgnore() async {
+    var reports = await firestore.collection('reports')
         .where('entityId', isEqualTo: widget.entityId)
         .get();
 
-    // 게시글 문서의 visible false로 수정(정상 동작)
+    for (var report in reports.docs) {
+      await report.reference.update({'isHandledByAdmin': true});
+    }
+  }
+
+
+  Future<void> handleBlind() async {
+    var reports = await firestore.collection('reports')
+        .where('entityId', isEqualTo: widget.entityId)
+        .get();
+
+    for (var report in reports.docs) {
+      await report.reference.update({'isHandledByAdmin': true});
+    }
+
     var colId = widget.entityId.split(":")[0];
     var docId = widget.entityId.split(":")[1];
     var modifyingDoc = firestore.collection(colId).doc(docId);
     await modifyingDoc.update({'visible': false});
   }
+
 }

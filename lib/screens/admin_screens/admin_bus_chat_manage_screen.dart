@@ -130,7 +130,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text((isCurrent) ? '버스 댓글 신고 관리 - 유효한 댓글' : '버스 댓글 신고 관리 - 만료된 댓글', style: TextStyle(color: Colors.black)),
+        title: Text((isCurrent) ? '버스 댓글 신고 관리 - 유효한 댓글' : '버스 댓글 신고 관리 - 만료된 댓글', style: const TextStyle(color: Colors.black)),
         centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 1,
@@ -141,7 +141,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: (isLoading) ?
-            Center(
+            const Center(
               child: Center( child: CircularProgressIndicator(),),
             ) :
             ListView.builder(
@@ -152,7 +152,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
                   return Column(
                     children: [
                       buildCommentTile(commentReportedItem, index),
-                      SizedBox(height: 80,),
+                      const SizedBox(height: 80,),
                     ],
                   );
                 }
@@ -163,7 +163,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
           Align(
             alignment: Alignment.bottomRight,
             child: Container(
-              margin: EdgeInsets.all(10.0),
+              margin: const EdgeInsets.all(10.0),
               child: Transform.scale(
                 alignment: Alignment.bottomRight,
                 scale: 1.4,
@@ -216,14 +216,14 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
           background: Container(
             color: Colors.grey,
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child:Icon(Icons.do_not_disturb_alt_outlined, color: Colors.white),// Text('무시'),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child:const Icon(Icons.delete, color: Colors.white),// Text('무시'),
           ),
           secondaryBackground: Container(
             color: const Color(0xFF3F51B5),
             alignment: Alignment.centerRight,
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Icon(Icons.remove_circle_outline, color: Colors.white),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.visibility_off, color: Colors.white),
           ),
           onDismissed: (direction) async {// 두 가지 경우를 다 생각해봐야 함
             if (direction == DismissDirection.endToStart) { // 왼쪽으로 - 블라인드처리
@@ -239,7 +239,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
             });
           },
           child: Padding(
-            padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+            padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
             child: ListTile(
               leading: GestureDetector(
                 onTap: () {
@@ -250,7 +250,9 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
                     ),
                   );
                 },
-                child: CircleAvatar( backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
+                child: CircleAvatar(
+                  radius: 32,
+                  backgroundImage: NetworkImage(comment.userModel.profileImageUrl),),
               ),
               title: Row(
                 children: [
@@ -297,7 +299,7 @@ class _AdminBusChatManageScreenState extends State<AdminBusChatManageScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        margin: EdgeInsets.only(top: 5.0), // 원하는 마진 값 설정
+                        margin: const EdgeInsets.only(top: 5.0), // 원하는 마진 값 설정
                         child: _buildMannerBar(comment.userModel.mannerTemperature),
                       ),
                     ],

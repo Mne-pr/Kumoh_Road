@@ -34,15 +34,13 @@ class _MainScreenState extends State<MainScreen> {
       label: Text(model.title, style: const TextStyle(color: Colors.black)),
       onPressed: () => model.onTap(),
       style: ElevatedButton.styleFrom(
-        primary: Colors.white,
-        // 배경색
-        onPrimary: Colors.black,
+        foregroundColor: Colors.black, backgroundColor: Colors.white,
         // 전경색(텍스트 및 아이콘 색상)
         elevation: 3,
         // 그림자 깊이
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50.0),
-          side: BorderSide(color: Colors.grey), // 테두리 추가
+          side: const BorderSide(color: Colors.grey), // 테두리 추가
         ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         textStyle: const TextStyle(fontSize: 12),
@@ -106,7 +104,9 @@ class _MainScreenState extends State<MainScreen> {
       body: ListView(
         children: [
           _buildUserInteractionButtons(context),
+          const SizedBox(height: 5),
           buildAnnouncementsSection(),
+          const SizedBox(height: 5),
           buildRideSharingSection(
               'train_posts',
               '구미역에서 모집중인 합승',
@@ -115,6 +115,7 @@ class _MainScreenState extends State<MainScreen> {
                   () =>
                   setState(() => trainPostsIsExpanded = !trainPostsIsExpanded)
           ),
+          const SizedBox(height: 5),
           buildRideSharingSection(
               'express_bus_posts',
               '터미널에서 모집중인 합승',
@@ -122,6 +123,7 @@ class _MainScreenState extends State<MainScreen> {
               busPostsIsExpanded,
                   () => setState(() => busPostsIsExpanded = !busPostsIsExpanded)
           ),
+          const SizedBox(height: 5),
           buildRideSharingSection(
               'school_posts',
               '금오공과대학교에서 모집중인 합승',
@@ -130,6 +132,7 @@ class _MainScreenState extends State<MainScreen> {
                   () =>
                   setState(() => schoolPostsIsExpanded = !schoolPostsIsExpanded)
           ),
+          const SizedBox(height: 5),
           buildBusSection(
               'bus_station_info',
               '댓글을 기다리는 버스', // 섹션 제목
@@ -380,17 +383,16 @@ class _MainScreenState extends State<MainScreen> {
         var now = DateTime.now();
         var nowTotalMinutes = now.hour * 60 + now.minute;
         var filteredDocs = snapshot.data!.docs.where((doc) {
+          bool isVisible = doc['visible'] ?? true; // visible 필드가 없는 경우 true로 처리
           var createdTime = (doc["createdTime"] as Timestamp).toDate();
           var isToday = createdTime.year == now.year && createdTime.month == now.month && createdTime.day == now.day;
           var timeParts = doc["categoryTime"].split(':');
           var docHour = int.parse(timeParts[0]);
           var docMinute = int.parse(timeParts[1]);
           var docTotalMinutes = docHour * 60 + docMinute + 60;
-          return isToday && docTotalMinutes >= nowTotalMinutes;
+          return isVisible && isToday && docTotalMinutes >= nowTotalMinutes;
         }).toList();
-
-        // 필터링된 결과에서 상위 4개 문서만 선택
-        var limitedDocs = filteredDocs.take(5).toList();
+        var limitedDocs = filteredDocs.take(4).toList();
         return ListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -463,8 +465,7 @@ class _MainScreenState extends State<MainScreen> {
       duration: const Duration(milliseconds: 500),
       curve: Curves.fastOutSlowIn,
       margin: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-      padding: const EdgeInsets.only(
-          top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
+      padding: const EdgeInsets.only(top: 8.0, left: 15.0, right: 15.0, bottom: 3.0),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey),
