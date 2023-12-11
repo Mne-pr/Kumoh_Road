@@ -357,17 +357,14 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   Future<bool> onBackPressed() async {
     if (isCommentWidgetOpen) {
       await commentsBoxSlide();
-      print('오기는 하냐???');
       return Future.value(false);
     }
     else if (isBusStWidgetOpen) {
       await busStationBoxSlide();
-      print('오기는 하냐고');
       return Future.value(false);
     }
     else {
-      print('뒤진거냐고');
-      return await Navigator.maybePop(context);
+      return true;
     }
   }
 
@@ -900,11 +897,12 @@ final busStopMarks = [
 // 네이버맵 - 각 마커들을 기반으로 설정한 카메라, 매핑 정보
 final cameras = [
   // 구미역, 금오공대, 종합터미널 (버스리스트 미활성화/활성화)
-  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,     zoom: GUMI_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,    zoom: KUMOH_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom),
+  //NCameraUpdate.scrollAndZoomTo(target: GUMI_S_POS.target,     zoom: GUMI_S_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: GUMI_POS.target,       zoom: GUMI_POS.zoom)..setPivot(NPoint(1/2,1/4)),
+  NCameraUpdate.scrollAndZoomTo(target: KUMOH_POS.target,      zoom: KUMOH_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: KUMOH_S_POS.target,    zoom: KUMOH_S_POS.zoom),
-  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target, zoom: TERMINAL_POS.zoom),
+  NCameraUpdate.scrollAndZoomTo(target: TERMINAL_POS.target,   zoom: TERMINAL_POS.zoom),
   NCameraUpdate.scrollAndZoomTo(target: TERMINAL_S_POS.target, zoom: TERMINAL_S_POS.zoom)
 ];
 const cameraMap =  [0,2,4]; // 구미역, 금오공대, 종합터미널
