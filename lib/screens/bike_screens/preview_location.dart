@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../../utilities/bike_util.dart';
+import '../../widgets/outline_circle_button.dart';
 
 class PreviewLocation extends StatefulWidget {
   final Point loadAddress;
@@ -60,19 +61,18 @@ class _PreviewLocationState extends State<PreviewLocation> {
             Positioned(
               top: 15,
               left: 15,
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.cancel,
-                    size: 40,
-                    color: Color(0xFF3F51B5),
-                  ),
-                  onPressed: () => {
-                    Navigator.pop(context),
-                  },
+              child: OutlineCircleButton(
+                radius: 40.0,
+                borderSize: 0.5,
+                foregroundColor: const Color(0xFF3F51B5),
+                borderColor: Colors.white,
+                onTap: () => {
+                  Navigator.pop(context),
+                },
+                child: const Icon(
+                  Icons.chevron_left,
+                  color: Colors.white,
+                  size: 30,
                 ),
               ),
             ),
