@@ -31,8 +31,14 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
       onTap: () {
         Navigator.pop(context, data.address);
       },
-      trailing: TextButton(
-        child: const Text("위치"),
+      trailing: IconButton(
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+        icon: const Icon(
+          Icons.location_on,
+          size: 30,
+          color: Color(0xFF3F51B5),
+        ),
         onPressed: () async {
           inputTextFocus.unfocus();
           Point tmp = await changeCoordinate(data.address);
@@ -72,7 +78,7 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    margin: EdgeInsets.fromLTRB(5, marginSize, marginSize, 5),
+                    margin: EdgeInsets.fromLTRB(5, marginSize, 5, 5),
                     height: 35,
                     child: Row(
                       children: [
@@ -101,7 +107,10 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
                             maxLength: 23,
                             controller: addressText,
                             focusNode: inputTextFocus,
-                            onSubmitted: (text) {},
+                            onSubmitted: (text) => {
+                              inputTextFocus.unfocus(),
+                              renewalList(addressText.text),
+                            },
                             onTapOutside: (text) => {
                               inputTextFocus.unfocus(),
                             },
@@ -124,11 +133,11 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(MediaQuery.of(context).size.width * 0.4, 5, MediaQuery.of(context).size.width * 0.4, 0),
+                    margin: const EdgeInsets.fromLTRB(15, 5, 15, 0),
                     child: SizedBox(
-                      width: (MediaQuery.of(context).size.width - marginSize * 2),
+                      width: (MediaQuery.of(context).size.width - marginSize),
                       height: 35,
-                      child: TextButton(
+                      child: TextButton.icon(
                         onPressed: () => {
                           inputTextFocus.unfocus(),
                           renewalList(addressText.text),
@@ -143,7 +152,8 @@ class _TranslateAddressScreenState extends State<TranslateAddressScreen> with Ad
                             color: Colors.white,
                           ),
                         ),
-                        child: const Text('검색'),
+                        icon: const Icon(Icons.search, size:20, color: Colors.white),
+                        label: const Text("검색"),
                       ),
                     ),
                   ),
