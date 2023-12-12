@@ -227,9 +227,11 @@ class UserProvider with ChangeNotifier {
       var updateData = <String, dynamic>{};
       if (age != null) {
         updateData['age'] = age;
+        _age = age;
       }
       if (gender != null) {
         updateData['gender'] = gender;
+        _gender = gender;
       }
       if (email != null) {
         updateData['email'] = email;

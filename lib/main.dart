@@ -34,6 +34,7 @@ void main() async {
 
 class KumohRoad extends StatelessWidget {
   const KumohRoad({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -52,13 +53,10 @@ class KumohRoad extends StatelessWidget {
                 _showAdditionalInfoDialog(context, userProvider);
               });
             }
-            else {
-              return MainScreen();
-            }
+            return MainScreen();
           } else {
             return IntroScreen();
           }
-          return IntroScreen();
         },
       ),
     );
@@ -96,6 +94,7 @@ class KumohRoad extends StatelessWidget {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
