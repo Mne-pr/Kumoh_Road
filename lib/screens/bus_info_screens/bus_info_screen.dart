@@ -38,6 +38,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   bool isMapMoved = false;
   final mainMarkerIcon = Icon(Icons.location_on, color: Color(0xFF3F51B5), size: 60,);
   final subMarkerIcon = Icon(Icons.location_on, color: Color(0xFF6478C8), size: 50,);
+  bool firstOpen = true;
 
   // 사용할 버스정류장 위젯..?
   late final busStopW;
@@ -283,7 +284,12 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 버스 업데이트 버튼 클릭 시 이벤트 처리 함수
   Future<void> updateBusStop(int busStop) async {
-    await busStopW[curBusStop].close();
+    if (firstOpen == true) {
+      setState(() { firstOpen = false; });
+    } else {
+      await busStopW[curBusStop].close();
+    }
+
 
     setState(() { curBusStop = busStop; });
     (isCommentWidgetOpen) ? commentsBoxSlide() : null;
