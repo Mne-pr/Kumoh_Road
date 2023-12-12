@@ -36,6 +36,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
   // 지도 컨트롤러
   late NaverMapController con;
   bool isMapMoved = false;
+  final mainMarkerIcon = Icon(Icons.location_on, color: Color(0xFF3F51B5), size: 60,);
+  final subMarkerIcon = Icon(Icons.location_on, color: Color(0xFF6478C8), size: 50,);
 
   // 사용할 버스정류장 위젯..?
   late final busStopW;
@@ -281,14 +283,16 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 버스 업데이트 버튼 클릭 시 이벤트 처리 함수
   Future<void> updateBusStop(int busStop) async {
+    await busStopW[curBusStop].close();
+
     setState(() { curBusStop = busStop; });
     (isCommentWidgetOpen) ? commentsBoxSlide() : null;
-    busStopMarks[busStop].setIcon(NOverlayImage.fromAssetImage('assets/images/main_marker.png'));
+    busStopMarks[busStop].setIcon(await NOverlayImage.fromWidget(widget: mainMarkerIcon, size: Size(60,60), context: context) as NOverlayImage);
+
 
     for (int i = 0; i < 5; i++){
       if (busStop != i) {
-        try { await busStopW[i].close();} catch (e) { }
-        try { busStopMarks[i].setIcon(NOverlayImage.fromAssetImage('assets/images/sub_marker.png')); } catch (e) {}
+        try { busStopMarks[i].setIcon(await NOverlayImage.fromWidget(widget: subMarkerIcon, size: Size(50,50), context: context) as NOverlayImage); } catch (e) {}
       }
     }
 
@@ -502,6 +506,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
         for (int i = 0; i < 5; i++){
           con.addOverlay(busStopMarks[i]);
+
           busStopMarks[i].setOnTapListener((overlay) async {
             (isCommentWidgetOpen) ? commentsBoxSlide() : null;
             await busStopMarks[i].openInfoWindow(busStopW[i]);
