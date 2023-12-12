@@ -359,7 +359,11 @@ class _TaxiScreenState extends State<TaxiScreen> {
         .getAllPostByCollectionAndDateTime(
         collectionName, _selectedTime!, DateTime.now());
 
-    return _buildPosts(context, postList, collectionName);
+    List<TaxiScreenPostModel> visiblePosts = postList
+        .where((post) => post.visible ?? false) // visible 필드가 null인 경우를 대비
+        .toList();
+
+    return _buildPosts(context, visiblePosts, collectionName);
   }
 
   Future<Widget> _buildPosts(BuildContext context, List<TaxiScreenPostModel> postList, String collectionName) async {

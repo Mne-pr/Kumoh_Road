@@ -29,11 +29,9 @@ class _PostReportDetailScreenState extends State<PostReportDetailScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    final kakaoLoginProvider = Provider.of<UserProvider>(context);
-    kakaoLoginProvider.startListeningToUserChanges();
-    if (kakaoLoginProvider.id != null) {
-      _reportManager = ReportManager(kakaoLoginProvider);
+    var user = Provider.of<UserProvider>(context);
+    if (user.id != null) {
+      _reportManager = ReportManager(user);
     } else {
       // 현재 사용자 ID가 없는 경우, 첫 번째 화면으로 이동
       WidgetsBinding.instance.addPostFrameCallback((_) {

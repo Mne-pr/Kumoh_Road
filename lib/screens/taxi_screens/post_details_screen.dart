@@ -242,7 +242,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
                           },
                         ),
                         SizedBox(
-                          height: deviceHeight * 0.8,
+                          height: deviceHeight * 0.3,
                         ),
                       ],
                     ),
@@ -532,7 +532,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
 
   Future<Widget> _buildCommentSection(BuildContext context) async {
     List<dynamic> commentList = _commentList;
-
+    commentList = commentList.where((comment) => comment['enable'] == true).toList();
     commentList.sort((comment1, comment2) {
       DateTime time1 = (comment1['time'] as Timestamp).toDate();
       DateTime time2 = (comment2['time'] as Timestamp).toDate();

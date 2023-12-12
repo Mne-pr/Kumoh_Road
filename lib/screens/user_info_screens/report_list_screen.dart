@@ -33,6 +33,9 @@ class _ReportListScreenState extends State<ReportListScreen> {
   }
 
   @override
+  bool get wantKeepAlive => true; // 이클립스 처리를 위해 상태 유지
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +72,6 @@ class _ReportListScreenState extends State<ReportListScreen> {
     String reportDetail = report['reason']; // 신고 상세 내용
     String reportTime = ''; // 신고 시간
 
-    // 신고 시간 파싱 및 포맷팅
     if (report.containsKey('createdTime')) {
       Timestamp timestamp = report['createdTime'];
       DateTime reportedAt = timestamp.toDate();
@@ -83,8 +85,14 @@ class _ReportListScreenState extends State<ReportListScreen> {
       case 'post':
         reportType = '게시글 신고';
         break;
+      case 'postComment':
+        reportType = '게시글 댓글 신고';
+        reportTitle = '댓글은 신고 유형 X';
+        break;
       case 'comment':
         reportType = '댓글 신고';
+        reportTitle = '댓글은 신고 유형 X';
+        reportDetail = report['category'];
         break;
       default:
         reportType = '기타 신고';
