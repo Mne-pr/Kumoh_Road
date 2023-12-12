@@ -39,7 +39,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
   // 사용할 버스정류장 위젯..?
   late final busStopW;
-  
+
   // 위치 이동 버튼과 상태
   late List<OutlineCircleButton> buttons;
   late int curButton = 0;
@@ -111,9 +111,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     DocumentSnapshot station = await stationDoc.get();
     buslistFromFire = BusList.fromDocument(station);
 
-    // 각 버스의 도착지 결정해야 - 마지막에..
-    print('도착지는요? - 미안합니다..');
-
     // 두 코드 리스트에서 공통된(기존) 버스 찾아 추가 - 정보 업데이트
     for (var fireBus in buslistFromFire.buses) {
       for (var apiBus in busListFromApi.buses) {
@@ -159,11 +156,41 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       } catch(e) {print('passed bus chat document update error : ${e}');}
     }
 
-    // // 새 버스는 그냥 추가, 채팅 문서 추가
+    // 새 버스는 그냥 추가, 채팅 문서 추가
     for (Bus bus in busListFromApi.buses) {
       newBusListToFire.buses.add(bus);
       try{ await FIRE.collection('bus_chat').doc(bus.code).set({'comments': [], 'passed': false});}
       catch(e) { print('adding new bus chat list error : ${e.toString()}');}
+    }
+
+    // 도착지 결정하고 세팅하기
+    if (newBusListToFire.buses.length > 0) {
+
+      for (Bus bus in newBusListToFire.buses) {
+        // 처음 가져온 데이터(api), 그리고 확인할 버스인 경우
+        if (bus.direction == 'notyet' && importantBuses.contains(bus.routeno)) {
+          // 금오공대 쪽인 경우 - api 돌려야 함
+          if (bus.nodeid == 'GMB132' || bus.nodeid == 'GMB131') {
+            try {
+              print('api 실행.. 버스 경로 가져오는 중..');
+              final res = await http.get(Uri.parse('${BUS_ROUTE_API_ADDR}?serviceKey=${BUS_API_SERVICE_KEY}&_type=json&cityCode=37050&routeId=${bus.routeid}&numOfRows=1'));
+              final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
+              final item = decodeRes['response']['body']['items']['item'] as Map<String, dynamic>;
+              final nodenm = item['nodenm'];
+              print('버스 검증 - ${bus.routeno} - ${nodenm}');
+
+              if (gumiStart.contains(nodenm)) {bus.direction = '-> 옥계';}
+              else {bus.direction = '-> 구미역';}
+
+            } catch(e) {print('get bus route error : $e');}
+          }
+          // 구미역 쪽인 경우
+          else { bus.direction = '-> 금오공대'; }
+        }
+        // 이미 가져온 데이터(firebase), 그리고 확인할 필요 없는 버스인 경우
+        else { bus.direction = '';}
+      }
+
     }
 
     // 수정한 목록을 파베,입력에 업데이트
@@ -202,14 +229,13 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       DateTime now = DateTime.now(), lastUpdate = station.get('lastUpdate').toDate(); // 불길
       var difference = now.difference(lastUpdate);
 
-      // 마지막 업데이트 후 10분이 넘었다 - api 호출 새 버스리스트 받아옴
-      if (difference.inMinutes >= 10) { print("업데이트 - api!! ${nodeId}");
+      // 마지막 업데이트 후 5분이 넘었다 - api 호출 새 버스리스트 받아옴
+      if (difference.inMinutes >= 5) { print("업데이트 - api!! ${nodeId}");
       setState(() { isLoading = true;});
 
       try{
+        await stationDoc.update({'lastUpdate': Timestamp.fromDate(now)}); // 미리 준비함
         buslist = await getBusListFromApi(nodeId);
-        // buslist = BusList.fromJson({}); 확인용
-        await stationDoc.update({'lastUpdate': Timestamp.fromDate(now)}); // 진행되면 업뎃하게끔
       } catch(e) { print('try station update error : ${e.toString()}'); return BusList.fromJson({});}
 
       setState(() { isLoading = false;});
@@ -485,8 +511,6 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       },
 
       onCameraChange: (reason, animated) async {
-        NCameraPosition v = await con.getCameraPosition();
-        print('이동한 좌표 : ${v.target.latitude}, ${v.target.longitude}');
         if(reason== NCameraUpdateReason.gesture) {
           setState((){ isMapMoved=true;});
         }
@@ -499,88 +523,88 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
     final station = busStopInfos[curBusStop];
 
     return GestureDetector(
-      onVerticalDragUpdate: (details) {
-        if (isBusStWidgetOpen == false && details.delta.dy < 0) { busStationBoxSlide(); }
-        if (isBusStWidgetOpen == true  && details.delta.dy > 0) { busStationBoxSlide(); }
-      },
+        onVerticalDragUpdate: (details) {
+          if (isBusStWidgetOpen == false && details.delta.dy < 0) { busStationBoxSlide(); }
+          if (isBusStWidgetOpen == true  && details.delta.dy > 0) { busStationBoxSlide(); }
+        },
 
-      child: Column(
-        children: [
-          Container(
-            width: screen.width * 0.3,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(20.0),topRight: Radius.circular(20.0),),
-              boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.3), spreadRadius: 0, blurRadius: 12, offset: Offset(0, 0)),],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [(isBusStWidgetOpen) ? Icon(Icons.arrow_downward_outlined) : Icon(Icons.arrow_upward_outlined)],
-            ),
-          ),
-
-          Container(
-            decoration: BoxDecoration(
-              color: white, borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
-              boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.05), spreadRadius: 0, blurRadius: 10, offset: Offset(0, -5)),],
+        child: Column(
+          children: [
+            Container(
+              width: screen.width * 0.3,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(20.0),topRight: Radius.circular(20.0),),
+                boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.3), spreadRadius: 0, blurRadius: 12, offset: Offset(0, 0)),],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [(isBusStWidgetOpen) ? Icon(Icons.arrow_downward_outlined) : Icon(Icons.arrow_upward_outlined)],
+              ),
             ),
 
-            child: Stack(
-              children: [
-                Column(
+            Container(
+                decoration: BoxDecoration(
+                  color: white, borderRadius: BorderRadius.vertical(top: Radius.circular(50.0)),
+                  boxShadow: [ BoxShadow(color: mainColor.withOpacity(0.05), spreadRadius: 0, blurRadius: 10, offset: Offset(0, -5)),],
+                ),
+
+                child: Stack(
                   children: [
-                    SizedBox(height: 20),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SizedBox(width: 20),
-                        Icon(Icons.location_on, color: mainColor, size: 25),
-                        SizedBox(width: 5),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(station.mainText, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
-                              SizedBox(height: 14),
-                              Text(station.subText,  style: TextStyle(fontSize: 12, color: Colors.grey),),
-                              Text('${station.id}',  style: TextStyle(fontSize: 12, color: Colors.grey),),
-                            ],
-                          ),
+                    Column(
+                      children: [
+                        SizedBox(height: 20),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(width: 20),
+                            Icon(Icons.location_on, color: mainColor, size: 25),
+                            SizedBox(width: 5),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(station.mainText, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
+                                  SizedBox(height: 14),
+                                  Text(station.subText,  style: TextStyle(fontSize: 12, color: Colors.grey),),
+                                  Text('${station.id}',  style: TextStyle(fontSize: 12, color: Colors.grey),),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                        SizedBox(height: 15),
                       ],
                     ),
-                    SizedBox(height: 15),
-                  ],
-                ),
 
-                Positioned(
-                  top: 0, bottom: 0,
-                  right: MediaQuery.of(context).size.width * 0.05,
-                  child: Center( child: buttons[curButton],),
-                ),
-
-                isMapMoved ? Positioned(
-                  top: 0, bottom: 0,
-                  right: MediaQuery.of(context).size.width * 0.2,
-                  child: Center(
-                    child: OutlineCircleButton(
-                      child: Icon(Icons.undo_outlined, color: white), radius: 50.0, borderSize: 0.5,
-                      foregroundColor: mainColor, borderColor: white,
-                      onTap: () {
-                        final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
-                        buttons[toCurLocationButtonIndex].onTap();
-                      },
+                    Positioned(
+                      top: 0, bottom: 0,
+                      right: MediaQuery.of(context).size.width * 0.05,
+                      child: Center( child: buttons[curButton],),
                     ),
-                  ),
-                ) : Container(),
 
-              ],
-            )
+                    isMapMoved ? Positioned(
+                      top: 0, bottom: 0,
+                      right: MediaQuery.of(context).size.width * 0.2,
+                      child: Center(
+                        child: OutlineCircleButton(
+                          child: Icon(Icons.undo_outlined, color: white), radius: 50.0, borderSize: 0.5,
+                          foregroundColor: mainColor, borderColor: white,
+                          onTap: () {
+                            final toCurLocationButtonIndex = ((curButton-1) >= 0) ? curButton - 1 : buttons.length - 1;
+                            buttons[toCurLocationButtonIndex].onTap();
+                          },
+                        ),
+                      ),
+                    ) : Container(),
+
+                  ],
+                )
 
 
-          ),
-        ],
-      )
+            ),
+          ],
+        )
 
 
     );
@@ -603,8 +627,8 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
           ),
           height: screen.height / 2,
           child: (isLoading)
-            ? Center( child: SizedBox(height: screen.height / 2, child: Center(child: CircularProgressIndicator())))
-            : RefreshIndicator(
+              ? Center( child: SizedBox(height: screen.height / 2, child: Center(child: CircularProgressIndicator())))
+              : RefreshIndicator(
             color: Colors.white10, displacement: 1000000,
             onRefresh: () async { busStationBoxSlide();},
             child: ListView.builder(
@@ -624,28 +648,9 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                 }
 
                 Bus bus = busList[index];
-                String busName = bus.routeno;
 
                 final urgentColor = ((bus.arrtime / 60).toInt() >= 5) ? mainColor : Colors.red;
                 final busColor = (bus.routetp == '일반버스') ? const Color(0xff05d686) : Colors.purple;
-
-                // 여기서 특수버스(?)인지 확인 후 출력 ㄱ
-                // 구미역이나 정류장은 그냥 쓰면 됨
-
-                // 특수버스인지 확인
-                if (importantBuses.contains(busName)) {
-                  // 구미역, 정류장은 그냥 확인하면 됨
-                  if (curBusCode == "GMB80" || curBusCode == "GMB91" || curBusCode == "GMB167") {
-                    busName = '${busName} -> 금오공대!';
-                  }
-
-                  // 금오공대가 문제
-                  if (curBusCode == "132" || curBusCode == "131") {
-
-
-                  }
-                }
-
 
                 return GestureDetector(
                   onTap: () async { await callComments(bus.code);},
@@ -674,7 +679,7 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
                                           children: <Widget>[
                                             SizedBox(height: 2),
                                             Text(
-                                              busName,
+                                              '${bus.routeno} ${bus.direction}',
                                               style: TextStyle(fontSize: 16,fontWeight:FontWeight.bold),),
                                             SizedBox(height: 10),
                                             Text(
@@ -751,69 +756,69 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
       child: Column(
         children: [
 
-         Expanded(
-          child:  Container( // 댓글 출력 창
-            decoration: BoxDecoration( color: Colors.white,),
-            height:     MediaQuery.of(context).size.height / 2 - ((!isChatModifying) ? 62.5 : 0),
+          Expanded(
+            child:  Container( // 댓글 출력 창
+              decoration: BoxDecoration( color: Colors.white,),
+              height:     MediaQuery.of(context).size.height / 2 - ((!isChatModifying) ? 62.5 : 0),
 
-            child: RefreshIndicator(
-              displacement: 100000, // 인디케이터 보이지 않도록
-              onRefresh:    () async { await commentsBoxSlide();},
+              child: RefreshIndicator(
+                displacement: 100000, // 인디케이터 보이지 않도록
+                onRefresh:    () async { await commentsBoxSlide();},
 
-              child: (isLoading) ?
-              ListView(
-                children: [
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height / 2 - 30,
-                    child: Center( child: CircularProgressIndicator(),),
+                child: (isLoading) ?
+                ListView(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height / 2 - 30,
+                      child: Center( child: CircularProgressIndicator(),),
+                    ),
+                  ],
+                ) : (comments.isEmpty || commentUsers.isEmpty) ?
+                ListView(
+                  children: [
+                    Stack(
+                      children: [
+                        Positioned(
+                          top: 0, left: 0, right: 0,
+                          child: Icon(Icons.arrow_downward),
+                        ),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height / 2 - 30,
+                          child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
+                        ),
+                      ],
+                    ),
+                  ],
+                ) : GestureDetector(
+                  onTap: () {setState(() { isChatModifying = false;}); FocusScope.of(context).unfocus();},
+                  child: ListView.builder(
+                    itemCount:   comments.length,
+                    itemBuilder: (context, index) {
+
+                      Comment comment = comments[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
+                      UserModel user  = commentUsers[index];
+
+                      if (index == 0) { // 첫째 줄
+                        return Container(
+                          child: Stack(
+                            children: [
+                              Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_downward,size: 20.0,), ),
+                              OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
+                            ],),);}
+
+                      else { // 나머지 줄
+                        return Container(
+                          decoration: BoxDecoration( border: Border(
+                              top: BorderSide(width: 1.0, color: Colors.grey.shade200),
+                              bottom: (index == comments.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
+                          ), child:   OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
+                        );}
+                    },
                   ),
-                ],
-              ) : (comments.isEmpty || commentUsers.isEmpty) ?
-              ListView(
-                children: [
-                  Stack(
-                    children: [
-                      Positioned(
-                        top: 0, left: 0, right: 0,
-                        child: Icon(Icons.arrow_downward),
-                      ),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height / 2 - 30,
-                        child: Center(child: Text("댓글이 없습니다", style: TextStyle(fontSize: 20))),
-                      ),
-                    ],
-                  ),
-                ],
-              ) : GestureDetector(
-                onTap: () {setState(() { isChatModifying = false;}); FocusScope.of(context).unfocus();},
-                child: ListView.builder(
-                  itemCount:   comments.length,
-                  itemBuilder: (context, index) {
-
-                    Comment comment = comments[index]; // 댓글 유저 수 같아야 함.. 탈퇴한 유저? 아직 처리안함
-                    UserModel user  = commentUsers[index];
-
-                    if (index == 0) { // 첫째 줄
-                      return Container(
-                        child: Stack(
-                          children: [
-                            Container( alignment: Alignment.center, height: 22.0, child: Icon(Icons.arrow_downward,size: 20.0,), ),
-                            OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
-                          ],),);}
-
-                    else { // 나머지 줄
-                      return Container(
-                        decoration: BoxDecoration( border: Border(
-                            top: BorderSide(width: 1.0, color: Colors.grey.shade200),
-                            bottom: (index == comments.length-1) ? BorderSide(width: 1.0, color: Colors.grey.shade200) : BorderSide.none),
-                        ), child:   OneChatWidget( user: user, comment: comment, userProvider: userProvider, updateComment: getComments, tellModifying: modifyingChat),
-                      );}
-                  },
                 ),
               ),
             ),
           ),
-         ),
 
           (isChatModifying) ? SizedBox(width: 0,) :
           Container( // 댓글 입력 창
@@ -936,3 +941,4 @@ const mainColor = Color(0xFF3F51B5);
 const white     = Colors.white;
 
 const importantBuses = ['190','190-1','190-2','190-3','191','192','193','193-2','195','196','5200','557','900'];
+const gumiStart = ['구미역','김천시외버스터미널(종점)'];
