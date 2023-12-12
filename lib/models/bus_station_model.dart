@@ -21,8 +21,7 @@ class Bus{
   final String routetp;   // 노선 유형
   final String vehicletp; // 자량 유형
   final String code;      // 버스 코드 - 고유 번호
-
-  //final String direction;    // 가는 방향 - 구미역, 금오공대
+  String direction;    // 가는 방향 - 구미역, 금오공대
 
   Bus({
     required this.arrprevstationcnt,
@@ -34,6 +33,7 @@ class Bus{
     required this.routetp,
     required this.vehicletp,
     required this.code,
+    this.direction='notyet',
   });
 
   @override
@@ -46,7 +46,7 @@ class Bus{
   @override
   int get hashCode => code.hashCode;
 
-  factory Bus.fromJson(Map<String, dynamic> json) {
+  factory Bus.fromJson(Map<String, dynamic> json, {source = 'doc'}) {
     return Bus(
       arrprevstationcnt: json['arrprevstationcnt'],
       arrtime:           json['arrtime'],
@@ -57,6 +57,7 @@ class Bus{
       routetp:           json['routetp'],
       vehicletp:         json['vehicletp'],
       code:           '${json['nodeid']}-${json['routeno']}-${json['routeid']}',
+      direction:         (source == 'doc') ? json['direction'] : 'notyet',
     );
   }
 }
@@ -84,6 +85,7 @@ class BusList {
         'routetp':           bus.routetp,           // 노선유형
         'vehicletp':         bus.vehicletp,         // 자량유형
         'code':              bus.code,              // 고유문자
+        'direction':         bus.direction,
       });
     }
 
@@ -103,10 +105,10 @@ class BusList {
       var items = body['items']['item'];
       if (items is List) {
         // item이 리스트일 경우
-        buslist = items.map((i) => Bus.fromJson(i)).toList();
+        buslist = items.map((i) => Bus.fromJson(i,source: 'json')).toList();
       } else {
         // item이 단일 객체일 경우
-        buslist.add(Bus.fromJson(items));
+        buslist.add(Bus.fromJson(items,source: 'json'));
       }
 
       buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
@@ -129,7 +131,7 @@ class BusList {
       for (var busInfo in field) { tempBusList.add(busInfo);}
 
       try {
-        buslist = tempBusList.map((bus) => Bus.fromJson(bus)).toList();
+        buslist = tempBusList.map((bus) => Bus.fromJson(bus,source: 'doc')).toList();
         buslist.sort((bus1, bus2) => bus1.arrtime.compareTo(bus2.arrtime));
       } catch(e) { print('Buslist.fromDocument error: ${e.toString()}'); buslist=[];};
     }
