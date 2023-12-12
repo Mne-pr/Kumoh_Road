@@ -332,9 +332,9 @@ class _AdminTaxiManageScreenState extends State<AdminTaxiManageScreen> {
                             ),
                             onDismissed: (direction) {
                               if (direction == DismissDirection.endToStart) {
-                                _blindComment(collectionName, postId, commentId, reportDoc.id);
+                                _blindComment(collectionName, postId, commentId, reportDoc.id, entityId);
                               } else {
-                                _ignoreReport(reportDoc.id);
+                                _ignoreReport(entityId);
                               }
                               // Remove the item from the uniqueCommentIds list
                               setState(() {
@@ -472,7 +472,7 @@ class _AdminTaxiManageScreenState extends State<AdminTaxiManageScreen> {
     );
   }
 
-  Future<void> _blindComment(String collectionName, String postId, String commentId, String reportId) async {
+  Future<void> _blindComment(String collectionName, String postId, String commentId, String reportId, String entityId) async {
     var postDocument = await FirebaseFirestore.instance.collection(collectionName).doc(postId).get();
     var comments = List<Map<String, dynamic>>.from(postDocument.data()!['commentList']);
     var commentIndex = comments.indexWhere((c) => c['id'] == commentId);
@@ -480,14 +480,21 @@ class _AdminTaxiManageScreenState extends State<AdminTaxiManageScreen> {
       comments[commentIndex]['enable'] = false;
       await FirebaseFirestore.instance.collection(collectionName).doc(postId).update({'commentList': comments});
     }
-    await _handleReport(reportId);
+    await _handleAllReportsForComment(entityId);
   }
 
-  Future<void> _ignoreReport(String reportId) async {
-    await _handleReport(reportId);
+  Future<void> _ignoreReport(String entityId) async {
+    await _handleAllReportsForComment(entityId);
   }
 
-  Future<void> _handleReport(String reportId) async {
-    await FirebaseFirestore.instance.collection('reports').doc(reportId).update({'isHandledByAdmin': true});
+  Future<void> _handleAllReportsForComment(String entityId) async {
+    var reportDocuments = await FirebaseFirestore.instance.collection('reports')
+        .where('entityId', isEqualTo: entityId)
+        .get();
+
+    for (var doc in reportDocuments.docs) {
+      await doc.reference.update({'isHandledByAdmin': true});
+    }
   }
+
 }
