@@ -165,32 +165,34 @@ class _BusInfoScreenState extends State<BusInfoScreen> with TickerProviderStateM
 
     // 도착지 결정하고 세팅하기
     if (newBusListToFire.buses.length > 0) {
-
       for (Bus bus in newBusListToFire.buses) {
-        // 처음 가져온 데이터(api), 그리고 확인할 버스인 경우
-        if (bus.direction == 'notyet' && importantBuses.contains(bus.routeno)) {
-          // 금오공대 쪽인 경우 - api 돌려야 함
-          if (bus.nodeid == 'GMB132' || bus.nodeid == 'GMB131') {
-            try {
-              print('api 실행.. 버스 경로 가져오는 중..');
-              final res = await http.get(Uri.parse('${BUS_ROUTE_API_ADDR}?serviceKey=${BUS_API_SERVICE_KEY}&_type=json&cityCode=37050&routeId=${bus.routeid}&numOfRows=1'));
-              final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
-              final item = decodeRes['response']['body']['items']['item'] as Map<String, dynamic>;
-              final nodenm = item['nodenm'];
-              print('버스 검증 - ${bus.routeno} - ${nodenm}');
+        // 처음 가져온 데이터(api)
+        if (bus.direction == 'notyet') {
+          // 중요 버스인 경우
+          if (importantBuses.contains(bus.routeno)) {
+            // 금오공대 쪽인 경우 - api 돌려야 함
+            if (bus.nodeid == 'GMB132' || bus.nodeid == 'GMB131') {
+              try {
+                print('api 실행.. 버스 경로 가져오는 중..');
+                final res = await http.get(Uri.parse('${BUS_ROUTE_API_ADDR}?serviceKey=${BUS_API_SERVICE_KEY}&_type=json&cityCode=37050&routeId=${bus.routeid}&numOfRows=1'));
+                final decodeRes = jsonDecode(utf8.decode(res.bodyBytes));
+                final item = decodeRes['response']['body']['items']['item'] as Map<String, dynamic>;
+                final nodenm = item['nodenm'];
+                print('버스 검증 - ${bus.routeno} - ${nodenm}');
 
-              if (gumiStart.contains(nodenm)) {bus.direction = '-> 옥계';}
-              else {bus.direction = '-> 구미역';}
+                if (gumiStart.contains(nodenm)) {bus.direction = '-> 옥계';}
+                else {bus.direction = '-> 구미역';}
 
-            } catch(e) {print('get bus route error : $e');}
+              } catch(e) {print('get bus route error : $e');}
+            }
+            // 구미역 쪽인 경우
+            else { bus.direction = '-> 금오공대'; }
           }
-          // 구미역 쪽인 경우
-          else { bus.direction = '-> 금오공대'; }
+          // 아닌 경우
+          else { bus.direction = ''; }
         }
-        // 이미 가져온 데이터(firebase), 그리고 확인할 필요 없는 버스인 경우
-        else { bus.direction = '';}
+        // 이미 존재하던 데이터는 그대로 유지
       }
-
     }
 
     // 수정한 목록을 파베,입력에 업데이트
