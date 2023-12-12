@@ -4,6 +4,7 @@ import 'package:kumoh_road/models/taxi_screen_post_model.dart';
 import 'package:kumoh_road/models/taxi_screen_user_model.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_main_screen.dart';
 import 'package:kumoh_road/screens/admin_screens/admin_taxi_manage_screen.dart';
+import 'package:kumoh_road/screens/admin_screens/admin_user_info_screen.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
@@ -174,7 +175,7 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
         onTap: () {
           if (currUser!.id.toString() != widget.postModel.writerId) {
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => OtherUserProfileScreen(userId: widget.postModel.writerId),
+              builder: (context) => AdminUserInfoScreen(userId: widget.postModel.writerId),
             ));
           }
         },

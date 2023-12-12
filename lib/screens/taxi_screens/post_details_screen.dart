@@ -544,10 +544,6 @@ class _PostDetailsScreenState extends State<PostDetailsScreen>
     List<TaxiScreenUserModel> commentUserList =
         await TaxiScreenUserModel.getCommentUserList(commentUserIdList);
 
-    for (var e in commentUserList) {
-      log.i(e.userId);
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
