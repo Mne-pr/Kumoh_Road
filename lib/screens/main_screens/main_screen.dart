@@ -578,7 +578,7 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                   title: Text(
-                    '${busInfo.nodenm}: ${busInfo.routeno}',
+                    '${busInfo.nodenm} ${busInfo.direction}: ${busInfo.routeno}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
