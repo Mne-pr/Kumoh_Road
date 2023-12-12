@@ -47,15 +47,18 @@ class KumohRoad extends StatelessWidget {
                 _showAccountSuspendedDialog(context, userProvider);
               });
             }
-            if (userProvider.age == null || userProvider.gender == null) {
+            else if (userProvider.age == null || userProvider.gender == null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showAdditionalInfoDialog(context, userProvider);
               });
             }
-            return MainScreen();
+            else {
+              return MainScreen();
+            }
           } else {
             return IntroScreen();
           }
+          return IntroScreen();
         },
       ),
     );
