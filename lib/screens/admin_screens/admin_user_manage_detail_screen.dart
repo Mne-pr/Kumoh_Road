@@ -19,13 +19,13 @@ class AdminUserManageDetailScreen extends StatefulWidget {
 }
 
 class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScreen> {
-  Future<void> suspendUser(String userId) async {
-      // 사용자 계정 정지 처리 로직
+  Future<void> suspendAccount(String userId) async {
     await FirebaseFirestore.instance.collection('users').doc(userId).update({
       'isSuspended': true,
     });
+  }
 
-    // 관련 신고 모두 처리
+  Future<void> handleReports(String userId) async {
     var reportsSnapshot = await FirebaseFirestore.instance.collection('reports')
         .where('entityType', isEqualTo: 'user')
         .where('entityId', isEqualTo: userId)
@@ -38,17 +38,13 @@ class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScree
     Navigator.of(context).pop(); // 화면 닫기
   }
 
-  Future<void> handleAllReports() async {
-    var reportsSnapshot = await FirebaseFirestore.instance.collection('reports')
-        .where('entityType', isEqualTo: 'user')
-        .where('entityId', isEqualTo: widget.user.userId)
-        .get();
+  Future<void> suspendUser(String userId) async {
+    await suspendAccount(userId); // 계정을 정지시키는 함수 호출
+    await handleReports(userId); // 신고 처리 로직
+  }
 
-    for (var report in reportsSnapshot.docs) {
-      await report.reference.update({'isHandledByAdmin': true});
-    }
-
-    Navigator.of(context).pop(); // 화면 닫기
+  Future<void> ignoreReports(String userId) async {
+    await handleReports(userId);
   }
 
   Widget _bottomSection() {
@@ -59,9 +55,9 @@ class _AdminUserManageDetailScreenState extends State<AdminUserManageDetailScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildActionButton("무시", handleAllReports, Colors.grey, Icons.delete),
+          _buildActionButton("무시", ignoreReports, Colors.grey, Icons.delete),
           const SizedBox(width: 10),
-          _buildActionButton("계정 정지", suspendUser, Color(0xFF3F51B5), Icons.block),
+          _buildActionButton("계정 정지", suspendUser, const Color(0xFF3F51B5), Icons.block),
         ],
       ),
     );
