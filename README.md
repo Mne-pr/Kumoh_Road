@@ -36,10 +36,19 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
   
   >#### 앱 가이드 화면
-![image](https://github.com/Mne-pr/Kumoh_Road/assets/42082748/60a88bc8-980f-4d3a-8911-e7fba2b7848f)
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/daffa1f7-2c6d-4b89-b16b-4a2ffe8451f6">
+</p>
+
 사용자가 앱을 처음 실행하면 앱의 핵심 기능 및 사용법을 간결하게 제시하여 사용자에게 앱의 목적을 설명한다.
   >#### 로그인 화면
-카카오 로그인을 통해 사용자가 간편하게 앱에 로그인할 수 있도록 한다.또한 사용자에 대한 정확한 정보를 얻도록 한다. 한 번 카카오 로그인을 진행하고 나면, 다음 번에 앱에 접속할 때 자동으로 로그인하여 보다 편리한 앱 사용감을 제공한다. 
+<p align="center">
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c0bf00d8-49c4-4306-8874-8ab4ecc30fd1">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/28047c11-c9c1-45c1-911c-e6e13ffb1141">
+</p>
+카카오 로그인을 통해 사용자가 간편하게 앱에 로그인할 수 있도록 한다.처음 카카오 로그인을 시도할 때 사용자에 대한 정확한 정보를 얻도록 한다. 한 번 카카오 로그인을 진행하고 나면, 다음 번에 앱에 접속할 때 자동으로 로그인하여 보다 편리한 앱 사용감을 제공한다. 
 </div>
 </details>
 
@@ -165,9 +174,9 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 | Profile | Role | Part |
 | ------- | ---- | ---- |
 | <div align="center"><a href="https://github.com/joon6093"><img src="https://avatars.githubusercontent.com/u/118044367?v=4" width="70px;" alt=""/><br/><sub><b>송제용</b><sub></a></div> | 팀장 | - 프로젝트 리더<br/>- 사용자 인터페이스 책임자 및 개발자<br/>- 프로젝트 일정 및 전반적인 관리<br/>- GitHub 프로젝트 관리<br/>- 로그인 및 메인 화면 시스템 구현<br/>- 내정보 화면 구현<br/>- 관리자 모드 메인 화면 및 사용자 관리 화면 구현<br/>- 택시 인원 모집 화면 UI 개편 및 관리자 모드 택시 게시글 & 댓글 관리 화면 구현 |
-| <div align="center"><a href="https://github.com/bini59"><img src="https://avatars.githubusercontent.com/u/51144791?v=4" width="70px;" alt=""/><br/><sub><b>권태현</b></sub></a></div> | 팀원 | - 대중교통 정보 시스템 개발자<br/>- 택시 인원 모집 기능 구현<br/>- 프로젝트 문서화 및 관리를 위한 노션 플랫폼 운영 및 유지보수 |
-| <div align="center"><a href="https://github.com/Sonny-Kor"><img src="https://github.com/bini59/Smart-Embedded-Fan/assets/46300191/3929f0b1-1bc3-4444-af1f-9896de0d9497" width="70px;" alt=""/><br/><sub><b>손현락</b></sub></a></div> | 팀원 | - 시내버스 정보 시스템 개발자<br/>- 버스 정보 공유 기능 개발 | 
-| <div align="center"><a href="https://github.com/lunghyun"><img src="https://github.com/bini59/Smart-Embedded-Fan/assets/103187357/7648ce44-6136-41e5-ab6b-70a544b67318" width="70px;" alt=""/><br/><sub><b>배건애</b></sub></a></div> | 팀원 | - 자전거 경로 탐색 시스템 개발자<br/>- 자전거 경로 기능 구현<br/>- 사용자 피드백 수집 | 
+| <div align="center"><a href="https://github.com/xogus0226" width="70px;" alt=""/><img src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c50f15c1-d915-486e-b65a-9bf3c330365a" width="70px;" alt=""/><br/><sub><b>권태현</b></sub></a></div> | 팀원 | - 대중교통 정보 시스템 개발자<br/>- 택시 인원 모집 기능 구현<br/>- 프로젝트 문서화 및 관리를 위한 노션 플랫폼 운영 및 유지보수 |
+| <div align="center"><a href="https://github.com/Mne-pr"><img src="https://avatars.githubusercontent.com/u/42082748?v=4" width="70px;" alt=""/><br/><sub><b>손현락</b></sub></a></div> | 팀원 | - 시내버스 정보 시스템 개발자<br/>- 버스 정보 공유 기능 개발 | 
+| <div align="center"><a href="https://github.com/TankyBae"><img src="https://avatars.githubusercontent.com/u/119331034?v=4" width="70px;" alt=""/><br/><sub><b>배건애</b></sub></a></div> | 팀원 | - 자전거 경로 탐색 시스템 개발자<br/>- 자전거 경로 기능 구현<br/>- 사용자 피드백 수집 | 
 
 --------
 
@@ -179,9 +188,9 @@ GitHub를 통한 프로젝트 관리는 초기에 어려움이 있었지만, 점
 
 마지막으로, 프로젝트를 성공적으로 마무리할 수 있도록 늘 함께해준 팀원들에게 너무 고생했다고 말하고 싶다.
 > #### 손현락
-
+이번에 처음으로 한 달 이상의 시간을 필요로 하는 대규모 프로젝트에 참여했다. 깃허브를 통한 협업 방법, 안드로이드 스튜디오의 초기 설정 방법 등 실무와 관련된 여러 가지를 배울 수 있는 좋은 기회였다. 이번 프로젝트의 핵심은 다양한 API를 사용하는 것이었다. API가 무엇인지 처음에는 막막했지만, 지금 돌아보니 그 과정에서 많이 성장했다는 걸 느낄 수 있었다. 이제까지 백엔드에 더 많은 경험이 있어 프론트를 가볍게 여기고 있었는데, 이번 프로젝트를 통해 원하는 대로 원활하게 작동하는 프론트엔드를 만드는 건 쉽지 않다는 걸 체감했다. 이런 소중한 경험을 할 수 있게 해준 팀원들에게 진심으로 고맙게 생각한다.
 > #### 권태현
-
+이번 프로젝트는 처음 해보는 팀프로젝트였기에, 협업 도구인 깃허브(Fork, Pull Request 등)와 피그마를 처음으로 사용해 보았다. 프로젝트를 진행하면서, 일정이 급하여 DB 설계를 미루고 UI부터 개발하기도 했다. 또한, DB와의 비동기 요청이 가져오는 성능 저하를 고려하지 못하고 한 번에 수십 번의 DB 요청을 보내는 실수를 하기도 했다. 이런 경험을 통해 일의 분담, DB 모델링의 중요성, 그리고 성능을 고려한 개발의 필요성을 몸소 느끼는 시간이었다. 프로젝트 후반부 쯤에 맡은 기능을 일정에 맞추지 못 해 한 팀원이 내 기능을 도와주었는데, 정말 고마웠다.
 > #### 배건애
 
 --------
