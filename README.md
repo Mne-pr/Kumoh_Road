@@ -34,20 +34,22 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <details>
 <summary>로그인 화면</summary>
 <div markdown="1">
-  
+
   >#### 앱 가이드 화면
 
 <p align="center"> 
-  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/daffa1f7-2c6d-4b89-b16b-4a2ffe8451f6">
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/7225b50a-5cb3-474d-a868-aa3398ecf2ff">
 </p>
 
 사용자가 앱을 처음 실행하면 앱의 핵심 기능 및 사용법을 간결하게 제시하여 사용자에게 앱의 목적을 설명한다.
   >#### 로그인 화면
+
 <p align="center">
-  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c0bf00d8-49c4-4306-8874-8ab4ecc30fd1">
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/1495f6e9-dec5-4fae-94b8-89fefe545d84">
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/28047c11-c9c1-45c1-911c-e6e13ffb1141">
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/296981a7-d14e-410f-9ffc-b901b7d3301a">
 </p>
+
 카카오 로그인을 통해 사용자가 간편하게 앱에 로그인할 수 있도록 한다.처음 카카오 로그인을 시도할 때 사용자에 대한 정확한 정보를 얻도록 한다. 한 번 카카오 로그인을 진행하고 나면, 다음 번에 앱에 접속할 때 자동으로 로그인하여 보다 편리한 앱 사용감을 제공한다. 
 </div>
 </details>
@@ -55,10 +57,20 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <details>
 <summary>홈 화면</summary>
 <div markdown="1">
-  
+
   >#### 홈 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/a4d18de3-aa85-4a67-baef-49cab459b0a8">
+</p>
+
 로그인 후 사용자가 접근하는 홈 화면은 다양한 기능에 빠르게 접근할 수 있는 버튼과 내비게이션을 포함하여 사용자 편의성을 고려한다. 또한 공지사항을 표시해 현재 앱에 대한 서비스 현황을 한 눈에 확인할 수 있도록 하고, 실시간 합승 정보와 버스 정보를 간단하게 목록으로 표시하여 학생들의 주요 이동 수단 정보를 빠르게 접근할 수 있도록 한다.
   >#### 날씨정보 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/4a329541-4425-42f4-b0d8-be9795de46b4">
+</p>
+
 홈 화면에서 날씨 정보에 접근할 경우, 날씨 정보를 시각적으로 쉽게 파악할 수 있는 직관적인 디자인을 제공하며, 필요한 정보만 빠르게 얻을 수 있도록 설계했다. 또한 해당 정보를 바탕으로 날씨에 따른 현재 이용하기 적절한 이동수단을 사용자에게 추천한다. 이때, 교통수단을 추천하는 창을 클릭하면 어플에서 제공하고 있는 해당 이동수단 관련 메뉴로 리다이렉트하여 접근성을 높였다
 </div>
 </details>
@@ -68,10 +80,31 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
   
   >#### 택시 인원 모집 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c61caa22-aebd-4bf9-8f84-aab0915466bd">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/603e1a2a-ed9a-4ddb-a99a-44f13f2bc57c">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/0b0b36e4-a89c-4be1-84df-84b51f688e4f">
+</p>
+
 택시 파티를 모집하기 위한 게시글을 작성하는 화면이다. 사용자는 금오공대생이 주로 이동하는 목적지인 구미역, 터미널, 금오공대 중에서 자신이 택시를 타고 싶은 곳을 선택할 수 있다. 특히, 터미널과 구미역에서는 버스와 기차의 실제 도착시간을 선택하여 택시 인원 모집 게시글을 확인할 수 있다. 모집 게시글 작성을 위해 글쓰기 버튼을 클릭 시 화면 작성 화면으로 이동된다. 이곳에서 출발지 장소 등록을 위한 사진을 촬영해 등록하고 등록될 게시물의 제목 및 내용을 입력할 수 있다. 
   >#### 게시글 상세 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/0c14a1f8-180c-497c-a139-c4a6d893a696">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/a110bc0a-737b-4c42-b176-2bb40573f46b">
+</p>
+
 사용자는 게시글 내용과 게시글 작성자의 매너 온도, 합승 리뷰를 통해 작성자의 신뢰성을 판단할 수 있고, 댓글 기능을 통해 게시글 작성자와 소통할 수 있다. 또한 현재 파티에 참여 인원 수를 확인하고 합승하기 버튼을 통해 택시 파티에 가입할 수 있다. 이 때 파티가 만석이거나 성별이 다를 경우엔 참가할 수 없다. 게시글 작성자는 현재 파티에 문제가 되는 참여자를 추방 할 수 있고, 참여자는 택시 합승이 끝난 후 작성자에게 송금버튼을 통한 정산 후 합승 리뷰 작성 기능을 통한 후기를 작성할 수 있다. 이때 작성된 합승 리뷰는 게시글 작성자의 매너온도와 정보에 반영된다.
   >#### 게시글 신고 및 댓글 신고 및 삭제 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/158317c7-ed90-449f-a6dd-cfa792bc9e86">
+</p>
+
 사용자는 불쾌감을 주는 글과 댓글을 신고 할 수 있다. ‘게시글 신고하기’ 버튼을 클릭 시 신고 카테고리 선택화면으로 이동된다. 카테고리 선택 후 상세 내용 작성화면으로 이동하고, 이 화면에서 신고 상세 내용을 작성 후 신고를 제출할 수 있다. 그리고 불쾌감을 주는 댓글의 신고 또한 가능하다. 작성된 댓글의 ‘신고하기’ 버튼을 클릭 시 알림 다이얼로그 창이 나타나고 신고를 제출할 수 있다. 위의 게시글과 댓글의 신고내용은 데이터베이스에 저장되며, 추후 관리자가 이를 처리한다. 본인이 작성한 댓글의 경우 삭제 할 수 있다.
 </div>
 </details>
