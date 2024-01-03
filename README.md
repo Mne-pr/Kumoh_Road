@@ -238,10 +238,27 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
   
   >#### 관리자 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/f2d8d66a-25f9-4d9a-a305-067f5e7bc996">
+</p>
+
 관리자가 사용자의 불쾌감을 해소하고 신고를 빠르게 처리하기 위해서 사용하는 화면이다. 관리자 인증을 위해서는 이메일 인증 절차를 거쳐야 하며, 이 과정을 통해 보안을 유지한다.
   >#### 일일 동향 분석
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/85572724-e7bd-48a9-97a6-643005a4dbef">
+</p>
+
 어제와 오늘에 대한 사용자 활동 통계를 확인할 수 있다. 이는 택시 게시글 작성수, 버스 댓글 작성수, 신규 사용자 가입수, 택시 게시글 및 버스 댓글 신고수 등의 데이터를 포함한다. 이를 통해 관리자는 앱 사용 패턴과 이슈를 파악하고 적절한 조치를 취할 수 있다.
   >#### 공지사항 관리 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/20a1f0b2-1885-4ec9-a6e3-8280130d7cc9">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e613b7db-3de7-43b7-a5c8-8a469183c9b4">
+</p>
+
 관리자는 사용자들에게 중요한 정보를 전달하기 위한 공지사항을 관리할 수 있는 화면이다. 관리자는 공지사항을 게시및 수정할 수 있으며, 이는 사용자 경험을 개선하고 커뮤니케이션을 효과적으로 유지하는 데 중요한 역할을 한다.
 </div>
 </details>
