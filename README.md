@@ -114,8 +114,28 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
 
   >#### 버스 정보 공유 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e6c50693-868b-4e6b-b04a-174e7f0672e3">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/a6983810-c636-4dcb-91b9-b194bafaafcc">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c9086ced-2bb9-4d4b-8e81-ff6b57f7b10a">
+</p>
+
 화면에 표시된 지도를 통해 버스 도착 정보를 확인하고자 하는 버스 정류장 마커를 선택할 수 있고, 선택 시 해당 정류장에 대한 위치 등의 정보를 하단에 표시한다. 지도는 마커를 선택하거나 주변을 이동할 수 있고, 확대 또는 축소할 수 있다. 처음에 버스 메뉴로 진입할 때의 위치는 구미역 주변으로, ‘구미역’, ‘농협’ 버스정류장 마커와 상호작용할 수 있는데 하단의 ‘위치 이동’ 버튼을 사용해 금오공대, 구미버스터미널에 표시되어있는 마커를 찾아 상호작용할 수 있다. 
   >#### 버스 목록, 댓글 화면
+
+<p align="center"> 
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/5b897b21-ee9e-4244-900d-b122b36d6e41">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e0103dfe-a3ea-4e37-bb20-016b0fd72896">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/254b4253-702b-4fc1-be21-69a74707e777">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/7487906f-821b-44c2-b3f4-cd3668fbad5a">
+</p>
+
 마커를 클릭한 뒤, 하단에  표시된 정류장 정보창을 잡아 위로 슬라이드할 때 해당 버스정류장으로 들어오는 실시간 버스 도착 목록이 등장한다. 이 버스 도착 목록에서는 왼쪽의 버스 색을 통한 좌석버스의 유무, 해당 버스정류장으로 도착하기까지 걸리는 시간과 정류장 수와 같은 정보를 확인할 수 있다. 버스 도착 목록에서 정보를 공유하고자 하는 버스를 클릭하면 해당 버스에 대한 댓글창이 등장하고, 댓글을 작성하거나 편집, 삭제 할 수 있다. 
 다른 사람이 작성한 댓글이 현재 상황에 부적절하거나 위험한 내용의 댓글이라고 판단한 경우 우측 버튼을 통해 활성화 된 신고 버튼을 클릭하여 해당 댓글을 신고할 수 있다. 이런 댓글 작성과 신고 활동은 매너 온도와 활동 배지에 반영된다. 이를 통해 사용자 간 활발한 버스 정보 공유와 소통을 유도한다. 
 
