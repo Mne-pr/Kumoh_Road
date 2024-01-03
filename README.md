@@ -127,13 +127,13 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
   >#### 버스 목록, 댓글 화면
 
 <p align="center"> 
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/5b897b21-ee9e-4244-900d-b122b36d6e41">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e0103dfe-a3ea-4e37-bb20-016b0fd72896">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/254b4253-702b-4fc1-be21-69a74707e777">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/7487906f-821b-44c2-b3f4-cd3668fbad5a">
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/5b897b21-ee9e-4244-900d-b122b36d6e41">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e0103dfe-a3ea-4e37-bb20-016b0fd72896">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/254b4253-702b-4fc1-be21-69a74707e777">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/7487906f-821b-44c2-b3f4-cd3668fbad5a">
 </p>
 
 마커를 클릭한 뒤, 하단에  표시된 정류장 정보창을 잡아 위로 슬라이드할 때 해당 버스정류장으로 들어오는 실시간 버스 도착 목록이 등장한다. 이 버스 도착 목록에서는 왼쪽의 버스 색을 통한 좌석버스의 유무, 해당 버스정류장으로 도착하기까지 걸리는 시간과 정류장 수와 같은 정보를 확인할 수 있다. 버스 도착 목록에서 정보를 공유하고자 하는 버스를 클릭하면 해당 버스에 대한 댓글창이 등장하고, 댓글을 작성하거나 편집, 삭제 할 수 있다. 
@@ -172,13 +172,13 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
   >#### 내정보 화면
 
 <p align="center"> 
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e0934910-fd25-44fd-b8f7-a67edd209985">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/665084c1-e5d3-461e-bafd-2b373054d7f7">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/69392338-9342-42d7-9de8-865ada4670a4">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e4b162fe-d45d-4078-83a5-de42cd534f23">
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e0934910-fd25-44fd-b8f7-a67edd209985">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/665084c1-e5d3-461e-bafd-2b373054d7f7">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/69392338-9342-42d7-9de8-865ada4670a4">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e4b162fe-d45d-4078-83a5-de42cd534f23">
 </p>
 
 사용자는 자신의 프로필을 확인하고 다양한 정보를 확인할 수 있다. 확인할 수 있는 여러가지 정보로는 자주 묻는 질문, 서비스 이용약관, 개인정보 처리방침, 오픈소스 라이선스, 개발자 정보를 확인 할 수 있다. 또한 로그아웃 및 회원 탈퇴를 수행할 수 있다.
@@ -234,13 +234,13 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
   >#### 타인 정보 화면
 
 <p align="center"> 
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/49beac4f-d1f8-49c7-993b-5996b6446cb1">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/29c2c841-2772-4e4f-913d-ce1407ce605a">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c58621f1-67a5-4fc8-89da-5172bfa63810">
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/f0e6a60e-16b9-4c05-b56e-e4ff281cfca7">
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/49beac4f-d1f8-49c7-993b-5996b6446cb1">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/29c2c841-2772-4e4f-913d-ce1407ce605a">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c58621f1-67a5-4fc8-89da-5172bfa63810">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="380" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/f0e6a60e-16b9-4c05-b56e-e4ff281cfca7">
 </p>
 
 다른 사용자의 프로필에 접근할 경우 다른 사용자의 프로필과 활동 배지 정보, 해당 유저가 활동하면서 받은 매너 상세를 확인할 수 있다. 활동배지를 통해 사용자에게 즐거움을 제공하여 사용자들이 더욱 활발한 참여를 유도하도록 한다. 또한 사용자 신고 기능을 제공한다. 해당 신고 내용은 관리자가 확인하고 처리하며, 매너 온도에도 반영된다.
