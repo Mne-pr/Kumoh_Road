@@ -147,8 +147,20 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
   
   >#### 자전거 경로 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/37e808bf-fcf5-4f0c-b275-7b5964b18290">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/5adf917c-18a5-4fd0-a27e-3c3bd0407275">
+</p>
+
 자전거나 킥보드를 이용해 학교에 안전하게 도착할 수 있도록 경로를 제공하는 화면이다. 만약, 사용자가 택시와 버스 모두 이용하기 싫을 때 편리하게 사용할 수 있도록 구현하였다. 사용자는 자신의 현재 위치를 확인할 수 있으며 출발지와 도착지를 입력하여 경로와 소요 시간을 확인할 수 있다. 또한 출발지에 입력 없이 현재 위치를 출발지로 사용할 수 있으며 좌측의 교환 버튼을 통해 출발지와 목적지를 바꿀 수 있다.
   >#### 주소 검색 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/886c6002-68ac-44c3-aaf9-d2f2d77892f5">
+</p>
+
 출발지와 도착지를 선택하기 위해, 주소를 검색할 수 있는 화면이다. 기본적으로 구미역과 구미터미널, 금오공과대학교가 제공되며 사용자는 건물명이나 도로명 주소를 입력해 원하는 주소를 검색할 수 있다. 검색된 항목을 눌러 주소를 선택할 수 있으며 마커 클릭을 통해 해당 항목의 위치를 확인할 수 있다.
 </div>
 </details>
