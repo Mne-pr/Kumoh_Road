@@ -170,16 +170,56 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
   
   >#### 내정보 화면
+
+<p align="center"> 
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e0934910-fd25-44fd-b8f7-a67edd209985">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/665084c1-e5d3-461e-bafd-2b373054d7f7">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/69392338-9342-42d7-9de8-865ada4670a4">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/e4b162fe-d45d-4078-83a5-de42cd534f23">
+</p>
+
 사용자는 자신의 프로필을 확인하고 다양한 정보를 확인할 수 있다. 확인할 수 있는 여러가지 정보로는 자주 묻는 질문, 서비스 이용약관, 개인정보 처리방침, 오픈소스 라이선스, 개발자 정보를 확인 할 수 있다. 또한 로그아웃 및 회원 탈퇴를 수행할 수 있다.
   >#### 매너 상세 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/824360f7-3686-46a5-8248-828a11e585b4">
+</p>
+
 사용자가 택시 합승 시 다른 사람들로부터 받은 평가를 볼 수 있는 화면이다. 이를 통해 사용자들은 타인과의 합승을 좀더 매너 있게 진행하도록 독려받게 된다.
   >#### 획득 배지 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/21485e98-8303-4e0e-9122-f570bbb0a35d">
+</p>
+
 사용자가 앱 내에서 특정 활동을 수행하거나 목표를 달성함으로써 얻은 배지를 확인하는 화면이다. 배지는 사용자의 참여를 유도하고 개인의 성취를 보여주는 방법으로 기능한다.
   >#### 신고 내역 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/147f097e-8dc9-4ff1-bccf-523dc170c75c">
+</p>
+
 사용자는 이 화면을 통해 자신이 신고한 부적절한 행동이나 내용에 대한 기록을 확인할 수 있다. 이 기능은 신고된 사항이 처리되었음을 확인함으로써 사용자에게 성취감을 제공하고, 앱 내에서 긍정적인 환경을 유지하도록 장려한다.
   >#### QR 코드 등록 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/9a836e9b-c2d3-4fb3-9494-b2ec850e9211">
+</p>
+
 사용자가 자신의 카카오페이 QR 코드를 등록할 수 있도록하는 화면이다. 등록된 QR 코드를 통해 사용자들은 서로 간편하게 송금할 수 있게 된다. 또한, 사용자가 QR 코드를 쉽게 등록하고 사용할 수 있도록 QR 코드 등록 가이드를 제공한다.
   >#### 학생 인증 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/ae6086db-2aad-4bb7-b69b-9fe224ea0bfe">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/53ee1602-30de-4437-87c4-1233dd0490b4">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/f2ebb5c0-5e65-4497-accd-3c2d38ae1e7c">
+</p>
+
 금오공대 학생들이 앱 사용을 위해 본인 인증을 할 수 있는 보안 기능을 제공하는 화면이다. 사용자는 자신의 금오공대 공식 이메일 주소를 사용하여 인증하고, 이메일로 받은 인증 코드를 앱에 입력한다. 인증이 완료되면, 앱의 모든 기능에 접근할 수 있으며, 이는 외부인의 무단 접근을 방지한다.
 </div>
 </details>
