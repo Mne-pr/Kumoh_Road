@@ -219,6 +219,9 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/f2ebb5c0-5e65-4497-accd-3c2d38ae1e7c">
 </p>
+<p align="center"> 
+  <img height="250" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/273c2673-52ef-478e-8c65-67b83b401d93">
+</p>
 
 금오공대 학생들이 앱 사용을 위해 본인 인증을 할 수 있는 보안 기능을 제공하는 화면이다. 사용자는 자신의 금오공대 공식 이메일 주소를 사용하여 인증하고, 이메일로 받은 인증 코드를 앱에 입력한다. 인증이 완료되면, 앱의 모든 기능에 접근할 수 있으며, 이는 외부인의 무단 접근을 방지한다.
 </div>
@@ -229,6 +232,17 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
 
   >#### 타인 정보 화면
+
+<p align="center"> 
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/49beac4f-d1f8-49c7-993b-5996b6446cb1">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/29c2c841-2772-4e4f-913d-ce1407ce605a">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/c58621f1-67a5-4fc8-89da-5172bfa63810">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="450" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/f0e6a60e-16b9-4c05-b56e-e4ff281cfca7">
+</p>
+
 다른 사용자의 프로필에 접근할 경우 다른 사용자의 프로필과 활동 배지 정보, 해당 유저가 활동하면서 받은 매너 상세를 확인할 수 있다. 활동배지를 통해 사용자에게 즐거움을 제공하여 사용자들이 더욱 활발한 참여를 유도하도록 한다. 또한 사용자 신고 기능을 제공한다. 해당 신고 내용은 관리자가 확인하고 처리하며, 매너 온도에도 반영된다.
 </div>
 </details>
@@ -268,6 +282,13 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
 
   >#### 택시 게시글 관리 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/03a10aa4-3818-43fa-8553-7553723d74b5">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/9db7a100-f14c-4096-950f-a12a3b423774">
+</p>
+
 관리자는 게시글 관리 화면에서 ‘택시 게시글 관리’ ‘택시 댓글 관리’ 버튼을 통해 신고된  게시글과 댓글 목록을 확인할 수 있다. 게시글을 클릭 시 상세화면으로 이동되며, 이 곳에는 게시글의 내용[b-2] 및 카테고리 목록별 신고 횟수[를 확인할 수 있다. 또한 무시/블라인드 버튼을 클릭함으로써 접수된 신고를 처리할 수 있다. 이 때 사용자에게 블라인드된 게시글은 보이지 않게 된다. 다음으로 신고된 댓글을 클릭 시 해당 화면으로 이동되며, 이곳에서 사용자의 정보 및 사용자 정지 처리를 할 수 있다.  
 </div>
 </details>
@@ -277,6 +298,15 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
 
   >#### 버스 댓글 관리 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/8e713c1c-4f4f-4544-9fcb-0ebec7d9e5ec">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/dea44220-255d-4f34-84cd-f376d22690c1">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/7eabd40b-ba18-458b-9187-881739e8cb75">
+</p>
+
 관리자는 신고된 댓글 목록을 조회하고, 각 댓글의 신고받은 횟수와 댓글의 내용을 검토하여, 커뮤니티 기준에 부합하지 않는 댓글을 왼쪽 슬라이드를 통해 ‘블라인드’ 처리할 수 있다. 신고받을 이유가 없는 댓글이라 판단한 경우 오른쪽 슬라이드를 통해 ‘무시’ 처리할 수 있다. 블라인드하는 것으로 해결될 문제가 아닌 댓글인 경우 유저의 프로필 사진을 클릭해 사용자 관리 화면으로 진입하여 ‘계정 정지’ 처리를 할 수 있다.
 </div>
 </details>
@@ -286,6 +316,11 @@ Flutter, Dart, Firebase 등 다양한 기술 스택을 학습하고 적용하여
 <div markdown="1">
   
   >#### 사용자 관리 화면
+
+<p align="center"> 
+  <img height="500" src="https://github.com/Mne-pr/Kumoh_Road/assets/42082748/bb13b7f3-6c1e-4543-9b5e-5049f3b3fa6f">
+</p>
+
 사용자 관리 화면은 관리자가 애플리케이션 내에서 신고된 사용자들의 목록을 확인할 수 있는 화면이다. 관리자는 신고된 사용자들의 목록을 볼 수 있으며, 각 사용자 별로 신고된 횟수와 신고된 내용의 상세를 확인할 수 있다. 필요에 따라 관리자는 신고된 사용자의 계정에 대해 조치를 취할 수 있다. 계정 정지를 당한 사용자는 화면에 계정이 정지되었다고 알림을 받게 되며, 다시는 어플에 접속할 수 없게 된다.
 </div>
 </details>
